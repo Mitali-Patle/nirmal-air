@@ -1,11 +1,16 @@
+from datetime import datetime
 from typing import Any
+from unittest.mock import patch
 
 import pytest
+import respx
 from fastapi.testclient import TestClient
 from pydantic import SecretStr, ValidationError
 
+from app.air.cpcb import CPCB_URL, IST
 from app.config import Settings
 from app.main import create_app
+from tests.conftest import load_fixture
 
 
 def make_settings(**values: Any) -> Settings:
@@ -53,3 +58,22 @@ def test_production_refuses_to_start_without_its_secrets(
 ) -> None:
     with pytest.raises(ValidationError, match=message):
         make_settings(app_env="production", **overrides)
+
+
+def test_readyz_is_unavailable_without_a_data_key() -> None:
+    response = make_client().get("/readyz")
+    assert (response.status_code, response.json()) == (503, {"status": "unavailable"})
+
+
+@respx.mock
+def test_readyz_reports_whether_cpcb_answers() -> None:
+    client = make_client(data_gov_api_key=SecretStr("key"))
+    route = respx.get(CPCB_URL).respond(json=load_fixture("cpcb_talkatora.json"))
+    with patch("app.web.routes.health.datetime") as clock:
+        clock.now.return_value = datetime(2026, 11, 23, 18, tzinfo=IST)
+        assert client.get("/readyz").json() == {"status": "ok"}
+    assert route.calls.last.request.headers["user-agent"] == "NirmalAir/0.1"
+
+    respx.get(CPCB_URL).respond(503)
+    client = make_client(data_gov_api_key=SecretStr("key"))  # a fresh, empty cache
+    assert client.get("/readyz").status_code == 503
