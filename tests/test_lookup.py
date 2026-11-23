@@ -4,10 +4,10 @@ import httpx
 import pytest
 import respx
 
-from app.air.cache import TtlCache
 from app.air.cpcb import CPCB_URL, IST
 from app.air.lookup import AirLookup
 from app.air.stations import nearest_stations
+from app.cache import Cached, TtlCache
 from tests.conftest import load_fixture
 
 DELHI = (28.6139, 77.209)
@@ -89,10 +89,9 @@ def test_cache_entries_expire_and_are_dropped_after_the_fallback_window() -> Non
     now = [0.0]
     cache: TtlCache[str] = TtlCache(ttl_s=10, keep_s=60, clock=lambda: now[0])
     cache.put("k", "v")
-    assert cache.get("k") is not None
-    assert not cache.get("k").stale  # type: ignore[union-attr]
+    assert cache.get("k") == Cached("v", stale=False)
     now[0] = 30
-    assert cache.get("k").stale  # type: ignore[union-attr]
+    assert cache.get("k") == Cached("v", stale=True)
     now[0] = 61
     assert cache.get("k") is None
     assert cache.get("missing") is None
@@ -107,3 +106,14 @@ async def test_readings_older_than_three_hours_are_not_used(
     by_station(first=rows(("PM2.5", "210"), ("PM10", "180"), ("NO2", "40"), at=stamp))
     air = await AirLookup(client, "key").measured_air(*DELHI, FIVE_PM)
     assert (air is not None) == (hours_old < 3)
+
+
+def test_the_cache_drops_its_oldest_entry_when_full() -> None:
+    cache: TtlCache[int] = TtlCache(ttl_s=10, keep_s=60, max_items=2)
+    cache.put("a", 1)
+    cache.put("b", 2)
+    cache.put("a", 3)  # refreshing "a" makes "b" the oldest
+    cache.put("c", 4)
+    assert cache.get("b") is None
+    kept = [cache.get(key) for key in ("a", "c")]
+    assert [entry.value for entry in kept if entry is not None] == [3, 4]

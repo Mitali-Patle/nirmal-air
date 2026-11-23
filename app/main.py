@@ -5,7 +5,10 @@ from contextlib import asynccontextmanager
 
 import httpx
 from fastapi import FastAPI
+from pydantic import SecretStr
 
+from app.ai.chain import AIChain
+from app.ai.providers import default_providers
 from app.air.cpcb import USER_AGENT
 from app.air.lookup import AirLookup
 from app.config import Settings, get_settings
@@ -41,9 +44,16 @@ def create_app(settings: Settings | None = None, http: httpx.AsyncClient | None 
     app.state.http = http
     key = settings.data_gov_api_key
     app.state.air_lookup = AirLookup(http, key.get_secret_value()) if key else None
+    app.state.ai = AIChain(
+        default_providers(http, _secret(settings.groq_api_key), _secret(settings.gemini_api_key))
+    )
     app.add_middleware(SecurityHeadersMiddleware, hsts=settings.is_production)
     app.include_router(health.router)
     return app
+
+
+def _secret(value: SecretStr | None) -> str | None:
+    return value.get_secret_value() if value else None
 
 
 @asynccontextmanager
