@@ -1,0 +1,60 @@
+{
+ "records": [
+  {
+   "station": "Talkatora Garden, Delhi - DPCC",
+   "pollutant_id": "NO2",
+   "min_value": "14",
+   "max_value": "32",
+   "avg_value": "21",
+   "last_update": "23-11-2026 17:00:00"
+  },
+  {
+   "station": "Talkatora Garden, Delhi - DPCC",
+   "pollutant_id": "OZONE",
+   "min_value": "6",
+   "max_value": "18",
+   "avg_value": "13",
+   "last_update": "23-11-2026 17:00:00"
+  },
+  {
+   "station": "Talkatora Garden, Delhi - DPCC",
+   "pollutant_id": "NH3",
+   "min_value": "5",
+   "max_value": "7",
+   "avg_value": "6",
+   "last_update": "23-11-2026 17:00:00"
+  },
+  {
+   "station": "Talkatora Garden, Delhi - DPCC",
+   "pollutant_id": "CO",
+   "min_value": "17",
+   "max_value": "35",
+   "avg_value": "27",
+   "last_update": "23-11-2026 17:00:00"
+  },
+  {
+   "station": "Talkatora Garden, Delhi - DPCC",
+   "pollutant_id": "PM2.5",
+   "min_value": "118",
+   "max_value": "411",
+   "avg_value": "324",
+   "last_update": "23-11-2026 17:00:00"
+  },
+  {
+   "station": "Talkatora Garden, Delhi - DPCC",
+   "pollutant_id": "PM10",
+   "min_value": "120",
+   "max_value": "306",
+   "avg_value": "226",
+   "last_update": "23-11-2026 17:00:00"
+  },
+  {
+   "station": "Talkatora Garden, Delhi - DPCC",
+   "pollutant_id": "SO2",
+   "min_value": "3",
+   "max_value": "5",
+   "avg_value": "4",
+   "last_update": "23-11-2026 17:00:00"
+  }
+ ]
+}

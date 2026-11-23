@@ -24,6 +24,7 @@ dev = [
     "playwright>=1.65.2",
     "pre-commit>=4.7.0",
     "pytest>=9.2.0",
+    "pytest-asyncio>=1.5.0",
     "pytest-cov>=7.1.0",
     "respx>=0.23.1",
     "ruff>=0.17.6",
@@ -76,6 +77,8 @@ pythonpath = ["."]
 # Browser tests need Playwright's Chromium: run them with `pytest -m e2e`.
 addopts = '-q --strict-markers --doctest-modules -m "not e2e"'
 markers = ["e2e: real-browser tests against a running app (Playwright)"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 
 [tool.coverage.run]
 branch = true

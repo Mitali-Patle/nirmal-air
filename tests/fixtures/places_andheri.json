@@ -1,0 +1,39 @@
+{
+ "results": [
+  {
+   "name": "Andheri",
+   "latitude": 19.13086,
+   "longitude": 72.85258,
+   "admin1": "Maharashtra",
+   "admin2": "Mumbai City District"
+  },
+  {
+   "name": "Andheri",
+   "latitude": 30.55529,
+   "longitude": 77.18415,
+   "admin1": "Himachal Pradesh",
+   "admin2": "Sirmaur"
+  },
+  {
+   "name": "Andheri",
+   "latitude": 30.3896,
+   "longitude": 77.12608,
+   "admin1": "Haryana",
+   "admin2": "Ambala"
+  },
+  {
+   "name": "Andheri",
+   "latitude": 30.71387,
+   "longitude": 77.46219,
+   "admin1": "Himachal Pradesh",
+   "admin2": "Sirmaur"
+  },
+  {
+   "name": "Andheri",
+   "latitude": 30.26906,
+   "longitude": 75.81414,
+   "admin1": "Punjab",
+   "admin2": "Sangrur District"
+  }
+ ]
+}
