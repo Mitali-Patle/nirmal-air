@@ -1,0 +1,44 @@
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+build/
+dist/
+
+# Tool caches and reports
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.hypothesis/
+.coverage
+coverage.xml
+htmlcov/
+playwright-report/
+test-results/
+*.log
+
+# Deploy and editor state
+.vercel/
+node_modules/
+.claude/
+.idea/
+.vscode/
+.DS_Store
+
+# Media and evidence stay outside the repo (10 MB limit)
+*.mp4
+*.mov
+*.webm
+*.gif
+*.png
+*.jpg
+*.jpeg
+!docs/img/*.png
+screenshots/
+recordings/
