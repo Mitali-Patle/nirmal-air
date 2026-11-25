@@ -30,6 +30,11 @@
   --sign-blue-deep: #173F74;
   --sign-yellow: #F2C230;
   --sign-legend: #FFFFFF;
+  --on-yellow: #1B2220;
+
+  /* The route line: dirtier-than-usual hours and the hatched worst window. */
+  --route-dirtier: #7A4A2A;
+  --route-worst: #6E2E22;
 
   /* CPCB AQI band colours: only ever a small swatch beside the band's name. */
   --band-good: #00A650;

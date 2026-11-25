@@ -55,7 +55,7 @@ def use_sample(request: Request, sample: Annotated[str, Form(max_length=40)]) ->
     chosen = SAMPLES.get(sample)
     if chosen is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "No such sample household.")
-    save_household(request, chosen.place, chosen.household)
+    save_household(request, chosen.place, chosen.household, chosen.title)
     return RedirectResponse("/today", status.HTTP_303_SEE_OTHER)
 
 

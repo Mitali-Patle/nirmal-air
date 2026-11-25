@@ -105,6 +105,7 @@ def test_today_shows_the_measured_air_its_source_and_the_estimates(live: respx.M
     assert "With windows shut, the main room" in page
     assert "If Asha went by bus instead" in page
     assert 'hx-get="/today/plan?lang=en"' in page
+    assert "Sample household: Delhi family" in page
     assert live.calls.last.request.headers["user-agent"] == "NirmalAir/0.1"
 
 
@@ -169,7 +170,7 @@ def test_an_ai_plan_is_drawn_as_signs_with_its_provenance(live: respx.MockRouter
     fragment = client.get("/today/plan?lang=hi").text
     assert "Standard advice" not in fragment
     assert fragment.index("Play indoors.") < fragment.index("Earlier today (2)")
-    assert "sign-big" in fragment and "fake:model" in fragment and "plan-v1" in fragment
+    assert "sign-big" in fragment and "fake:model" in fragment and "plan-v2" in fragment
     assert "Hindi (Devanagari script)" not in fragment  # the payload is not echoed raw
 
 
@@ -233,6 +234,7 @@ def test_a_household_form_saves_with_a_searched_place(live: respx.MockRouter) ->
     response = client.post("/household", data=form, follow_redirects=False)
     assert response.status_code == 303
     assert "Continue to today in Andheri" in client.get("/").text
+    assert "Sample household" not in client.get("/today").text
 
 
 def test_a_household_form_saves_with_the_browsers_location() -> None:

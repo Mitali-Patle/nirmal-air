@@ -16,7 +16,7 @@ from app.advice.facts import Fact, Today, clock
 from app.ai.guard import unknown_numbers
 from app.ai.task import OutputRejectedError
 
-PLAN_VERSION = "plan-v1"
+PLAN_VERSION = "plan-v2"
 EVERYONE = "Everyone"
 MIN_ITEMS = 3
 
@@ -37,7 +37,8 @@ Rules:
 5. Each routine fact gives today's rule for it: follow that rule and explain it, adding how
    much worse the worst time is when that helps. Commutes: offer the first swap listed for
    that commute (swap_N_1, chosen by code) and state both its CO2 saving and how it changes
-   the polluted air breathed, even if that rises.
+   the polluted air breathed, even if that rises. Never call a swap healthier or say it
+   limits exposure when its fact says more polluted air is breathed on the way.
 6. Indoors: follow the windows fact's rule, quoting its time as given; mention the purifier
    if there is one; mention incense, coils, smoking or solid-fuel
    cooking if a fact shows them.

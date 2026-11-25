@@ -11,7 +11,7 @@ from app.advice.plan import Language, PlanContext
 from app.advice.tasks import ASK_TASK, PLAN_TASK
 from app.ai.chain import AIChain
 from app.services.today import Day, PlaceChoice, TodayService
-from app.web.session import CsrfChecked, load_household, theme_choice
+from app.web.session import CsrfChecked, load_household, sample_title, theme_choice
 from app.web.templating import templates
 from app.web.views import KIND_LABELS, sign_board, sky_for, strip
 
@@ -121,5 +121,5 @@ def _context(request: Request, place: PlaceChoice, day: Day, lang: str) -> dict[
         "strip": strip(day.hours, today.timing),
         "sky": sky_for(place, today.now, air.aqi.category if air else None, theme_choice(request)),
         "lang": lang,
-        "kind_labels": KIND_LABELS,
+        "sample": sample_title(request),
     }

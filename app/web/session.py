@@ -19,6 +19,7 @@ CSRF_KEY = "csrf"
 PLACE_KEY = "place"
 HOUSEHOLD_KEY = "household"
 THEME_KEY = "theme"
+SAMPLE_KEY = "sample"
 CSRF_HEADER = "x-csrf-token"
 
 
@@ -65,16 +66,36 @@ async def require_csrf(request: Request, csrf: Annotated[str | None, Form()] = N
 CsrfChecked = Depends(require_csrf)
 
 
-def save_household(request: Request, place: PlaceChoice, household: Household) -> None:
+def save_household(
+    request: Request, place: PlaceChoice, household: Household, sample: str | None = None
+) -> None:
     """Remember a household and its place.
 
     Args:
         request: The incoming request.
         place: Where the household is.
         household: The validated profile.
+        sample: The sample's title when this is a sample household, so the page can say so.
     """
     request.session[PLACE_KEY] = {"label": place.label, "lat": place.lat, "lon": place.lon}
     request.session[HOUSEHOLD_KEY] = household.model_dump(mode="json", exclude_defaults=True)
+    if sample:
+        request.session[SAMPLE_KEY] = sample
+    else:
+        request.session.pop(SAMPLE_KEY, None)
+
+
+def sample_title(request: Request) -> str | None:
+    """The sample household's title, if the saved household is a sample.
+
+    Args:
+        request: The incoming request.
+
+    Returns:
+        The title, or None for the visitor's own household.
+    """
+    title = request.session.get(SAMPLE_KEY)
+    return title if isinstance(title, str) else None
 
 
 def load_household(request: Request) -> tuple[PlaceChoice, Household] | None:

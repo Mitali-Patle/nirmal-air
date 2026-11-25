@@ -33,7 +33,7 @@ code, pre { font-family: ui-monospace, "Cascadia Mono", "Roboto Mono", monospace
 }
 .skip {
   position: absolute; left: var(--space-3); top: -60px; z-index: 10;
-  background: var(--sign-yellow); color: #1B2220; font-weight: 700;
+  background: var(--sign-yellow); color: var(--on-yellow); font-weight: 700;
   padding: var(--space-2) var(--space-3); border-radius: 6px;
 }
 .skip:focus { top: var(--space-3); }
@@ -46,7 +46,7 @@ code, pre { font-family: ui-monospace, "Cascadia Mono", "Roboto Mono", monospace
 }
 .brand { font-weight: 800; font-size: 1.125rem; letter-spacing: -0.01em; text-decoration: none; }
 .bar-place { color: var(--muted); font-size: 0.9375rem; }
-.bar-place a { color: var(--ink); margin-left: var(--space-2); }
+.bar-place a { color: var(--ink); margin: 0 var(--space-2) 0 var(--space-3); }
 
 .foot { border-top: 1px solid var(--line); margin-top: var(--space-7); color: var(--muted); font-size: 0.875rem; }
 .foot-in { flex-direction: column; align-items: stretch; padding-block: var(--space-5); gap: var(--space-4); }

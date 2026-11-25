@@ -1,21 +1,29 @@
 {% macro sign(s, kind_labels, big=false) -%}
 <article class="sign {{ 'sign-home' if s.home else 'sign-step' }}{{ ' sign-big' if big else '' }}">
   <div class="sign-in">
-    <p class="sign-who">{{ s.member }}<span class="sep" aria-hidden="true">·</span><span class="visually-hidden">, </span>{{ s.slot.value|capitalize }}</p>
-    <h3 class="sign-text">{{ s.action }}{% if big %}<svg class="sign-arrow" viewBox="0 0 30 30" aria-hidden="true" focusable="false"><path d="M4 15h19M16 7l8 8-8 8"/></svg>{% endif %}</h3>
+    <p class="sign-who">{{ s.member }}<span class="sep" aria-hidden="true"></span><span class="visually-hidden">, </span>{{ s.slot.value|capitalize }}</p>
+    {% if big %}
+    <h3 class="sign-text">{{ s.action }}<svg class="sign-arrow" viewBox="0 0 30 30" aria-hidden="true" focusable="false"><path d="M4 15h19M16 7l8 8-8 8"/></svg></h3>
     <div class="sign-row">
       <p class="sign-why">{{ s.why }}</p>
       {% if s.figure %}<p class="sign-fig">{{ s.figure }}</p>{% endif %}
     </div>
+    {% else %}
+    <div class="sign-row">
+      <h3 class="sign-text">{{ s.action }}</h3>
+      {% if s.figure %}<p class="sign-fig">{{ s.figure }}</p>{% endif %}
+    </div>
+    {% endif %}
   </div>
-  {% if s.facts %}
-  <details class="sign-facts">
-    <summary>The numbers behind this</summary>
+  <details class="plate">
+    <summary>{{ "The numbers behind this" if big else "Why, and the numbers" }}</summary>
+    {% if not big %}<p class="plate-why">{{ s.why }}</p>{% endif %}
+    {% if s.facts %}
     <ul>
       {% for fact in s.facts %}<li><span class="kind kind-{{ fact.kind.name|lower }}">{{ kind_labels[fact.kind] }}</span> {{ fact.text }}</li>{% endfor %}
     </ul>
+    {% endif %}
   </details>
-  {% endif %}
 </article>
 {%- endmacro %}
 
@@ -28,24 +36,24 @@
     <div><dt>Time</dt><dd>{{ p.latency_ms }} ms{% if p.cached %}, reused from an answer in the last hour{% endif %}</dd></div>
   </dl>
   {% if p.attempts %}
-  <h4>Attempts</h4>
+  <h3>Attempts</h3>
   <ol class="how-attempts">
     {% for attempt in p.attempts %}<li>{{ attempt.provider }}: {{ attempt.outcome.value }} ({{ attempt.latency_ms }} ms){% for problem in attempt.problems %}<br><span class="problem">{{ problem }}</span>{% endfor %}</li>{% endfor %}
   </ol>
   {% endif %}
-  <h4>Facts sent to the model</h4>
+  <h3>Facts sent to the model</h3>
   <p class="how-note">Every number in the answer must appear in these facts, or the answer is sent back.</p>
   <ul class="how-facts">
     {% for fact in p.request.facts %}<li><code>{{ fact.id }}</code> {{ fact.text }}</li>{% endfor %}
   </ul>
-  {% if p.request.question is defined %}<h4>Question</h4><p>{{ p.request.question }}</p>{% endif %}
-  {% if p.reply %}<h4>Model reply</h4><pre class="how-reply">{{ p.reply }}</pre>{% endif %}
+  {% if p.request.question is defined %}<h3>Question</h3><p>{{ p.request.question }}</p>{% endif %}
+  {% if p.reply %}<h3>Model reply</h3><pre class="how-reply">{{ p.reply }}</pre>{% endif %}
 </details>
 {%- endmacro %}
 
-{% macro fact_row(fact, kind_labels) -%}
+{% macro fact_row(fact) -%}
 <li class="fact-row">
-  <p class="fact-text"><span class="kind kind-{{ fact.kind.name|lower }}">{{ kind_labels[fact.kind] }}</span> {{ fact.text }}</p>
+  <p class="fact-text">{{ fact.text }}</p>
   {% if fact.figure %}<p class="fact-fig">{{ fact.figure }}</p>{% endif %}
 </li>
 {%- endmacro %}

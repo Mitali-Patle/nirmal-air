@@ -1,8 +1,9 @@
 {% from "macros.html" import sign, how %}
 <section class="plan" id="plan" aria-labelledby="plan-h">
-<h2 class="plan-head" id="plan-h">{{ headline }}</h2>
+<h2 class="visually-hidden" id="plan-h">Today's plan</h2>
+<p class="plan-head">{{ headline }}</p>
 {% if provenance.fallback %}
-<p class="std-label">Standard advice (not AI-generated). The AI models did not answer in time, so these steps come from fixed rules on CPCB's bands.</p>
+<p class="std-label">Standard advice (not AI-generated). The AI models did not answer, so these steps come from fixed rules on CPCB's bands.</p>
 {% endif %}
 {% if board.next %}{{ sign(board.next, kind_labels, big=true) }}{% endif %}
 {% if board.later %}
@@ -15,6 +16,6 @@
   <div class="signs">{% for s in board.earlier %}{{ sign(s, kind_labels) }}{% endfor %}</div>
 </details>
 {% endif %}
-{{ how(provenance) }}
 </section>
+<div id="how-slot" hx-swap-oob="true">{{ how(provenance) }}</div>
 <p id="plan-status" class="visually-hidden" role="status" hx-swap-oob="true">Today's plan is ready.</p>
