@@ -1,0 +1,12 @@
+{% if failed %}
+<p class="field-note">Place search is not answering right now. Try again in a moment, or use your location.</p>
+{% elif results %}
+<fieldset class="place-choices">
+  <legend>Which {{ query }}?</legend>
+  {% for place in results %}
+  <label class="choice"><input type="radio" name="place_index" value="{{ loop.index0 }}"{% if loop.first %} checked{% endif %}> {{ place.label }}</label>
+  {% endfor %}
+</fieldset>
+{% elif query|length >= 2 %}
+<p class="field-note">No place in India matches “{{ query }}”. Try the town or district name.</p>
+{% endif %}

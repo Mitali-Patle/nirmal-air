@@ -7,12 +7,26 @@ the same numbers as the rest of the page.
 
 from app.advice.facts import Fact
 from app.advice.plan import EVERYONE, Plan, PlanContext, PlanItem, Slot
-from app.domain.guidance import CHANGE_FROM, SENSITIVE_INDOORS_FROM, Decision, routine_decision
+from app.domain.guidance import (
+    CHANGE_FROM,
+    SENSITIVE_INDOORS_FROM,
+    Decision,
+    WindowRule,
+    routine_decision,
+    window_rule,
+)
 from app.domain.household import Condition, CookingFuel, Household
 
 AFTERNOON_FROM = 12
 EVENING_FROM = 17
 MAX_ITEMS = 9
+WINDOW_ACTIONS = {
+    WindowRule.OPEN: "Open the windows to air the house.",
+    WindowRule.SHUT_EXCEPT_CLEANEST: (
+        "Keep windows shut; air the house briefly during the cleanest time."
+    ),
+    WindowRule.MOSTLY_SHUT: "Keep windows mostly shut until a nearby reading is available.",
+}
 ACTIONS = {
     Decision.AS_USUAL: "Go ahead with today's {}.",
     Decision.SHORTER: "Keep today's {} short.",
@@ -67,14 +81,8 @@ def _summary(aqi: int | None, *, has_forecast: bool) -> str:
 
 
 def _windows(aqi: int | None, facts: dict[str, Fact]) -> PlanItem:
-    if aqi is not None and aqi < CHANGE_FROM:
-        return _item(Slot.MORNING, EVERYONE, "Open the windows to air the house.", facts["air_now"])
-    reason = facts.get("indoor_shut") or facts.get("cleanest") or facts["air_now"]
-    if "cleanest" in facts:
-        action = "Keep windows shut; air the house briefly during the cleanest time."
-    else:
-        action = "Keep windows mostly shut until a nearby reading is available."
-    return _item(Slot.MORNING, EVERYONE, action, reason)
+    rule = window_rule(aqi, has_forecast="cleanest" in facts)
+    return _item(Slot.MORNING, EVERYONE, WINDOW_ACTIONS[rule], facts["windows"])
 
 
 def _routines(aqi: int | None, household: Household, facts: dict[str, Fact]) -> list[PlanItem]:

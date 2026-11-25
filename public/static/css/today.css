@@ -1,0 +1,144 @@
+/* The Today page: measured air, the plan as road signs, the 24-hour route strip, Ask,
+   and the home and travel estimates. One column on phones; two from 960px. */
+
+.today {
+  max-width: 1160px; margin: 0 auto; padding: var(--space-4);
+  display: flex; flex-direction: column; gap: var(--space-5);
+}
+.today > section > h2 { font-size: 1.375rem; margin-bottom: var(--space-4); }
+
+/* Air now. */
+.aqi { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2) var(--space-3); }
+.aqi-n { font-size: 2rem; font-weight: 800; line-height: 1; letter-spacing: -0.02em; }
+.band { display: inline-flex; align-items: center; gap: 7px; font-weight: 700; font-size: 1.0625rem; }
+.swatch { width: 14px; height: 14px; border-radius: 3px; border: 1px solid color-mix(in srgb, var(--ink) 35%, transparent); }
+.swatch-good { background: var(--band-good); }
+.swatch-satisfactory { background: var(--band-satisfactory); }
+.swatch-moderate { background: var(--band-moderate); }
+.swatch-poor { background: var(--band-poor); }
+.swatch-very_poor { background: var(--band-very_poor); }
+.swatch-severe { background: var(--band-severe); }
+.src { color: var(--muted); font-size: 0.875rem; margin-top: var(--space-2); }
+.health { margin-top: var(--space-2); font-size: 0.9375rem; }
+.air .note { margin-top: var(--space-3); }
+
+/* The plan: a run of road signs. */
+.plan-head { font-size: 1.5rem; margin-bottom: var(--space-4); max-width: 34ch; }
+.group-head { font-size: 0.9375rem; color: var(--muted); margin: var(--space-5) 0 var(--space-3); }
+.signs { display: grid; gap: var(--space-3); }
+
+.sign { border-radius: var(--radius); padding: 5px; color: var(--sign-legend); background: var(--sign-green); }
+.sign-home { background: var(--sign-blue); }
+.sign-in { border: 2px solid var(--sign-legend); border-radius: 8px; padding: var(--space-3) var(--space-4); }
+.sign-who { font-weight: 600; font-size: 0.875rem; opacity: 0.92; }
+.sep { margin: 0 0.45em; }
+.sign-text { font-size: 1.25rem; font-weight: 800; line-height: 1.15; margin-top: 2px; }
+.sign-row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-4); margin-top: var(--space-2); }
+.sign-why { font-size: 0.9375rem; line-height: 1.4; max-width: 62ch; }
+.sign-fig { font-weight: 800; font-size: 1.0625rem; white-space: nowrap; text-align: right; }
+
+.sign-big .sign-in { border-width: 3px; padding: var(--space-4) var(--space-4) var(--space-3); }
+.sign-big .sign-who { font-size: 1rem; }
+.sign-big .sign-text {
+  font-size: clamp(1.75rem, 6vw, 2.25rem); line-height: 1.05; letter-spacing: -0.02em;
+  margin: var(--space-1) 0 var(--space-3); display: flex; align-items: center; gap: var(--space-3);
+}
+.sign-arrow { flex: none; width: 1em; height: 1em; fill: none; stroke: currentColor; stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; }
+.sign-big .sign-row { border-top: 1.5px solid color-mix(in srgb, var(--sign-legend) 55%, transparent); padding-top: var(--space-2); }
+.sign-big .sign-why { font-size: 1rem; }
+.sign-big .sign-fig { font-size: 1.375rem; }
+
+.sign-facts { margin: var(--space-1) 2px 0; font-size: 0.875rem; }
+.sign-facts summary {
+  cursor: pointer; padding: var(--space-2) var(--space-3); font-weight: 600;
+  text-decoration: underline; text-underline-offset: 3px; list-style-position: inside;
+}
+.sign-facts ul { list-style: none; padding: 0 var(--space-3) var(--space-3); display: grid; gap: var(--space-2); }
+.sign-facts li { line-height: 1.45; }
+
+.sign-wait { opacity: 0.45; min-height: 72px; animation: settle 1.4s var(--ease-out) infinite alternate; }
+.sign-wait.sign-big { min-height: 150px; }
+@keyframes settle { to { opacity: 0.25; } }
+
+/* Standard advice looks like a temporary road-works sign: yellow, never alarming. */
+.std-label {
+  background: var(--sign-yellow); color: #1B2220; border-radius: 8px; font-weight: 600;
+  padding: var(--space-2) var(--space-3); margin-bottom: var(--space-4); font-size: 0.9375rem;
+}
+
+.earlier { margin-top: var(--space-5); }
+.earlier > summary { cursor: pointer; font-weight: 700; color: var(--muted); margin-bottom: var(--space-3); }
+
+/* Panels. */
+.air, .route, .ask, .home, .trips, .how {
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--space-4);
+}
+
+/* The next 24 hours as a route line. */
+.route h2 { display: flex; align-items: center; gap: var(--space-2); }
+.strip { display: grid; grid-template-columns: repeat(24, 1fr); gap: 2px; height: 20px; }
+.hr { border-radius: 2px; background: color-mix(in srgb, var(--ink) 16%, var(--panel)); }
+.hr.lv-cleaner { background: color-mix(in srgb, var(--sign-green) 35%, var(--panel)); }
+.hr.lv-dirtier { background: color-mix(in srgb, #7A4A2A 45%, var(--panel)); }
+.hr.is-clean { background: var(--sign-green); }
+.hr.is-worst { background: repeating-linear-gradient(135deg, #6E2E22 0 3px, color-mix(in srgb, #6E2E22 35%, var(--panel)) 3px 6px); }
+.hr.is-now { outline: 2.5px solid var(--ink); outline-offset: 1px; }
+.ticks { display: grid; grid-template-columns: repeat(24, 1fr); margin-top: var(--space-1); font-size: 0.75rem; color: var(--muted); }
+.ticks span { white-space: nowrap; overflow: visible; }
+.route-legend { list-style: none; padding: 0; margin-top: var(--space-3); display: grid; gap: var(--space-2); font-size: 0.9375rem; }
+.route-legend li { display: flex; align-items: baseline; gap: var(--space-2); }
+.key { flex: none; width: 18px; height: 10px; border-radius: 3px; }
+.key-clean { background: var(--sign-green); }
+.key-worst { background: repeating-linear-gradient(135deg, #6E2E22 0 3px, color-mix(in srgb, #6E2E22 35%, var(--panel)) 3px 6px); }
+.sky-note { margin-top: var(--space-3); font-size: 0.8125rem; color: var(--muted); }
+
+/* Ask. */
+.ask label { display: block; }
+.ask-row { display: flex; gap: var(--space-2); margin-top: var(--space-1); }
+.ask-row input { margin-top: 0; }
+#answer:not(:empty) { margin-top: var(--space-4); }
+.answer-q { color: var(--muted); font-size: 0.875rem; }
+.answer-text { font-size: 1.0625rem; font-weight: 600; margin-top: var(--space-1); }
+.answer-facts { list-style: none; padding: 0; margin-top: var(--space-3); display: grid; gap: var(--space-2); font-size: 0.875rem; }
+
+/* Estimates at home and on the road. */
+.facts { list-style: none; padding: 0; display: grid; }
+.fact-row {
+  display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-4);
+  padding: var(--space-4) 0;
+}
+.fact-row + .fact-row { border-top: 1px solid var(--line); }
+.fact-row:first-child { padding-top: var(--space-1); }
+.fact-text { font-size: 1rem; max-width: 62ch; }
+.fact-fig { font-weight: 800; font-size: 1.0625rem; white-space: nowrap; }
+.home > .muted { font-size: 0.8125rem; margin-top: var(--space-3); }
+
+/* How this was generated. */
+.how { margin-top: var(--space-4); font-size: 0.875rem; }
+.how summary { cursor: pointer; font-weight: 700; }
+.how h4 { font-size: 0.875rem; margin: var(--space-4) 0 var(--space-2); }
+.how-list { display: grid; gap: var(--space-1); margin-top: var(--space-3); }
+.how-list div { display: flex; gap: var(--space-2); }
+.how-list dt { font-weight: 700; min-width: 7.5em; }
+.how-note { color: var(--muted); }
+.how-attempts, .how-facts { padding-left: 1.2em; display: grid; gap: var(--space-1); }
+.how-facts code { margin-right: var(--space-1); }
+.problem { color: var(--muted); }
+.how-reply { white-space: pre-wrap; word-break: break-word; background: color-mix(in srgb, var(--ink) 6%, var(--panel)); padding: var(--space-3); border-radius: 8px; max-height: 18rem; overflow: auto; }
+
+@media (min-width: 960px) {
+  .today {
+    display: grid; padding: var(--space-6) var(--space-4); column-gap: var(--space-6); row-gap: var(--space-5);
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    grid-template-rows: auto auto 1fr auto auto;
+    grid-template-areas: "plan air" "plan route" "plan ask" "home ask" "trips ask";
+    align-items: start;
+  }
+  .air { grid-area: air; }
+  .plan { grid-area: plan; }
+  .route { grid-area: route; }
+  .ask { grid-area: ask; }
+  .home { grid-area: home; }
+  .trips { grid-area: trips; }
+  .plan-head { font-size: 1.875rem; }
+}

@@ -1,0 +1,20 @@
+{% from "macros.html" import sign, how %}
+<section class="plan" id="plan" aria-labelledby="plan-h">
+<h2 class="plan-head" id="plan-h">{{ headline }}</h2>
+{% if provenance.fallback %}
+<p class="std-label">Standard advice (not AI-generated). The AI models did not answer in time, so these steps come from fixed rules on CPCB's bands.</p>
+{% endif %}
+{% if board.next %}{{ sign(board.next, kind_labels, big=true) }}{% endif %}
+{% if board.later %}
+<h3 class="group-head">Later today</h3>
+<div class="signs">{% for s in board.later %}{{ sign(s, kind_labels) }}{% endfor %}</div>
+{% endif %}
+{% if board.earlier %}
+<details class="earlier">
+  <summary>Earlier today ({{ board.earlier|length }})</summary>
+  <div class="signs">{% for s in board.earlier %}{{ sign(s, kind_labels) }}{% endfor %}</div>
+</details>
+{% endif %}
+{{ how(provenance) }}
+</section>
+<p id="plan-status" class="visually-hidden" role="status" hx-swap-oob="true">Today's plan is ready.</p>

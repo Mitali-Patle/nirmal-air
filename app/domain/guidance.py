@@ -19,6 +19,32 @@ CHANGE_FROM = Category.MODERATE.lowest
 FLEXIBLE = frozenset({Activity.WALK, Activity.PLAY, Activity.SPORT})
 
 
+class WindowRule(StrEnum):
+    """What to do with the windows today."""
+
+    OPEN = "open the windows to air the house"
+    SHUT_EXCEPT_CLEANEST = "keep windows shut; open them briefly only during the cleanest time"
+    MOSTLY_SHUT = "keep windows mostly shut"
+
+
+def window_rule(aqi: int | None, *, has_forecast: bool) -> WindowRule:
+    """Decide what to do with the windows today.
+
+    Args:
+        aqi: Today's measured AQI, or None when no station reported.
+        has_forecast: Whether a cleanest time is known.
+
+    Returns:
+        The rule.
+
+    >>> window_rule(80, has_forecast=True).name
+    'OPEN'
+    """
+    if aqi is not None and aqi < CHANGE_FROM:
+        return WindowRule.OPEN
+    return WindowRule.SHUT_EXCEPT_CLEANEST if has_forecast else WindowRule.MOSTLY_SHUT
+
+
 class Decision(StrEnum):
     """What to do with one routine today."""
 

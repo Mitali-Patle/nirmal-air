@@ -1,23 +1,31 @@
 """Application factory: the single place where dependencies are wired together."""
 
+import secrets
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from datetime import datetime
+from pathlib import Path
 
 import httpx
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from pydantic import SecretStr
+from starlette.middleware.sessions import SessionMiddleware
 
 from app.ai.chain import AIChain
 from app.ai.providers import default_providers
-from app.air.cpcb import USER_AGENT
+from app.air.cpcb import IST, USER_AGENT
 from app.air.lookup import AirLookup
 from app.config import Settings, get_settings
-from app.web.routes import health
+from app.services.today import TodayService
+from app.web.routes import health, start, today
 from app.web.security import SecurityHeadersMiddleware
 
 # Outside services get 8 seconds: long enough for a slow CPCB reply, short enough that a
 # stalled one falls back to cached or labelled data instead of a hanging page.
 HTTP_TIMEOUT = httpx.Timeout(8.0, connect=4.0)
+STATIC_DIR = Path(__file__).resolve().parent.parent / "public" / "static"
+SESSION_MAX_AGE_S = 30 * 24 * 3600
 
 
 def create_app(settings: Settings | None = None, http: httpx.AsyncClient | None = None) -> FastAPI:
@@ -44,11 +52,27 @@ def create_app(settings: Settings | None = None, http: httpx.AsyncClient | None 
     app.state.http = http
     key = settings.data_gov_api_key
     app.state.air_lookup = AirLookup(http, key.get_secret_value()) if key else None
+    app.state.today = TodayService(http, app.state.air_lookup)
+    # Tests replace the clock so recorded CPCB and forecast data count as current.
+    app.state.clock = lambda: datetime.now(IST)
     app.state.ai = AIChain(
         default_providers(http, _secret(settings.groq_api_key), _secret(settings.gemini_api_key))
     )
+    app.add_middleware(
+        SessionMiddleware,
+        # Outside production a fresh secret per start is fine: sessions just reset.
+        secret_key=_secret(settings.session_secret) or secrets.token_urlsafe(32),
+        session_cookie="nirmalair",
+        max_age=SESSION_MAX_AGE_S,
+        same_site="lax",
+        https_only=settings.is_production,
+    )
     app.add_middleware(SecurityHeadersMiddleware, hsts=settings.is_production)
-    app.include_router(health.router)
+    for router in (health.router, start.router, today.router):
+        app.include_router(router)
+    if not settings.is_production:
+        # In production Vercel serves public/ from its CDN; mount it for local runs and tests.
+        app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
     return app
 
 

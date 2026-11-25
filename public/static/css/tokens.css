@@ -1,0 +1,105 @@
+/* Design tokens. The page ground is the sky at the household's place: one of five phases
+   (set on <html data-phase> from sunrise and sunset), dulled toward smog by the measured AQI
+   band (data-haze 0 to 5). Signs keep fixed colours in every phase. tests/test_contrast.py
+   checks every phase and haze level against WCAG AA, so edit values there too. */
+
+@font-face {
+  font-family: "Overpass";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("../fonts/overpass-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Overpass";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("../fonts/overpass-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+  --font: "Overpass", "Noto Sans", "Noto Sans Devanagari", system-ui, sans-serif;
+
+  /* Sign boards (IRC colours) and their legend. */
+  --sign-green: #0A6B3D;
+  --sign-green-deep: #08542F;
+  --sign-blue: #1D4F91;
+  --sign-blue-deep: #173F74;
+  --sign-yellow: #F2C230;
+  --sign-legend: #FFFFFF;
+
+  /* CPCB AQI band colours: only ever a small swatch beside the band's name. */
+  --band-good: #00A650;
+  --band-satisfactory: #8FC93A;
+  --band-moderate: #F5D90A;
+  --band-poor: #F28C1C;
+  --band-very_poor: #E02424;
+  --band-severe: #8E1616;
+
+  /* What each fact is: shown as a small chip next to it. */
+  --kind-measured-bg: #DDEFE4;  --kind-measured-fg: #0A5130;
+  --kind-forecast-bg: #DEE8F5;  --kind-forecast-fg: #173F74;
+  --kind-estimate-bg: #F5E8C8;  --kind-estimate-fg: #5C4100;
+  --kind-guidance-bg: #E6E9E6;  --kind-guidance-fg: #2E3A34;
+  --kind-household-bg: #ECE4F3; --kind-household-fg: #46306A;
+
+  --radius: 12px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --haze: 0%;
+}
+
+html[data-haze="1"] { --haze: 8%; }
+html[data-haze="2"] { --haze: 15%; }
+html[data-haze="3"] { --haze: 22%; }
+html[data-haze="4"] { --haze: 30%; }
+html[data-haze="5"] { --haze: 38%; }
+
+html[data-phase="morning"] {
+  --sky: #F3F6F4; --smog: #B8AD99; --bar-sky: #FFFFFF;
+  --ink: #1B2220; --muted: #3E4944; --panel: #FFFFFF; --line: #CDD5D0;
+  color-scheme: light;
+}
+html[data-phase="afternoon"] {
+  --sky: #F7F0D4; --smog: #B5A991; --bar-sky: #FFFBEA;
+  --ink: #1F2220; --muted: #403F36; --panel: #FFFDF6; --line: #DED3B2;
+  color-scheme: light;
+}
+html[data-phase="evening"] {
+  --sky: #EBD6A8; --smog: #A79A84; --bar-sky: #F5E6C3;
+  --ink: #221E16; --muted: #3E3829; --panel: #FBF5E8; --line: #D6C296;
+  color-scheme: light;
+}
+html[data-phase="dusk"] {
+  --sky: #1E3354; --smog: #3E3B38; --bar-sky: #172A47;
+  --ink: #EEF1F5; --muted: #BAC5D2; --panel: #24395C; --line: #3D5579;
+  color-scheme: dark;
+}
+html[data-phase="night"] {
+  --sky: #15181A; --smog: #302D2A; --bar-sky: #101314;
+  --ink: #ECEFEC; --muted: #B4BCB7; --panel: #1F2427; --line: #383F43;
+  color-scheme: dark;
+}
+/* "Follow the sky" still respects a phone set to dark mode. */
+@media (prefers-color-scheme: dark) {
+  html[data-theme="auto"] {
+    --sky: #15181A; --smog: #302D2A; --bar-sky: #101314;
+    --ink: #ECEFEC; --muted: #B4BCB7; --panel: #1F2427; --line: #383F43;
+    color-scheme: dark;
+  }
+}
+
+:root {
+  --ground: color-mix(in srgb, var(--smog) var(--haze), var(--sky));
+  --bar: color-mix(in srgb, var(--smog) var(--haze), var(--bar-sky));
+}

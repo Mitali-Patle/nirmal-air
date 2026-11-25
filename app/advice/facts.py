@@ -15,6 +15,9 @@ from app.domain.household import Household
 from app.domain.timing import DayTiming
 
 NOON = 12
+# Typographic marks for figures: an en dash for ranges, a true minus for reductions.
+EN_DASH = "\u2013"
+MINUS = "\u2212"
 
 
 class Kind(StrEnum):
@@ -29,11 +32,16 @@ class Kind(StrEnum):
 
 @dataclass(frozen=True)
 class Fact:
-    """One sentence of fact with an id the AI can cite."""
+    """One sentence of fact with an id the AI can cite.
+
+    `figure` is the fact's key number in a few characters ("6 am", "103 µg/m³"), shown on the
+    right edge of a plan sign the way a road sign shows a distance.
+    """
 
     id: str
     kind: Kind
     text: str
+    figure: str | None = None
 
 
 @dataclass(frozen=True)
@@ -79,6 +87,22 @@ def clock(moment: datetime | int) -> str:
     hour = moment if isinstance(moment, int) else moment.astimezone(IST).hour
     suffix = "am" if hour < NOON else "pm"
     return f"{(hour % NOON) or NOON} {suffix}"
+
+
+def clock_span(start: datetime, end: datetime) -> str:
+    """A short time range, sharing am or pm when both ends do.
+
+    >>> from app.air.cpcb import IST
+    >>> one, four = (datetime(2026, 11, 25, hour, tzinfo=IST) for hour in (13, 16))
+    >>> clock_span(one, four) == f"1{EN_DASH}4 pm"
+    True
+    >>> clock_span(one.replace(hour=11), four) == f"11 am{EN_DASH}4 pm"
+    True
+    """
+    first, last = clock(start), clock(end)
+    if first[-2:] == last[-2:]:
+        return f"{first[:-3]}{EN_DASH}{last}"
+    return f"{first}{EN_DASH}{last}"
 
 
 def number(value: float) -> str:

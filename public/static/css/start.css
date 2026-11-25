@@ -1,0 +1,47 @@
+/* The start page: what NirmalAir does, sample households, and the household form. */
+
+.start { max-width: 880px; margin: 0 auto; padding: var(--space-5) var(--space-4); display: grid; gap: var(--space-7); }
+.intro h1 { font-size: clamp(1.75rem, 5vw, 2.75rem); line-height: 1.08; letter-spacing: -0.025em; max-width: 22ch; }
+.intro p { margin-top: var(--space-3); max-width: 60ch; font-size: 1.0625rem; color: var(--muted); }
+.go {
+  display: inline-block; margin-top: var(--space-4); background: var(--sign-green); color: var(--sign-legend);
+  font-weight: 800; text-decoration: none; padding: 12px 20px; border-radius: 8px;
+}
+.go:hover { background: var(--sign-green-deep); }
+
+.samples h2, .own h2 { font-size: 1.25rem; margin-bottom: var(--space-4); }
+.sample-list { list-style: none; padding: 0; display: grid; gap: var(--space-3); }
+.sample {
+  width: 100%; text-align: left; padding: 5px; border-radius: var(--radius);
+  background: var(--sign-blue); display: block;
+}
+.sample:hover { background: var(--sign-blue-deep); }
+.sample > span { display: block; }
+.sample-title {
+  border: 2px solid var(--sign-legend); border-bottom: 0; border-radius: 8px 8px 0 0;
+  padding: var(--space-3) var(--space-4) 0; font-size: 1.25rem; font-weight: 800;
+}
+.sample-place { border-inline: 2px solid var(--sign-legend); padding: 0 var(--space-4); font-weight: 600; font-size: 0.875rem; opacity: 0.92; }
+.sample-text {
+  border: 2px solid var(--sign-legend); border-top: 0; border-radius: 0 0 8px 8px;
+  padding: var(--space-2) var(--space-4) var(--space-3); font-weight: 400; font-size: 0.9375rem;
+}
+
+.errors { border: 2px solid var(--ink); background: var(--panel); border-radius: 8px; padding: var(--space-3) var(--space-4); margin-bottom: var(--space-5); }
+.errors p { font-weight: 800; }
+.errors ul { margin-top: var(--space-2); padding-left: 1.2em; }
+
+.household { display: grid; gap: var(--space-6); }
+.group { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--space-4); }
+.group > legend { float: left; width: 100%; margin-bottom: var(--space-3); }
+.group > legend + * { clear: left; }
+.row { display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); padding: var(--space-3) 0; border-top: 1px solid var(--line); }
+.row:first-of-type { border-top: 0; }
+.checks { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); align-items: center; grid-column: 1 / -1; }
+.checks label { font-weight: 400; font-size: 0.9375rem; display: inline-flex; align-items: center; gap: var(--space-2); min-height: 32px; }
+.checks input { width: 18px; height: 18px; }
+#place-choices { margin-top: var(--space-3); }
+.place-choices legend { font-size: 0.875rem; }
+.choice { display: flex; gap: var(--space-2); align-items: center; font-weight: 400; min-height: 36px; }
+#locate { margin-top: var(--space-3); }
+.household > button { justify-self: start; font-size: 1.0625rem; padding: 12px 24px; }

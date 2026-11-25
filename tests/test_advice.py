@@ -234,3 +234,11 @@ def test_the_standard_answer_repeats_the_measured_air() -> None:
     answer = standard_answer(AskContext("Can Aarav play?", context()))
     assert answer.text.startswith("The assistant is not available right now. AQI 326")
     assert answer.fact_ids == ["air_now", "health"]
+
+
+def test_sensitive_commuters_are_offered_swaps_that_do_not_add_exposure() -> None:
+    data = FAMILY.model_dump(mode="json")
+    data["members"][0]["conditions"] = ["heart condition"]
+    facts = facts_of(today(household=Household.model_validate(data)))
+    assert facts["swap_1_1"].startswith("If Asha went by car shared by 3 people")
+    assert facts_of()["swap_1_1"].startswith("If Asha went by bus")

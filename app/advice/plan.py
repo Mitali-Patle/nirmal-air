@@ -35,11 +35,11 @@ Rules:
 4. action: one concrete step, starting with a verb, under 20 words.
    why: one sentence on the direct effect of that step, using the numbers in its facts.
 5. Each routine fact gives today's rule for it: follow that rule and explain it, adding how
-   much worse the worst time is when that helps. Commutes: offer the swap with the largest
-   CO2 saving and state both its CO2 saving and how it changes the polluted air breathed,
-   even if that rises.
-6. Indoors: keep windows shut outside the cleanest time and air the room only during it;
-   mention the purifier if there is one; mention incense, coils, smoking or solid-fuel
+   much worse the worst time is when that helps. Commutes: offer the first swap listed for
+   that commute (swap_N_1, chosen by code) and state both its CO2 saving and how it changes
+   the polluted air breathed, even if that rises.
+6. Indoors: follow the windows fact's rule, quoting its time as given; mention the purifier
+   if there is one; mention incense, coils, smoking or solid-fuel
    cooking if a fact shows them.
 7. Never diagnose or suggest treatment. For a member with a lung or heart condition you may
    say to keep their usual medicines handy and see a doctor if breathing gets worse.

@@ -1,6 +1,6 @@
 """Facts about the household: who lives here, routines, commutes and swaps, and the home."""
 
-from app.advice.facts import Fact, Kind, Today, clock, number
+from app.advice.facts import MINUS, Fact, Kind, Today, clock, number
 from app.domain.commute import Swap, swaps, trip_impact
 from app.domain.guidance import routine_decision
 from app.domain.household import Commute, Home, Household, Mode
@@ -21,14 +21,28 @@ def household_facts(today: Today) -> list[Fact]:
     household = today.household
     pm25 = today.outdoor_pm25
     facts = _member_facts(household) + _routine_facts(today)
+    sensitive = {member.name for member in household.members if member.sensitive}
     for index, commute in enumerate(household.commutes, start=1):
         facts.append(_commute_fact(index, commute, pm25, today.approx))
-        for rank, swap in enumerate(swaps(commute)[:SWAPS_PER_COMMUTE], start=1):
+        ranked = _ranked_swaps(commute, sensitive=commute.member in sensitive)
+        for rank, swap in enumerate(ranked[:SWAPS_PER_COMMUTE], start=1):
             facts.append(_swap_fact(f"swap_{index}_{rank}", commute.member, swap))
     facts.append(_home_fact(household.home))
     if pm25 is not None:
         facts += _indoor_facts(pm25, household.home, today.approx)
     return facts
+
+
+def _ranked_swaps(commute: Commute, *, sensitive: bool) -> list[Swap]:
+    """Swaps in the order to suggest them; the first is the one the plan offers.
+
+    For someone more sensitive to polluted air, swaps that do not add to the air breathed on
+    the way come first, so the plan never trades their health for CO₂.
+    """
+    found = swaps(commute)
+    if not sensitive:
+        return found
+    return sorted(found, key=lambda swap: swap.air_change_pct > 0)
 
 
 def _member_facts(household: Household) -> list[Fact]:
@@ -65,6 +79,7 @@ def _routine_facts(today: Today) -> list[Fact]:
                 f"{routine.member}'s usual {routine.activity.value}: {clock(routine.hour)}, "
                 f"for {routine.minutes} minutes. Today's rule for {band} and {who}: "
                 f"{decision.value}.",
+                clock(routine.hour),
             )
         )
     return facts
@@ -83,6 +98,7 @@ def _commute_fact(index: int, commute: Commute, pm25: float | None, approx: str)
         f"{number(commute.km_one_way)} km each way, {commute.days_per_week} days a week, "
         f"leaving at {clock(commute.leaves_at_hour)}. Each trip: about {trip.minutes} minutes, "
         f"{number(trip.co2_kg)} kg CO₂{inhaled}.",
+        f"{number(trip.co2_kg)} kg CO₂",
     )
 
 
@@ -94,6 +110,7 @@ def _swap_fact(fact_id: str, member: str, swap: Swap) -> Fact:
         f"{number(swap.co2_saved_kg_week)} kg less CO₂ a week; "
         f"{_change(swap.air_change_pct, '% more', '% less', 'polluted air breathed on the way')}; "
         f"{_change(swap.minutes_change, ' minutes longer', ' minutes shorter', 'travel time')}.",
+        f"{MINUS}{number(swap.co2_saved_kg_week)} kg CO₂/wk",
     )
 
 
@@ -140,12 +157,14 @@ def _indoor_facts(pm25: float, home: Home, approx: str) -> list[Fact]:
             "indoor_open",
             Kind.ESTIMATE,
             f"With windows open, the main room is {approx} {estimate.windows_open} µg/m³ of PM2.5.",
+            f"{estimate.windows_open} µg/m³",
         ),
         Fact(
             "indoor_shut",
             Kind.ESTIMATE,
             f"With windows shut, the main room is {approx} {estimate.windows_shut} µg/m³, "
             f"{shut_pct}% below outdoors.",
+            f"{estimate.windows_shut} µg/m³",
         ),
     ]
     if estimate.with_purifier is not None:
@@ -156,6 +175,7 @@ def _indoor_facts(pm25: float, home: Home, approx: str) -> list[Fact]:
                 f"With windows shut and the purifier on, {approx} {estimate.with_purifier} µg/m³: "
                 f"{approx} {number(cigarettes(estimate.with_purifier))} cigarettes a day instead "
                 f"of {approx} {number(cigarettes(pm25))} outdoors.",
+                f"{estimate.with_purifier} µg/m³",
             )
         )
     return facts

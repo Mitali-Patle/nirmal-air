@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% from "macros.html" import fact_row %}
+{% block title %}Today in {{ today.place }} · NirmalAir{% endblock %}
+{% block styles %}<link rel="stylesheet" href="/static/css/today.css">{% endblock %}
+{% block bar %}
+<p class="bar-place">{{ today.place }} <a href="/">Change</a></p>
+{% endblock %}
+
+{% block main %}
+<h1 class="visually-hidden">Today's plan for your household in {{ today.place }}</h1>
+<div class="today">
+
+  <section class="air" aria-labelledby="air-h">
+    <h2 id="air-h" class="visually-hidden">Air now</h2>
+    {% if air %}
+    <p class="aqi"><span class="aqi-n">AQI {{ air.aqi.value }}</span>
+      <span class="band"><i class="swatch swatch-{{ air.aqi.category.name|lower }}" aria-hidden="true"></i>{{ air.aqi.category.label }}</span></p>
+    <p class="src">Measured {{ air.reading.measured_at|clock }} at {{ air.nearby.station.label }}, {{ air.nearby.distance_km|km }} away. <span class="kind kind-measured">CPCB via data.gov.in</span></p>
+    <p class="health">{{ air.aqi.category.health }} <span class="muted">CPCB health advice.</span></p>
+    {% if air.from_cache_after_failure %}<p class="note">The station is not answering right now, so this is its last reading.</p>{% endif %}
+    {% if far %}<p class="note">The nearest station with data is {{ air.nearby.distance_km|km }} away, so the air where you are may differ.</p>{% endif %}
+    {% else %}
+    <p class="note">No CPCB station near {{ today.place }} has reported in the last 3 hours. The plan below uses the forecast times and general advice.</p>
+    {% endif %}
+  </section>
+
+  <p id="plan-status" class="visually-hidden" role="status"></p>
+  <section class="plan" id="plan" aria-labelledby="plan-h"
+           hx-get="/today/plan?lang={{ lang }}" hx-trigger="load" hx-swap="outerHTML">
+    <h2 class="plan-head" id="plan-h">Writing today's plan…</h2>
+    <div class="sign sign-step sign-big sign-wait" aria-hidden="true"><div class="sign-in"><p class="sign-who">&nbsp;</p><p class="sign-text">&nbsp;</p><p class="sign-why">&nbsp;</p></div></div>
+    <div class="sign sign-home sign-wait" aria-hidden="true"><div class="sign-in"><p class="sign-text">&nbsp;</p></div></div>
+    <noscript><p class="note">The plan needs JavaScript to load. The air, timing and estimates on this page work without it.</p></noscript>
+  </section>
+
+  <section class="route" aria-labelledby="route-h">
+    <h2 id="route-h">The next 24 hours <span class="kind kind-forecast">Forecast</span></h2>
+    {% if strip %}
+    <div class="strip" aria-hidden="true">
+      {% for hour in strip %}<span class="hr lv-{{ hour.level.value }}{{ ' is-clean' if hour.cleanest else '' }}{{ ' is-worst' if hour.worst else '' }}{{ ' is-now' if loop.first else '' }}"></span>{% endfor %}
+    </div>
+    <div class="ticks" aria-hidden="true">
+      {% for hour in strip %}<span>{{ hour.label if hour.tick else '' }}</span>{% endfor %}
+    </div>
+    {% endif %}
+    {% if facts.cleanest is defined %}
+    <ul class="route-legend">
+      <li><i class="key key-clean" aria-hidden="true"></i>{{ facts.cleanest.text }}</li>
+      <li><i class="key key-worst" aria-hidden="true"></i>{{ facts.worst.text }}</li>
+    </ul>
+    {% else %}
+    <p class="note">The forecast is not available right now, so the cleanest time is not shown.</p>
+    {% endif %}
+    <p class="sky-note">The page's colour follows the {{ sky.phase.value }} sky here{% if sky.haze %}, dulled by today's {{ air.aqi.category.label }} air{% endif %}.</p>
+  </section>
+
+  <section class="ask" aria-labelledby="ask-h">
+    <h2 id="ask-h">Ask about today</h2>
+    <form hx-post="/ask" hx-target="#answer" hx-swap="innerHTML" hx-disabled-elt="find button" method="post" action="/ask">
+      <input type="hidden" name="csrf" value="{{ csrf_token }}">
+      <input type="hidden" name="lang" value="{{ lang }}">
+      <label for="question">Your question</label>
+      <div class="ask-row">
+        <input id="question" name="question" type="text" required minlength="3" maxlength="200" autocomplete="off" placeholder="Can the children play outside at 5 pm?">
+        <button type="submit">Ask</button>
+      </div>
+    </form>
+    <div id="answer" aria-live="polite"></div>
+  </section>
+
+  {% if facts.indoor_shut is defined %}
+  <section class="home" aria-labelledby="home-h">
+    <h2 id="home-h">At home</h2>
+    <ul class="facts">
+      {{ fact_row(facts.indoor_open, kind_labels) }}
+      {{ fact_row(facts.indoor_shut, kind_labels) }}
+      {% if facts.indoor_purifier is defined %}{{ fact_row(facts.indoor_purifier, kind_labels) }}{% endif %}
+      {{ fact_row(facts.cigarettes, kind_labels) }}
+    </ul>
+    <p class="muted">Estimates from outdoor air only; cooking, incense and smoking add to them.</p>
+  </section>
+  {% endif %}
+
+  {% if today.household.commutes %}
+  <section class="trips" aria-labelledby="trips-h">
+    <h2 id="trips-h">Getting around</h2>
+    <ul class="facts">
+      {% for fact in facts.values() if fact.id.startswith('commute_') or fact.id.startswith('swap_') %}{{ fact_row(fact, kind_labels) }}{% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block foot %}
+<nav class="foot-links" aria-label="Household and display">
+  <a href="/">Edit household or place</a>
+  {% if lang == 'hi' %}<a href="/today">Plan in English</a>{% else %}<a href="/today?lang=hi" hreflang="hi">योजना हिंदी में</a>{% endif %}
+</nav>
+<form class="theme" method="post" action="/theme">
+  <input type="hidden" name="csrf" value="{{ csrf_token }}">
+  <fieldset>
+    <legend>Colours</legend>
+    {% for value, label in [('auto', 'Follow the sky'), ('light', 'Light'), ('dark', 'Dark')] %}
+    <button type="submit" name="theme" value="{{ value }}" aria-pressed="{{ 'true' if sky.theme.value == value else 'false' }}">{{ label }}</button>
+    {% endfor %}
+  </fieldset>
+</form>
+{% endblock %}

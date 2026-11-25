@@ -2,8 +2,9 @@
 
 from datetime import datetime
 
-from app.advice.facts import Fact, Kind, Today, clock, number
+from app.advice.facts import Fact, Kind, Today, clock, clock_span, number
 from app.air.cpcb import IST
+from app.domain.guidance import WindowRule, window_rule
 from app.domain.indoor import cigarettes
 
 # India's 24-hour PM2.5 standard (CPCB, National Ambient Air Quality Standards, 2009).
@@ -28,6 +29,7 @@ def air_facts(today: Today) -> list[Fact]:
                 f"No CPCB station near {today.place} has reported in the last 3 hours.",
             ),
             *_timing_facts(today),
+            _windows_fact(today),
         ]
     air = today.air
     station = air.nearby
@@ -40,6 +42,7 @@ def air_facts(today: Today) -> list[Fact]:
             f"AQI {air.aqi.value} ({air.aqi.category.label}) at {station.station.label}, "
             f"{distance} away, measured at {clock(air.reading.measured_at)}. "
             f"Main pollutant: {air.aqi.dominant.value}.",
+            f"AQI {air.aqi.value}",
         ),
         Fact(
             "health",
@@ -54,7 +57,7 @@ def air_facts(today: Today) -> list[Fact]:
     pm25 = today.outdoor_pm25
     if pm25 is not None:
         facts += _pm25_facts(pm25, today.approx)
-    return facts + _timing_facts(today)
+    return [*facts, *_timing_facts(today), _windows_fact(today)]
 
 
 def _pm25_facts(pm25: float, approx: str) -> list[Fact]:
@@ -66,14 +69,38 @@ def _pm25_facts(pm25: float, approx: str) -> list[Fact]:
             f"Outdoor PM2.5 is {approx} {round(pm25)} µg/m³ (24-hour average), "
             f"{floor}{number(round(pm25 / PM25_DAILY_LIMIT, 1))} times India's daily limit of "
             f"{PM25_DAILY_LIMIT} µg/m³.",
+            f"{round(pm25)} µg/m³",
         ),
         Fact(
             "cigarettes",
             Kind.ESTIMATE,
             "Breathing this outdoor air all day is as harmful as smoking "
             f"{approx} {number(cigarettes(pm25))} cigarettes (Berkeley Earth).",
+            f"{number(cigarettes(pm25))} cig/day",
         ),
     ]
+
+
+def _span(today: Today, start: datetime, end: datetime) -> str:
+    day = "today" if start.date() == today.now.astimezone(IST).date() else "tomorrow"
+    return f"{clock(start)} to {clock(end)} {day}"
+
+
+def _windows_fact(today: Today) -> Fact:
+    """Today's rule for the windows, decided by code (see `app.domain.guidance`)."""
+    air, timing = today.air, today.timing
+    rule = window_rule(air.aqi.value if air else None, has_forecast=timing is not None)
+    band = f"{air.aqi.category.label} air" if air else "no recent measurement"
+    if rule is WindowRule.SHUT_EXCEPT_CLEANEST and timing is not None:
+        when = _span(today, timing.cleanest.starts_at, timing.cleanest.ends_at)
+        figure = clock_span(timing.cleanest.starts_at, timing.cleanest.ends_at)
+        return Fact(
+            "windows",
+            Kind.GUIDANCE,
+            f"Today's rule for windows on {band}: {rule.value}, {when}.",
+            figure,
+        )
+    return Fact("windows", Kind.GUIDANCE, f"Today's rule for windows on {band}: {rule.value}.")
 
 
 def _timing_facts(today: Today) -> list[Fact]:
@@ -82,8 +109,7 @@ def _timing_facts(today: Today) -> list[Fact]:
         return []
 
     def span(start: datetime, end: datetime) -> str:
-        day = "today" if start.date() == today.now.astimezone(IST).date() else "tomorrow"
-        return f"{clock(start)} to {clock(end)} {day}"
+        return _span(today, start, end)
 
     cleanest, worst = timing.cleanest, timing.worst
     return [
@@ -91,11 +117,13 @@ def _timing_facts(today: Today) -> list[Fact]:
             "cleanest",
             Kind.FORECAST,
             f"Cleanest time: {span(cleanest.starts_at, cleanest.ends_at)}.",
+            clock_span(cleanest.starts_at, cleanest.ends_at),
         ),
         Fact(
             "worst",
             Kind.FORECAST,
             f"Worst time: {span(worst.starts_at, worst.ends_at)}, with about "
             f"{number(timing.worst_vs_cleanest)} times the PM2.5 of the cleanest time.",
+            clock_span(worst.starts_at, worst.ends_at),
         ),
     ]

@@ -42,3 +42,6 @@ node_modules/
 !docs/img/*.png
 screenshots/
 recordings/
+
+# Impeccable design working files (briefs, mocks, reviews)
+.impeccable/
