@@ -13,7 +13,7 @@ PLAN_TASK = AITask(
     check=plan.check_plan,
     fallback=standard_plan,
     temperature=0.3,
-    max_output_tokens=2000,
+    max_output_tokens=2400,
 )
 
 ASK_TASK = AITask(

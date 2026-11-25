@@ -135,3 +135,24 @@ def test_console_is_clean_in_every_state(new_page: NewPage) -> None:
     for build in STATES.values():
         build(page)
     assert problems == []
+
+
+def test_use_my_location_names_the_place_found(new_page: NewPage) -> None:
+    page = new_page(
+        geolocation={"latitude": 28.6139, "longitude": 77.2090}, permissions=["geolocation"]
+    )
+    page.goto("/")
+    page.get_by_label("Town, city or locality").fill("Andheri")
+    page.get_by_role("button", name="Use my location").click()
+    expect(page.locator("#locate-status")).to_contain_text("Found: Your location, near Delhi")
+    expect(page.get_by_label("Town, city or locality")).to_have_value("")
+    page.get_by_label("Town, city or locality").fill("Lucknow")
+    expect(page.locator("#locate-status")).to_contain_text("Using the place you type")
+
+
+def test_a_refused_location_says_what_to_do(new_page: NewPage) -> None:
+    page = new_page()
+    page.goto("/")
+    page.get_by_role("button", name="Use my location").click()
+    expect(page.locator("#locate-status")).to_contain_text("Location permission was not given")
+    expect(page.get_by_role("button", name="Use my location")).to_be_enabled()

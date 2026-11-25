@@ -16,9 +16,10 @@ from app.advice.facts import Fact, Today, clock
 from app.ai.guard import unknown_numbers
 from app.ai.task import OutputRejectedError
 
-PLAN_VERSION = "plan-v2"
+PLAN_VERSION = "plan-v3"
 EVERYONE = "Everyone"
 MIN_ITEMS = 3
+MAX_ITEMS = 12
 
 SYSTEM = """You are NirmalAir, a clean-air assistant for Indian households during winter smog.
 Write today's plan for one household using only the facts in the request.
@@ -29,9 +30,9 @@ Rules:
    Times too: say "during the cleanest time, 1 pm to 4 pm" as the fact gives it, never a
    time inside it, and add no durations of your own.
 2. Put the ids of the facts each item rests on in fact_ids.
-3. Write 4 to 8 items across morning, afternoon and evening. Each item is for one member,
-   named exactly as in `members`, or for "Everyone". Give an item to every member who is
-   more sensitive to polluted air, and cover every routine and every commute.
+3. Write 4 to 8 items across the day (up to 12 for a large household). Each item is for one
+   member, named exactly as in `members`, or for "Everyone". Give an item to every member who
+   is more sensitive to polluted air, and cover every routine and every commute.
 4. action: one concrete step, starting with a verb, under 20 words.
    why: one sentence on the direct effect of that step, using the numbers in its facts.
 5. Each routine fact gives today's rule for it: follow that rule and explain it, adding how
@@ -82,7 +83,7 @@ class Plan(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     headline: str = Field(min_length=3, max_length=200)
-    items: list[PlanItem] = Field(min_length=1, max_length=9)
+    items: list[PlanItem] = Field(min_length=1, max_length=MAX_ITEMS)
 
 
 @dataclass(frozen=True)

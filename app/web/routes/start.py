@@ -3,7 +3,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Form, HTTPException, Query, Request, status
-from fastapi.responses import HTMLResponse, RedirectResponse, Response
+from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse, Response
 
 from app.air.cpcb import AirDataUnavailableError
 from app.air.places import search_places
@@ -14,10 +14,12 @@ from app.web.household_form import (
     COMMUTE_ROWS,
     MEMBER_ROWS,
     ROUTINE_ROWS,
+    SHOWN_ROWS,
+    hidden_rows_in_use,
     parse_household,
 )
 from app.web.session import CsrfChecked, ThemeChoice, load_household, save_household
-from app.web.templating import templates
+from app.web.templating import distance_label, templates
 
 router = APIRouter()
 # India's bounding box, so a location outside it is refused before any lookup.
@@ -79,6 +81,30 @@ async def places(request: Request, q: Annotated[str, Query(max_length=60)] = "")
             failed = True
     context = {"query": query, "results": results, "failed": failed}
     return templates.TemplateResponse(request, "partials/places.html", context)
+
+
+@router.get("/near", response_class=PlainTextResponse)
+def near(
+    lat: Annotated[str, Query(max_length=12)] = "",
+    lon: Annotated[str, Query(max_length=12)] = "",
+) -> str:
+    """Name the browser's location and its nearest station, so the visitor sees what was found.
+
+    Args:
+        lat: Latitude from the browser.
+        lon: Longitude from the browser.
+
+    Returns:
+        One plain sentence for the status line (shown as text, never as HTML).
+    """
+    place = _near_me(lat, lon)
+    if place is None:
+        return "That location is outside India, so NirmalAir cannot use it. Type a place instead."
+    nearest = nearest_stations(place.lat, place.lon, limit=1)[0]
+    return (
+        f"Found: {place.label}. Nearest CPCB station: {nearest.station.label}, "
+        f"{distance_label(nearest.distance_km)} away."
+    )
 
 
 @router.post("/household", dependencies=[CsrfChecked])
@@ -161,5 +187,7 @@ def _start_page(
         "member_rows": range(MEMBER_ROWS),
         "routine_rows": range(ROUTINE_ROWS),
         "commute_rows": range(COMMUTE_ROWS),
+        "shown": SHOWN_ROWS,
+        "open_more": hidden_rows_in_use(form),
     }
     return templates.TemplateResponse(request, "start.html", context, status_code=code)

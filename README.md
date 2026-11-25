@@ -144,8 +144,8 @@ uv run uvicorn app.index:app --reload
 ```bash
 uv run ruff check . && uv run ruff format --check .
 uv run mypy app tests scripts                  # strict
-uv run pytest -W error --cov=app               # 273 tests, 95% branch-coverage gate (100% now)
-uv run pytest -W error -m e2e                  # 29 browser tests: axe (WCAG 2.2 AA), widths, keyboard
+uv run pytest -W error --cov=app               # 277 tests, 95% branch-coverage gate (100% now)
+uv run pytest -W error -m e2e                  # 31 browser tests: axe (WCAG 2.2 AA), widths, keyboard
 ```
 
 CI runs the same checks plus a secret scan, a dependency audit and a repository-size budget

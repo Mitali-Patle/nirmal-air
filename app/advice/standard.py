@@ -6,7 +6,7 @@ the same numbers as the rest of the page.
 """
 
 from app.advice.facts import Fact
-from app.advice.plan import EVERYONE, Plan, PlanContext, PlanItem, Slot
+from app.advice.plan import EVERYONE, MAX_ITEMS, Plan, PlanContext, PlanItem, Slot
 from app.domain.guidance import (
     CHANGE_FROM,
     SENSITIVE_INDOORS_FROM,
@@ -19,7 +19,6 @@ from app.domain.household import Condition, CookingFuel, Household
 
 AFTERNOON_FROM = 12
 EVENING_FROM = 17
-MAX_ITEMS = 9
 WINDOW_ACTIONS = {
     WindowRule.OPEN: "Open the windows to air the house.",
     WindowRule.SHUT_EXCEPT_CLEANEST: (
@@ -51,8 +50,9 @@ def standard_plan(context: PlanContext) -> Plan:
     household = context.today.household
     items = [_windows(aqi, facts), *_routines(aqi, household, facts)]
     items += _commutes(household, facts)
-    items += _home(aqi, household, facts)
+    # People's own steps come before home-wide ones, so a large household's cut keeps them.
     items += _conditions(aqi, household, facts)
+    items += _home(aqi, household, facts)
     label = air.aqi.category.label if air else "Unknown"
     headline = f"{label} air today: {_summary(aqi, has_forecast='cleanest' in facts)}"
     return Plan(headline=headline, items=items[:MAX_ITEMS])

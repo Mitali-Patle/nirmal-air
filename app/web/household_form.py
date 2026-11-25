@@ -11,9 +11,12 @@ from pydantic import ValidationError
 
 from app.domain.household import Condition, Household
 
-MEMBER_ROWS = 4
-ROUTINE_ROWS = 3
-COMMUTE_ROWS = 2
+MEMBER_ROWS = 8
+ROUTINE_ROWS = 6
+COMMUTE_ROWS = 4
+# Rows shown open; the rest sit behind "Add more…" so the usual household sees a short form.
+SHOWN_ROWS = {"members": 4, "routines": 3, "commutes": 2}
+ROW_PREFIX = {"members": ("m", "name"), "routines": ("r", "member"), "commutes": ("c", "member")}
 CONDITION_FIELDS = {
     "lung": Condition.LUNG,
     "heart": Condition.HEART,
@@ -49,10 +52,59 @@ def parse_household(form: Mapping[str, str]) -> tuple[Household | None, list[str
             "smoking_indoors": "home_smoking" in form,
         },
     }
+    unknown = _match_names(data)
     try:
         return Household.model_validate(data), []
     except ValidationError as error:
-        return None, [_message(item) for item in error.errors()]
+        problems = [_message(item) for item in error.errors()]
+        # Our own sentence names the person; the model's general one adds nothing.
+        return None, [problem for problem in problems if "must belong" not in problem] + unknown
+
+
+def hidden_rows_in_use(form: Mapping[str, str]) -> dict[str, bool]:
+    """Which "Add more…" sections hold something, so the form reopens them after an error.
+
+    Args:
+        form: Field names to submitted text.
+
+    Returns:
+        For people, routines and trips: whether any row past the shown ones is filled.
+    """
+    totals = {"members": MEMBER_ROWS, "routines": ROUTINE_ROWS, "commutes": COMMUTE_ROWS}
+    return {
+        kind: any(
+            _filled(form, f"{ROW_PREFIX[kind][0]}{row}_{ROW_PREFIX[kind][1]}")
+            for row in range(SHOWN_ROWS[kind], totals[kind])
+        )
+        for kind in totals
+    }
+
+
+def _key(name: object) -> str:
+    return " ".join(str(name).split()).casefold()
+
+
+def _match_names(data: dict[str, Any]) -> list[str]:
+    """Point routines and trips at the person they name, ignoring capitals and extra spaces.
+
+    Returns:
+        One sentence per name that matches nobody, such as 'Routine 2: "Ravi" is not one of
+        the people above.'
+    """
+    people = {
+        _key(member["name"]): " ".join(str(member["name"]).split()) for member in data["members"]
+    }
+    problems = []
+    for section, label in (("routines", "Routine"), ("commutes", "Trip")):
+        for number, row in enumerate(data[section], start=1):
+            match = people.get(_key(row["member"]))
+            if match is None:
+                problems.append(
+                    f'{label} {number}: "{row["member"].strip()}" is not one of the people above.'
+                )
+            else:
+                row["member"] = match
+    return problems
 
 
 def _filled(form: Mapping[str, str], key: str) -> bool:

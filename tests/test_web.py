@@ -170,7 +170,7 @@ def test_an_ai_plan_is_drawn_as_signs_with_its_provenance(live: respx.MockRouter
     fragment = client.get("/today/plan?lang=hi").text
     assert "Standard advice" not in fragment
     assert fragment.index("Play indoors.") < fragment.index("Earlier today (2)")
-    assert "sign-big" in fragment and "fake:model" in fragment and "plan-v2" in fragment
+    assert "sign-big" in fragment and "fake:model" in fragment and "plan-v3" in fragment
     assert "Hindi (Devanagari script)" not in fragment  # the payload is not echoed raw
 
 
@@ -313,3 +313,78 @@ def test_a_new_household_starts_a_new_week(live: respx.MockRouter) -> None:
     client.post("/log", data={"csrf": token(client, "/today"), "step": "swap-1"})
     load_sample(client, "mumbai-commuter")
     assert "0 steps logged" in client.get("/today").text
+
+
+def test_the_browsers_location_is_named_with_its_station() -> None:
+    client = make_client()
+    found = client.get("/near?lat=28.6139&lon=77.2090").text
+    assert found.startswith("Found: Your location, near Delhi. Nearest CPCB station:")
+    assert "outside India" in client.get("/near?lat=51.5&lon=-0.12").text
+    assert "outside India" in client.get("/near").text
+
+
+JOINT_FAMILY = {
+    **{
+        f"m{row}_name": name
+        for row, name in enumerate(
+            ["Dada", "Dadi", "Ravi", "Meena", "Kabir", "Ishita", "Anya", "Chachi"]
+        )
+    },
+    "m0_role": "senior",
+    "m0_heart": "on",
+    "m1_role": "senior",
+    "m1_lung": "on",
+    "m4_role": "child",
+    "m5_role": "child",
+    "m6_role": "child",
+    "m7_pregnant": "on",
+    **{
+        f"r{row}_member": name
+        for row, name in enumerate(["dada", " DADI ", "kabir", "Ishita", "Anya", "Ravi"])
+    },
+    **{f"r{row}_activity": "walk" for row in range(6)},
+    **{f"r{row}_hour": "7" for row in range(6)},
+    **{f"r{row}_minutes": "30" for row in range(6)},
+    **{f"c{row}_member": name for row, name in enumerate(["ravi", "Meena", "Chachi", "Ravi"])},
+    **{f"c{row}_mode": "car" for row in range(4)},
+    **{f"c{row}_km": "8" for row in range(4)},
+    **{f"c{row}_days": "5" for row in range(4)},
+    **{f"c{row}_hour": "9" for row in range(4)},
+    "home_sqft": "300",
+    "home_fuel": "LPG",
+    "place_query": "Andheri",
+}
+
+
+def test_an_eight_person_joint_family_with_loose_name_typing_is_saved(
+    live: respx.MockRouter,
+) -> None:
+    client = make_client()
+    response = client.post(
+        "/household", data={"csrf": token(client), **JOINT_FAMILY}, follow_redirects=False
+    )
+    assert response.status_code == 303
+    page = client.get("/today").text
+    assert page.count("I did this") >= 4  # trips and routines moved indoors
+    fragment = client.get("/today/plan").text
+    assert "Standard advice" in fragment
+    assert fragment.count('class="sign ') <= 12
+
+
+def test_names_that_match_nobody_are_named_and_extra_rows_reopen() -> None:
+    client = make_client()
+    form = {**JOINT_FAMILY, "r5_member": "Ravindra", "geo_lat": "28.6", "geo_lon": "77.2"}
+    response = client.post("/household", data={"csrf": token(client), **form})
+    assert response.status_code == 422
+    assert "Routine 6: &#34;Ravindra&#34; is not one of the people above." in response.text
+    assert response.text.count('class="more-rows" open') == 3
+
+
+def test_a_household_of_just_people_works(live: respx.MockRouter) -> None:
+    client = make_client()
+    form = {"csrf": token(client), "m0_name": "Asha", "geo_lat": "28.6", "geo_lon": "77.2"}
+    assert client.post("/household", data=form, follow_redirects=False).status_code == 303
+    page = client.get("/today").text
+    assert "Getting around" not in page
+    assert "Nothing to tick today" in page
+    assert "Standard advice" in client.get("/today/plan").text
