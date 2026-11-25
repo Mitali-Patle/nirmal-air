@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% from "macros.html" import fact_row %}
 {% block title %}Today in {{ today.place }} · NirmalAir{% endblock %}
-{% block styles %}<link rel="stylesheet" href="/static/css/today.css"><link rel="stylesheet" href="/static/css/sky.css">{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{{ 'css/today.css'|asset }}"><link rel="stylesheet" href="{{ 'css/sky.css'|asset }}">{% endblock %}
 {% block sky %}{% include "partials/sky.html" %}{% endblock %}
 {% block bar %}
 <p class="bar-place">{{ today.place }}<a href="/">Change</a>{% if sample %} <span class="sample-tag">Sample household: {{ sample }}</span>{% endif %}</p>

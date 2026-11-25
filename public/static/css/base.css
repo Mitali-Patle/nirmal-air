@@ -41,7 +41,7 @@ code, pre { font-family: ui-monospace, "Cascadia Mono", "Roboto Mono", monospace
 /* The top bar carries the sky too, a shade lighter than the ground. */
 .bar { background: var(--bar); border-bottom: 1px solid var(--line); }
 .bar-in, .foot-in {
-  max-width: 1160px; margin: 0 auto; padding: var(--space-3) var(--space-4);
+  max-width: var(--page-max); margin: 0 auto; padding: var(--space-3) var(--space-5);
   display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-2) var(--space-4);
 }
 .brand { font-weight: 800; font-size: 1.125rem; letter-spacing: -0.01em; text-decoration: none; }

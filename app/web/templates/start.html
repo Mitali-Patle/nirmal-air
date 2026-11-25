@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}NirmalAir · today's air, planned for your family{% endblock %}
-{% block styles %}<link rel="stylesheet" href="/static/css/start.css">{% endblock %}
-{% block scripts %}<script src="/static/js/locate.js" defer></script>{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{{ 'css/start.css'|asset }}">{% endblock %}
+{% block scripts %}<script src="{{ 'js/locate.js'|asset }}" defer></script>{% endblock %}
 {% block main %}
 {% set roles = [('adult', 'Adult'), ('child', 'Child'), ('senior', 'Senior')] %}
 {% set activities = [('walk', 'Walk'), ('outdoor play', 'Outdoor play'), ('sport or exercise', 'Sport or exercise'), ('school run', 'School run'), ('market and errands', 'Market and errands')] %}
@@ -16,6 +16,11 @@
     <h1 id="intro-h">Today's air, turned into a plan for each person at home.</h1>
     <p>NirmalAir reads the nearest CPCB station, then tells your family what to do, when, and what it changes. Every number is measured or worked out in code; the AI only explains.</p>
     {% if saved %}<p><a class="go" href="/today">Continue to today in {{ saved[0].label }}</a></p>{% endif %}
+    <ol class="how-it-works">
+      <li><span class="step-mark" aria-hidden="true">1</span><p><b>Measured air, where you are</b><span>The nearest CPCB station's reading, with its time and distance.</span></p></li>
+      <li><span class="step-mark" aria-hidden="true">2</span><p><b>A step for each person</b><span>Walks, play, the commute and the windows, decided from CPCB's bands.</span></p></li>
+      <li><span class="step-mark" aria-hidden="true">3</span><p><b>What each step changes</b><span>PM2.5 and CO₂ worked out in code, with the source one tap away.</span></p></li>
+    </ol>
   </section>
 
   <section class="samples" aria-labelledby="samples-h">

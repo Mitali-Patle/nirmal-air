@@ -51,6 +51,7 @@
   --kind-guidance-bg: #E6E9E6;  --kind-guidance-fg: #2E3A34;
   --kind-household-bg: #ECE4F3; --kind-household-fg: #46306A;
 
+  --page-max: 1440px;
   --radius: 12px;
   --space-1: 4px;
   --space-2: 8px;
