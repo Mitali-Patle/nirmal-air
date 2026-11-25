@@ -52,8 +52,14 @@
 {%- endmacro %}
 
 {% macro fact_row(fact) -%}
-<li class="fact-row">
-  <p class="fact-text">{{ fact.text }}</p>
-  {% if fact.figure %}<p class="fact-fig">{{ fact.figure }}</p>{% endif %}
+<li>
+  {% if fact.label %}
+  <details class="fact-more">
+    <summary class="fact-row"><span class="fact-text">{{ fact.label }}</span>{% if fact.figure %}<span class="fact-fig">{{ fact.figure }}</span>{% endif %}</summary>
+    <p class="fact-full">{{ fact.text }}</p>
+  </details>
+  {% else %}
+  <div class="fact-row"><p class="fact-text">{{ fact.text }}</p>{% if fact.figure %}<p class="fact-fig">{{ fact.figure }}</p>{% endif %}</div>
+  {% endif %}
 </li>
 {%- endmacro %}

@@ -101,7 +101,8 @@ def test_today_shows_the_measured_air_its_source_and_the_estimates(live: respx.M
     assert "Measured 5 pm at" in page and "CPCB via data.gov.in" in page
     assert 'data-phase="dusk"' in page and 'data-haze="4"' in page
     assert page.count('class="hr ') == 24
-    assert "Cleanest time:" in page
+    assert '<i class="key key-clean" aria-hidden="true"></i>Cleanest ' in page
+    assert " the cleanest</li>" in page
     assert "With windows shut, the main room" in page
     assert "If Asha went by bus instead" in page
     assert 'hx-get="/today/plan?lang=en"' in page
@@ -133,7 +134,6 @@ def test_the_plan_falls_back_to_labelled_standard_advice(live: respx.MockRouter)
 
 def test_an_ai_plan_is_drawn_as_signs_with_its_provenance(live: respx.MockRouter) -> None:
     plan = {
-        "headline": "Very Poor air: keep everyone in today.",
         "items": [
             {
                 "slot": "evening",
@@ -170,7 +170,7 @@ def test_an_ai_plan_is_drawn_as_signs_with_its_provenance(live: respx.MockRouter
     fragment = client.get("/today/plan?lang=hi").text
     assert "Standard advice" not in fragment
     assert fragment.index("Play indoors.") < fragment.index("Earlier today (2)")
-    assert "sign-big" in fragment and "fake:model" in fragment and "plan-v3" in fragment
+    assert "sign-big" in fragment and "fake:model" in fragment and "plan-v4" in fragment
     assert "Hindi (Devanagari script)" not in fragment  # the payload is not echoed raw
 
 

@@ -31,6 +31,10 @@
 .errors p { font-weight: 800; }
 .errors ul { margin-top: var(--space-2); padding-left: 1.2em; }
 
+.own > .muted { margin-bottom: var(--space-3); }
+.own-form > summary { cursor: pointer; list-style: none; margin-top: 0; }
+.own-form > summary::-webkit-details-marker { display: none; }
+.own-form[open] > summary { margin-bottom: var(--space-5); }
 .household { display: grid; gap: var(--space-6); }
 .group { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--space-4); }
 .group > legend { float: left; width: 100%; margin-bottom: var(--space-3); }

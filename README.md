@@ -51,7 +51,7 @@ to their location and lifestyle, and explain the direct impact of each choice.
 
 ## How the solution works
 
-1. **Pick a household.** Choose one of three samples, or describe your own: up to four
+1. **Pick a household.** Choose one of three samples, or describe your own: up to eight
    people with age group and conditions, routines, commutes and the home. Then search for a
    place (older names such as Bangalore or Gurgaon work) or use your location. Nothing is
    stored on a server: the household lives in a signed, HttpOnly cookie.

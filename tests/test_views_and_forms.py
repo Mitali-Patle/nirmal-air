@@ -21,7 +21,6 @@ def request_with(session: dict[str, Any]) -> Any:
 
 def test_late_evening_plans_have_no_next_step_only_earlier_ones() -> None:
     plan = Plan(
-        headline="Fine.",
         items=[
             PlanItem(slot=Slot.MORNING, member="Asha", action="Walk.", why="Fine.", fact_ids=["x"])
         ],
@@ -86,7 +85,6 @@ def test_signs_show_what_the_step_changes_first() -> None:
         Fact("air_now", Kind.MEASURED, "Air.", "AQI 326"),
     ]
     plan = Plan(
-        headline="Fine.",
         items=[
             PlanItem(
                 slot=Slot.EVENING,

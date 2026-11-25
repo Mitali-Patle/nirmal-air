@@ -28,8 +28,13 @@ def _start(page: Page) -> None:
     page.goto("/")
 
 
-def _start_with_errors(page: Page) -> None:
+def open_form(page: Page) -> None:
     page.goto("/")
+    page.get_by_text("Set up your household").click()
+
+
+def _start_with_errors(page: Page) -> None:
+    open_form(page)
     page.get_by_role("button", name="See today's plan").click()
     expect(page.get_by_role("alert")).to_contain_text("Choose a place from the list")
 
@@ -141,7 +146,7 @@ def test_use_my_location_names_the_place_found(new_page: NewPage) -> None:
     page = new_page(
         geolocation={"latitude": 28.6139, "longitude": 77.2090}, permissions=["geolocation"]
     )
-    page.goto("/")
+    open_form(page)
     page.get_by_label("Town, city or locality").fill("Andheri")
     page.get_by_role("button", name="Use my location").click()
     expect(page.locator("#locate-status")).to_contain_text("Found: Your location, near Delhi")
@@ -152,7 +157,7 @@ def test_use_my_location_names_the_place_found(new_page: NewPage) -> None:
 
 def test_a_refused_location_says_what_to_do(new_page: NewPage) -> None:
     page = new_page()
-    page.goto("/")
+    open_form(page)
     page.get_by_role("button", name="Use my location").click()
     expect(page.locator("#locate-status")).to_contain_text("Location permission was not given")
     expect(page.get_by_role("button", name="Use my location")).to_be_enabled()

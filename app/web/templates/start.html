@@ -39,6 +39,9 @@
 
   <section class="own" aria-labelledby="own-h">
     <h2 id="own-h">Or set up your own</h2>
+    <p class="muted">Your people, routines, trips and home: about a minute. Saved only in this browser.</p>
+    <details class="own-form"{% if errors or form %} open{% endif %}>
+    <summary class="go">Set up your household</summary>
     {% if errors %}
     <div class="errors" role="alert">
       <p>Please fix these:</p>
@@ -129,6 +132,7 @@
 
       <button type="submit" class="go">See today's plan</button>
     </form>
+    </details>
   </section>
 </div>
 {% endblock %}

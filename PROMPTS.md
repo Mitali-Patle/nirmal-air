@@ -15,8 +15,9 @@ How NirmalAir was built with AI, and how its own prompts changed after live test
 
 1. Code builds the **facts bundle**: one sentence per fact, each with an id and a kind
    (measured, forecast, estimate, CPCB guidance, your household).
-2. The **plan prompt** (`app/advice/plan.py`) asks for strict JSON: a headline, plus 4 to 8
-   items, each with a slot, a member, an action, a reason and the fact ids it cites.
+2. The **plan prompt** (`app/advice/plan.py`, version `plan-v4`) asks for strict JSON: 4 to 8
+   items (up to 12 for a large household), each with a slot, a member, an action under 12
+   words, a reason under 16 words and the fact ids it cites.
 3. Code checks every item:
    - every number appears in the facts;
    - the fact ids are real;
@@ -38,7 +39,9 @@ How NirmalAir was built with AI, and how its own prompts changed after live test
 | It said to shut windows *during* the cleanest window | **Code now decides** the windows rule; the AI quotes it |
 | It wrote "share with 2 others" when the fact said 3 people | The fact now says "Asha and 2 others", so the natural phrasing is a real number |
 | It suggested the bus to a father with a heart condition (371% more polluted air on the way) | **Code now ranks** swaps: sensitive people get swaps that do not add exposure first |
-| A headline said the bus would "limit exposure" | `plan-v2`: never call a swap healthier when its fact says more polluted air |
+| A headline said the bus would "limit exposure" | `plan-v2`: never call a swap healthier when its fact says more polluted air. It slipped into the headline again, so `plan-v4` dropped the headline: it only repeated the signs |
+| An 8-person joint family always failed the 8-item limit | `plan-v3`: up to 12 items for a large household |
+| The page was a lot of reading | `plan-v4`: actions under 12 words, reasons under 16 |
 | `gpt-oss-20b` passed the guard but said a car emits less CO₂ than a bus | Not added as a backup model |
 
 The pattern: each time the AI made a judgement call wrong, the judgement moved into tested

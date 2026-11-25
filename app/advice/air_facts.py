@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from app.advice.facts import Fact, Kind, Today, clock, clock_span, number
+from app.advice.facts import TIMES, Fact, Kind, Today, clock, clock_span, number
 from app.air.cpcb import IST
 from app.domain.guidance import WindowRule, window_rule
 from app.domain.indoor import cigarettes
@@ -77,6 +77,7 @@ def _pm25_facts(pm25: float, approx: str) -> list[Fact]:
             "Breathing this outdoor air all day is as harmful as smoking "
             f"{approx} {number(cigarettes(pm25))} cigarettes (Berkeley Earth).",
             f"{number(cigarettes(pm25))} cig/day",
+            "Outdoor air all day, as cigarettes",
         ),
     ]
 
@@ -118,6 +119,7 @@ def _timing_facts(today: Today) -> list[Fact]:
             Kind.FORECAST,
             f"Cleanest time: {span(cleanest.starts_at, cleanest.ends_at)}.",
             clock_span(cleanest.starts_at, cleanest.ends_at),
+            f"Cleanest {span(cleanest.starts_at, cleanest.ends_at)}",
         ),
         Fact(
             "worst",
@@ -125,5 +127,7 @@ def _timing_facts(today: Today) -> list[Fact]:
             f"Worst time: {span(worst.starts_at, worst.ends_at)}, with about "
             f"{number(timing.worst_vs_cleanest)} times the PM2.5 of the cleanest time.",
             clock_span(worst.starts_at, worst.ends_at),
+            f"Worst {span(worst.starts_at, worst.ends_at)}, "
+            f"{number(timing.worst_vs_cleanest)}{TIMES} the cleanest",
         ),
     ]

@@ -336,7 +336,7 @@ The haze: `data-haze` 0 to 5 is the measured band's position on CPCB's scale (0 
 - **Title** (800, 1.25rem, 1.15): sample-household names and section headings on the start page.
 - **Sign title** (800, 1.1875rem, 1.15): the action on each smaller board.
 - **Figure** (800, 1.0625rem, no wrap): the right-edge figure on a smaller sign; 1.125rem in distance plates; 1.375rem on the next-step board.
-- **Lead** (600, 16px, muted, max 62ch): the plan's one-sentence summary above the boards.
+- **Lead** (600, 16px, muted, max 62ch): the loading line above the boards while the plan is written.
 - **Body** (400, 16px, 1.5): running text; distance-plate rows cap at 62ch.
 - **Body small** (400, 0.9375rem, 1.4): the reason on a sign or plate, notes, the route legend, the "Later today" group heading (at 800, muted).
 - **Label** (600, 0.875rem): form labels and the plate's summary line.
@@ -377,7 +377,7 @@ The signature component: one board per step.
 - **Next step:** the first sign is larger, with a 3px inner border, the action at sign-next size with a drawn arrow at its right edge, then a thin white rule and a row with the reason on the left and the figure (1.375rem) on the right. The reason stays on this board.
 - **Step (green) / Home (blue):** fixed colours, white legend.
 - **Supplementary plate:** a disclosure inside the board's outer frame, under the bordered legend. Closed, it is an underlined white summary line on the board colour ("Why, and the numbers" on smaller signs, "The numbers behind this" on the next step). Open, it becomes a white 8px plate with Sign Black text: the reason (smaller signs only), then each fact with its kind chip.
-- **Grouping:** a muted lead sentence, the next step, then "Later today", then a collapsed "Earlier today".
+- **Grouping:** the next step, then "Later today", then a collapsed "Earlier today".
 - **Loading:** empty green and blue placeholder boards at reduced opacity, hidden from screen readers; a status line announces when the plan is ready.
 
 ### Air line (top bar)

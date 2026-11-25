@@ -81,13 +81,13 @@ html[data-phase="afternoon"] {
   color-scheme: light;
 }
 html[data-phase="evening"] {
-  --sky: #EBD6A8; --smog: #A79A84; --bar-sky: #F5E6C3;
-  --ink: #221E16; --muted: #3E3829; --panel: #FBF5E8; --line: #D6C296;
+  --sky: #E5BF7E; --smog: #A79A84; --bar-sky: #EDCD93;
+  --ink: #221E16; --muted: #3B3424; --panel: #FBF3E3; --line: #CFAE6E;
   color-scheme: light;
 }
 html[data-phase="dusk"] {
-  --sky: #1E3354; --smog: #3E3B38; --bar-sky: #172A47;
-  --ink: #EEF1F5; --muted: #BAC5D2; --panel: #24395C; --line: #3D5579;
+  --sky: #2B2140; --smog: #3E3B38; --bar-sky: #231A36;
+  --ink: #F2EEF6; --muted: #C9BFD6; --panel: #362A4F; --line: #554670;
   color-scheme: dark;
 }
 html[data-phase="night"] {

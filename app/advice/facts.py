@@ -18,6 +18,7 @@ NOON = 12
 # Typographic marks for figures: an en dash for ranges, a true minus for reductions.
 EN_DASH = "\u2013"
 MINUS = "\u2212"
+TIMES = "\u00d7"
 
 
 class Kind(StrEnum):
@@ -35,13 +36,15 @@ class Fact:
     """One sentence of fact with an id the AI can cite.
 
     `figure` is the fact's key number in a few characters ("6 am", "103 µg/m³"), shown on the
-    right edge of a plan sign the way a road sign shows a distance.
+    right edge of a plan sign the way a road sign shows a distance. `label` names the fact in a
+    few words ("Windows shut") for one-line rows, with the full sentence one tap away.
     """
 
     id: str
     kind: Kind
     text: str
     figure: str | None = None
+    label: str | None = None
 
 
 @dataclass(frozen=True)

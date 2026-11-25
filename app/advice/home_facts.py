@@ -87,6 +87,7 @@ def _commute_fact(index: int, commute: Commute, pm25: float | None, approx: str)
         f"leaving at {clock(commute.leaves_at_hour)}. Each trip: about {trip.minutes} minutes, "
         f"{number(trip.co2_kg)} kg CO₂{inhaled}.",
         f"{number(trip.co2_kg)} kg CO₂",
+        f"{commute.member} by {mode}, {number(commute.km_one_way)} km",
     )
 
 
@@ -99,6 +100,7 @@ def _swap_fact(fact_id: str, member: str, swap: Swap) -> Fact:
         f"{_change(swap.air_change_pct, '% more', '% less', 'polluted air breathed on the way')}; "
         f"{_change(swap.minutes_change, ' minutes longer', ' minutes shorter', 'travel time')}.",
         f"{MINUS}{number(swap.co2_saved_kg_week)} kg CO₂/wk",
+        _swap_label(member, swap),
     )
 
 
@@ -111,6 +113,13 @@ def _change(value: int, up: str, down: str, what: str) -> str:
     if value == 0:
         return f"no change in {what}"
     return f"{abs(value)}{up if value > 0 else down} {what}"
+
+
+def _swap_label(member: str, swap: Swap) -> str:
+    """A swap in a few words, such as "Asha by bus instead" or "Asha in a shared car"."""
+    if swap.people_in_vehicle > 1 and swap.mode in {Mode.CAR, Mode.SUV}:
+        return f"{member} in a shared {swap.mode.value}"
+    return f"{member} by {swap.mode.value} instead"
 
 
 def _mode_label(mode: Mode, people: int, member: str) -> str:
@@ -146,6 +155,7 @@ def _indoor_facts(pm25: float, home: Home, approx: str) -> list[Fact]:
             Kind.ESTIMATE,
             f"With windows open, the main room is {approx} {estimate.windows_open} µg/m³ of PM2.5.",
             f"{estimate.windows_open} µg/m³",
+            "Main room, windows open",
         ),
         Fact(
             "indoor_shut",
@@ -153,6 +163,7 @@ def _indoor_facts(pm25: float, home: Home, approx: str) -> list[Fact]:
             f"With windows shut, the main room is {approx} {estimate.windows_shut} µg/m³, "
             f"{shut_pct}% below outdoors.",
             f"{estimate.windows_shut} µg/m³",
+            "Main room, windows shut",
         ),
     ]
     if estimate.with_purifier is not None:
@@ -164,6 +175,7 @@ def _indoor_facts(pm25: float, home: Home, approx: str) -> list[Fact]:
                 f"{approx} {number(cigarettes(estimate.with_purifier))} cigarettes a day instead "
                 f"of {approx} {number(cigarettes(pm25))} outdoors.",
                 f"{estimate.with_purifier} µg/m³",
+                "Main room, purifier on",
             )
         )
     return facts

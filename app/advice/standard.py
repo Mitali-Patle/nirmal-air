@@ -9,7 +9,6 @@ from app.advice.facts import Fact
 from app.advice.plan import EVERYONE, MAX_ITEMS, Plan, PlanContext, PlanItem, Slot
 from app.domain.guidance import (
     CHANGE_FROM,
-    SENSITIVE_INDOORS_FROM,
     Decision,
     WindowRule,
     routine_decision,
@@ -53,9 +52,7 @@ def standard_plan(context: PlanContext) -> Plan:
     # People's own steps come before home-wide ones, so a large household's cut keeps them.
     items += _conditions(aqi, household, facts)
     items += _home(aqi, household, facts)
-    label = air.aqi.category.label if air else "Unknown"
-    headline = f"{label} air today: {_summary(aqi, has_forecast='cleanest' in facts)}"
-    return Plan(headline=headline, items=items[:MAX_ITEMS])
+    return Plan(items=items[:MAX_ITEMS])
 
 
 def _item(slot: Slot, member: str, action: str, fact: Fact) -> PlanItem:
@@ -66,18 +63,6 @@ def _slot(hour: int) -> Slot:
     if hour < AFTERNOON_FROM:
         return Slot.MORNING
     return Slot.AFTERNOON if hour < EVENING_FROM else Slot.EVENING
-
-
-def _summary(aqi: int | None, *, has_forecast: bool) -> str:
-    if aqi is None:
-        if has_forecast:
-            return "no recent measurement nearby, so use the cleanest time for outdoor plans."
-        return "no recent measurement or forecast nearby, so keep outdoor time short."
-    if aqi < CHANGE_FROM:
-        return "normal routines are fine."
-    if aqi < SENSITIVE_INDOORS_FROM:
-        return "keep windows shut at the worst times and use the cleanest hours outdoors."
-    return "keep windows shut, keep outdoor time short and use the cleanest hours."
 
 
 def _windows(aqi: int | None, facts: dict[str, Fact]) -> PlanItem:

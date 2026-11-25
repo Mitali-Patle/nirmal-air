@@ -31,7 +31,7 @@ NirmalAir tells each household, from today's measured air, what to do and why. I
 - Stack: FastAPI, Jinja templates, htmx; no React. Hosted on Vercel (Mumbai). Strict CSP: no inline scripts or styles, no third-party scripts.
 - Data: CPCB via data.gov.in (measured, hourly, station name, distance and "measured at" time always shown); Open-Meteo forecast only to rank hours, labelled forecast; estimates labelled estimate.
 - Household profile and a 7-day log live in a signed cookie; no accounts.
-- AI chain Groq → Gemini → labelled "Standard advice (not AI-generated)". Hindi output for the AI text is planned; the interface stays English.
+- AI chain Groq → Gemini → labelled "Standard advice (not AI-generated)". The AI text can be written in Hindi; the interface stays English.
 - States the screen must handle: loading, unknown place, nearest station far away, station not reporting, AI unavailable, off-topic question.
 - Not offered: medical advice, product sales, indoor sensor readings.
 

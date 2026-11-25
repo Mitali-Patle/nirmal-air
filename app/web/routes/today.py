@@ -58,7 +58,6 @@ async def plan(request: Request, lang: Lang = "en") -> Response:
     result = await chain.run(PLAN_TASK, PlanContext(day.today, facts, _language(lang)))
     context = {
         "board": sign_board(result.value, facts, day.today.now),
-        "headline": result.value.headline,
         "provenance": result.provenance,
         "kind_labels": KIND_LABELS,
     }

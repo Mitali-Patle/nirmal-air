@@ -29,7 +29,6 @@ def item(member: str, why: str, fact_ids: list[str], slot: Slot = Slot.MORNING) 
 
 def good_plan() -> Plan:
     return Plan(
-        headline="Very Poor air (AQI 326): keep windows shut.",
         items=[
             item("Dadi", "Her walk moves indoors.", ["routine_2"]),
             item(
@@ -108,24 +107,15 @@ def test_items_with_invented_numbers_or_people_are_dropped() -> None:
     assert checked.items == plan.items
 
 
-@pytest.mark.parametrize(
-    ("change", "problem"),
-    [
-        ({"headline": "AQI 999 today"}, "headline: numbers not in the facts: [999.0]"),
-        ({"items": good_plan().items[1:]}, "no item for Dadi"),
-    ],
-)
-def test_bad_headlines_and_missing_members_are_sent_back(
-    change: dict[str, object], problem: str
-) -> None:
+def test_a_plan_that_leaves_out_a_sensitive_member_is_sent_back() -> None:
     with pytest.raises(OutputRejectedError) as caught:
-        check_plan(good_plan().model_copy(update=change), context())
-    assert problem in caught.value.problems
+        check_plan(good_plan().model_copy(update={"items": good_plan().items[1:]}), context())
+    assert "no item for Dadi" in caught.value.problems
 
 
 def test_too_few_items_are_sent_back() -> None:
     alone = Household.model_validate({"members": [{"name": "Asha", "role": "adult"}]})
-    plan = Plan(headline="Fine.", items=[item("Asha", "Fine.", ["air_now"])])
+    plan = Plan(items=[item("Asha", "Fine.", ["air_now"])])
     with pytest.raises(OutputRejectedError, match="only 1 items"):
         check_plan(plan, context(today(household=alone)))
 
@@ -154,7 +144,6 @@ def test_standard_advice_on_very_poor_air() -> None:
     assert ("Dadi", "Keep today's walk indoors.") in actions
     assert ("Everyone", "Run the purifier in the main room with doors shut.") in actions
     assert ("Dadi", "Keep usual medicines handy; see a doctor if breathing gets worse.") in actions
-    assert plan.headline.startswith("Very Poor air today")
     assert check_plan(plan, context()) == plan  # it would pass the AI's own checks
 
 
@@ -163,19 +152,6 @@ def test_standard_advice_on_clean_air() -> None:
     actions = [entry.action for entry in plan.items]
     assert actions[0] == "Open the windows to air the house."
     assert "Run the purifier in the main room with doors shut." not in actions
-    assert plan.headline == "Satisfactory air today: normal routines are fine."
-
-
-@pytest.mark.parametrize(
-    ("aqi", "headline"),
-    [
-        (150, "Moderate air today: keep windows shut at the worst times"),
-        (None, "Unknown air today: no recent measurement nearby, so use the cleanest time"),
-    ],
-)
-def test_standard_headlines(aqi: int | None, headline: str) -> None:
-    day = today(measured(aqi)) if aqi else today(with_air=False)
-    assert standard_plan(context(day)).headline.startswith(headline)
 
 
 def test_standard_advice_without_any_data() -> None:

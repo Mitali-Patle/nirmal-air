@@ -46,8 +46,8 @@
       {% endif %}
       {% if facts.cleanest is defined %}
       <ul class="route-legend">
-        <li><i class="key key-clean" aria-hidden="true"></i>{{ facts.cleanest.text }}</li>
-        <li><i class="key key-worst" aria-hidden="true"></i>{{ facts.worst.text }}</li>
+        <li><i class="key key-clean" aria-hidden="true"></i>{{ facts.cleanest.label }}</li>
+        <li><i class="key key-worst" aria-hidden="true"></i>{{ facts.worst.label }}</li>
       </ul>
       {% else %}
       <p class="note">The forecast is not available right now, so the cleanest time is not shown.</p>
