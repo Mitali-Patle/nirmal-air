@@ -132,8 +132,9 @@ def swaps(commute: Commute) -> list[Swap]:
 def offered_swaps(commute: Commute, *, sensitive: bool) -> list[Swap]:
     """Swaps in the order to suggest them; the first is the one the plan offers.
 
-    For someone more sensitive to polluted air, swaps that do not add to the air breathed on
-    the way come first, so the plan never trades their health for CO₂.
+    For someone more sensitive to polluted air, only swaps that do not add to the air breathed
+    on the way are offered, so the plan never trades their health for CO₂. When there is no
+    such swap, nothing is offered.
 
     Args:
         commute: The trip as made today.
@@ -145,7 +146,7 @@ def offered_swaps(commute: Commute, *, sensitive: bool) -> list[Swap]:
     found = swaps(commute)
     if not sensitive:
         return found
-    return sorted(found, key=lambda swap: swap.air_change_pct > 0)
+    return [swap for swap in found if swap.air_change_pct <= 0]
 
 
 def _candidates(commute: Commute) -> list[tuple[Mode, int]]:

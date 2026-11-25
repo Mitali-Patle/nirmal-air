@@ -2,7 +2,7 @@ import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
-from app.domain.commute import swaps, trip_impact
+from app.domain.commute import offered_swaps, swaps, trip_impact
 from app.domain.household import Commute, Home, Mode
 from app.domain.indoor import cigarettes, indoor_estimates, indoor_pm25
 
@@ -92,3 +92,9 @@ def test_indoor_air_is_never_dirtier_than_outdoor_air() -> None:
 )
 def test_cigarette_equivalence(pm25: float, hours: float, expected: float) -> None:
     assert cigarettes(pm25, hours) == expected
+
+
+def test_a_sensitive_commuter_with_no_safe_swap_is_offered_none() -> None:
+    full_car = commute(people_in_vehicle=3)  # carpool already; only the bus is left
+    assert [swap.mode for swap in offered_swaps(full_car, sensitive=False)] == [Mode.BUS]
+    assert offered_swaps(full_car, sensitive=True) == []

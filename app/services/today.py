@@ -56,7 +56,9 @@ class TodayService:
         self._forecasts = forecasts or TtlCache(FORECAST_TTL_S, FORECAST_KEEP_S)
         self._weathers: TtlCache[Weather] = TtlCache(WEATHER_TTL_S, WEATHER_TTL_S)
 
-    async def day(self, place: PlaceChoice, household: Household, now: datetime) -> Day:
+    async def day(
+        self, place: PlaceChoice, household: Household, now: datetime, *, weather: bool = False
+    ) -> Day:
         """Measured air and forecast for a place, fetched at the same time.
 
         Either source may be missing (no station reporting, forecast down); the page and
@@ -66,15 +68,18 @@ class TodayService:
             place: Where the household is.
             household: Who lives there.
             now: The current time.
+            weather: Also fetch the current weather, which only the page's sky drawing uses.
 
         Returns:
             The day's data.
         """
-        air, hours, weather = await asyncio.gather(
-            self._measured(place, now), self._forecast(place, now), self._weather(place)
+        air, hours, current = await asyncio.gather(
+            self._measured(place, now),
+            self._forecast(place, now),
+            self._weather(place) if weather else _nothing(),
         )
         today = Today(place.label, now, air, day_timing(hours), household)
-        return Day(today, hours, weather)
+        return Day(today, hours, current)
 
     async def _weather(self, place: PlaceChoice) -> Weather | None:
         key = f"{place.lat:.2f},{place.lon:.2f}"
@@ -108,6 +113,10 @@ class TodayService:
             return _from_this_hour(cached.value, now) if cached is not None else ()
         self._forecasts.put(key, hours)
         return hours
+
+
+async def _nothing() -> None:
+    return None
 
 
 def _from_this_hour(hours: tuple[HourlyPm25, ...], now: datetime) -> tuple[HourlyPm25, ...]:

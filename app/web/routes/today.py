@@ -33,7 +33,7 @@ async def today(request: Request, lang: Lang = "en") -> Response:
     Returns:
         The page, or a redirect to the start page when no household is saved.
     """
-    found = await current_day(request)
+    found = await current_day(request, weather=True)
     if found is None:
         return RedirectResponse("/", status.HTTP_303_SEE_OTHER)
     return templates.TemplateResponse(request, "today.html", _context(request, *found, lang))
@@ -105,11 +105,12 @@ async def ask(
     return templates.TemplateResponse(request, "partials/answer.html", page)
 
 
-async def current_day(request: Request) -> tuple[PlaceChoice, Day] | None:
+async def current_day(request: Request, *, weather: bool = False) -> tuple[PlaceChoice, Day] | None:
     """The saved household's place and today's data for it.
 
     Args:
         request: The incoming request.
+        weather: Also fetch the weather (only the Today page draws the sky).
 
     Returns:
         The place and the day, or None when no household is saved.
@@ -118,7 +119,7 @@ async def current_day(request: Request) -> tuple[PlaceChoice, Day] | None:
     if saved is None:
         return None
     service: TodayService = request.app.state.today
-    return saved[0], await service.day(*saved, request.app.state.clock())
+    return saved[0], await service.day(*saved, request.app.state.clock(), weather=weather)
 
 
 def _language(lang: str) -> Language:

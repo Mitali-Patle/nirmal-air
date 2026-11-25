@@ -16,8 +16,15 @@ from collections.abc import Iterable
 # A word that starts with letters and ends in digits: PM2.5, PM10, NO2, N95, FFP2.
 _NAMED = re.compile(r"\b[^\W\d_]+\d+(?:\.\d+)?\b")
 _NUMBER = re.compile(r"\d+(?:[.,]\d+)*")
-# Words that state an amount without digits ("twice the PM2.5") need a source too.
-_NUMBER_WORDS = re.compile(r"\b(twice|thrice|double|triple|quadruple|half)\b", re.IGNORECASE)
+# Words that state an amount without digits ("twice the PM2.5", "दोगुना") need a source too.
+# Word edges are written out because Devanagari vowel signs are not "word" characters to \b.
+_EDGE = r"[\w\u0900-\u097F]"
+_NUMBER_WORDS = re.compile(
+    rf"(?<!{_EDGE})(twice|thrice|double|triple|quadruple|half"
+    r"|दोगुना|दोगुनी|दोगुने|दुगना|दुगनी|दुगुना|तिगुना|तिगुनी|आधा|आधी|आधे)"
+    rf"(?!{_EDGE})",
+    re.IGNORECASE,
+)
 
 
 def numbers_in(text: str) -> set[float]:
@@ -57,8 +64,40 @@ def unknown_numbers(text: str, allowed: Iterable[str]) -> set[float]:
     return numbers_in(text) - known
 
 
+class FactGuard:
+    """The amounts a set of facts allows, worked out once and used to check many sentences."""
+
+    def __init__(self, allowed: Iterable[str]) -> None:
+        sources = list(allowed)
+        self._numbers = set().union(*(numbers_in(source) for source in sources))
+        self._words = {
+            word.casefold() for source in sources for word in _NUMBER_WORDS.findall(source)
+        }
+
+    def problems(self, text: str) -> list[str]:
+        """Everything in `text` that states an amount the facts do not: digits and number words.
+
+        Args:
+            text: An AI-written sentence.
+
+        Returns:
+            Problems to send back to the model; empty when the sentence is clean.
+
+        >>> FactGuard(["Worst time: 7 pm to 10 pm."]).problems("दोगुना खराब, 7 pm के बाद")
+        ["number words not in the facts: ['दोगुना']"]
+        """
+        problems = []
+        numbers = numbers_in(text) - self._numbers
+        if numbers:
+            problems.append(f"numbers not in the facts: {sorted(numbers)}")
+        words = {word.casefold() for word in _NUMBER_WORDS.findall(text)} - self._words
+        if words:
+            problems.append(f"number words not in the facts: {sorted(words)}")
+        return problems
+
+
 def guard_problems(text: str, allowed: Iterable[str]) -> list[str]:
-    """Everything in `text` that states an amount the facts do not: digits and number words.
+    """Check one sentence against the facts (see `FactGuard` to check many).
 
     Args:
         text: An AI-written sentence.
@@ -70,13 +109,4 @@ def guard_problems(text: str, allowed: Iterable[str]) -> list[str]:
     >>> guard_problems("Twice as bad after 7 pm", ["Worst time: 7 pm to 10 pm."])
     ["number words not in the facts: ['twice']"]
     """
-    sources = list(allowed)
-    problems = []
-    numbers = unknown_numbers(text, sources)
-    if numbers:
-        problems.append(f"numbers not in the facts: {sorted(numbers)}")
-    known_words = {word.casefold() for source in sources for word in _NUMBER_WORDS.findall(source)}
-    words = {word.casefold() for word in _NUMBER_WORDS.findall(text)} - known_words
-    if words:
-        problems.append(f"number words not in the facts: {sorted(words)}")
-    return problems
+    return FactGuard(allowed).problems(text)

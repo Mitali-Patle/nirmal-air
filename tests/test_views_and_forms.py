@@ -129,7 +129,38 @@ async def test_an_old_forecast_is_used_when_open_meteo_is_down(client: Any) -> N
         respx.get(FORECAST_URL).respond(503)
         respx.get(WEATHER_URL).respond(json={"current": {"cloud_cover": 90, "precipitation": 1.2}})
         day = await service.day(
-            PlaceChoice("Delhi", 28.61, 77.21), FAMILY, earlier.replace(hour=9, minute=40)
+            PlaceChoice("Delhi", 28.61, 77.21),
+            FAMILY,
+            earlier.replace(hour=9, minute=40),
+            weather=True,
         )
     assert [hour.starts_at.hour for hour in day.hours] == [9, 10, 11]
     assert day.weather == Weather(90, raining=True)
+
+
+def test_signs_about_the_home_are_blue_whoever_they_are_for() -> None:
+    facts = [Fact("windows", Kind.GUIDANCE, "Windows."), Fact("routine_1", Kind.GUIDANCE, "Walk.")]
+    plan = Plan(
+        items=[
+            PlanItem(
+                slot=Slot.EVENING,
+                member="Asha",
+                action="Shut it.",
+                why="Air.",
+                fact_ids=["windows"],
+            ),
+            PlanItem(
+                slot=Slot.EVENING,
+                member="Everyone",
+                action="Walk in.",
+                why="Air.",
+                fact_ids=["routine_1"],
+            ),
+            PlanItem(
+                slot=Slot.EVENING, member="Everyone", action="Rest.", why="Air.", fact_ids=["gone"]
+            ),
+        ],
+    )
+    board = sign_board(plan, facts, datetime(2026, 11, 25, 18, tzinfo=IST))
+    assert board.next is not None
+    assert [board.next.home, *(sign.home for sign in board.later)] == [True, False, True]

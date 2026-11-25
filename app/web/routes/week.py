@@ -41,4 +41,4 @@ async def log_step(request: Request, step: Annotated[str, Form(max_length=20)]) 
     entries = add_entry(load_log(request), LogEntry(day, option.id, option.label, option.impact))
     save_log(request, entries)
     context = {"week": week_view(entries, options, day), "announce": f"Logged: {option.label}."}
-    return templates.TemplateResponse(request, "partials/week.html", context)
+    return templates.TemplateResponse(request, "partials/week_logged.html", context)

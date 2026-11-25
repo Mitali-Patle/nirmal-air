@@ -117,7 +117,7 @@ def test_a_plan_that_leaves_out_a_sensitive_member_is_sent_back() -> None:
 def test_too_few_items_are_sent_back() -> None:
     alone = Household.model_validate({"members": [{"name": "Asha", "role": "adult"}]})
     plan = Plan(items=[item("Asha", "Fine.", ["air_now"])])
-    with pytest.raises(OutputRejectedError, match="only 1 items"):
+    with pytest.raises(OutputRejectedError, match="only 1 usable items"):
         check_plan(plan, context(today(household=alone)))
 
 

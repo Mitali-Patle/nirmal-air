@@ -60,7 +60,7 @@ def live() -> Iterator[respx.MockRouter]:
     with respx.mock(assert_all_called=False) as router:
         router.get(CPCB_URL).respond(json=load_fixture("cpcb_talkatora.json"))
         router.get(FORECAST_URL).respond(json=load_fixture("forecast_delhi.json"))
-        router.get(WEATHER_URL).respond(json=load_fixture("weather_delhi.json"))
+        router.get(WEATHER_URL, name="weather").respond(json=load_fixture("weather_delhi.json"))
         router.get(GEOCODING_URL).respond(json=load_fixture("places_andheri.json"))
         yield router
 
@@ -296,7 +296,8 @@ def test_ticking_a_step_updates_this_week(live: respx.MockRouter) -> None:
     csrf = token(client, "/today")
     fragment = client.post("/log", data={"csrf": csrf, "step": "swap-1"}).text
     assert 'aria-pressed="true"' in fragment
-    assert "Logged: Asha went by bus." in fragment
+    assert "Logged: Asha went by bus." in fragment and 'hx-swap-oob="true"' in fragment
+    assert 'aria-label="I did this: Asha went by bus"' in fragment
     assert "3 kg</span> CO₂ avoided" in fragment
     client.post("/log", data={"csrf": csrf, "step": "swap-1"})
     assert "1 step logged in the last 7 days" in client.get("/today").text
@@ -420,3 +421,31 @@ def test_today_draws_the_sky_from_the_weather(live: respx.MockRouter) -> None:
     rainy = make_client()
     load_sample(rainy)
     assert '<div class="sky sky-rain" aria-hidden="true">' in rainy.get("/today").text
+
+
+def test_only_the_today_page_asks_for_the_weather(live: respx.MockRouter) -> None:
+    client = make_client()
+    load_sample(client)
+    weather = live.routes["weather"]
+    client.get("/today/plan")
+    assert weather.call_count == 0
+    client.get("/today")
+    assert weather.call_count == 1
+
+
+def test_a_too_short_question_says_how_long_to_make_it(live: respx.MockRouter) -> None:
+    client = make_client()
+    load_sample(client)
+    fragment = client.post(
+        "/ask",
+        data={"question": "x", "csrf": token(client, "/today")},
+        headers={"HX-Request": "true"},
+    )
+    assert fragment.status_code == 422 and "Please ask in 3 to 200 characters." in fragment.text
+
+
+def test_a_chosen_theme_is_named_instead_of_the_sky(live: respx.MockRouter) -> None:
+    client = make_client()
+    load_sample(client)
+    client.post("/theme", data={"csrf": token(client), "theme": "dark"})
+    assert "You chose dark colours" in client.get("/today").text

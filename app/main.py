@@ -59,7 +59,7 @@ def create_app(settings: Settings | None = None, http: httpx.AsyncClient | None 
     app.state.places = PlaceFinder(http)
     # Tests replace the clock so recorded CPCB and forecast data count as current.
     app.state.clock = lambda: datetime.now(IST)
-    app.state.ai_limits = AILimits()
+    app.state.ai_limits = AILimits(behind_proxy=settings.is_production)
     app.state.ai = AIChain(
         default_providers(http, _secret(settings.groq_api_key), _secret(settings.gemini_api_key))
     )

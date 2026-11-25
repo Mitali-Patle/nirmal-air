@@ -12,7 +12,7 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.advice.facts import Fact, Today, clock
-from app.ai.guard import guard_problems
+from app.ai.guard import FactGuard
 from app.ai.task import OutputRejectedError
 
 PLAN_VERSION = "plan-v4"
@@ -144,8 +144,9 @@ def check_plan(plan: Plan, context: PlanContext) -> Plan:
     members = {member.name for member in context.today.household.members} | {EVERYONE}
     problems: list[str] = []
     kept = []
+    guard = FactGuard(texts.values())
     for index, item in enumerate(plan.items, start=1):
-        issues = _item_issues(item, texts, members)
+        issues = _item_issues(item, texts, members, guard)
         problems += [f"item {index}: {issue}" for issue in issues]
         if not issues:
             kept.append(item)
@@ -153,7 +154,7 @@ def check_plan(plan: Plan, context: PlanContext) -> Plan:
     problems += [f"no item for {name}" for name in sorted(missing)]
     if missing or len(kept) < MIN_ITEMS:
         raise OutputRejectedError(
-            problems or [f"only {len(kept)} items; write at least {MIN_ITEMS + 1}"]
+            problems or [f"only {len(kept)} usable items; the rules ask for 4 to 8"]
         )
     return plan.model_copy(update={"items": kept})
 
@@ -166,12 +167,14 @@ def _members_needing_items(context: PlanContext) -> set[str]:
     return names | {commute.member for commute in household.commutes}
 
 
-def _item_issues(item: PlanItem, texts: dict[str, str], members: set[str]) -> list[str]:
+def _item_issues(
+    item: PlanItem, texts: dict[str, str], members: set[str], guard: FactGuard
+) -> list[str]:
     issues = []
     if item.member not in members:
         issues.append(f"member {item.member!r} is not in the household")
     unknown = [fact_id for fact_id in item.fact_ids if fact_id not in texts]
     if unknown:
         issues.append(f"unknown fact ids {unknown}")
-    issues += guard_problems(f"{item.action} {item.why}", texts.values())
+    issues += guard.problems(f"{item.action} {item.why}")
     return issues

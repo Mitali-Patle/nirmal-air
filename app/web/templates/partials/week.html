@@ -18,7 +18,7 @@
       <form method="post" action="/log" hx-post="/log" hx-target="#week" hx-swap="outerHTML">
         <input type="hidden" name="csrf" value="{{ csrf_token }}">
         <input type="hidden" name="step" value="{{ option.id }}">
-        <button type="submit" class="quiet" id="log-{{ option.id }}" aria-pressed="{{ 'true' if done else 'false' }}">I did this</button>
+        <button type="submit" class="quiet" id="log-{{ option.id }}" aria-pressed="{{ 'true' if done else 'false' }}" aria-label="I did this: {{ option.label }}">I did this</button>
       </form>
     </li>
     {% endfor %}
@@ -37,5 +37,4 @@
     <ul>{% for entry in week.recent %}<li>{{ entry.day.strftime("%a %d %b") }}: {{ entry.label }} ({{ impact(entry.impact) }})</li>{% endfor %}</ul>
   </details>
   {% endif %}
-  <p id="week-status" class="visually-hidden" role="status">{{ announce|default("") }}</p>
 </section>

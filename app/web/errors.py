@@ -19,6 +19,9 @@ TITLES = {
 }
 
 
+ASK_LENGTH = "Please ask in 3 to 200 characters."
+
+
 def register_error_handlers(app: FastAPI) -> None:
     """Show HTTP and validation errors as readable pages.
 
@@ -33,7 +36,8 @@ def register_error_handlers(app: FastAPI) -> None:
         return _render(request, code, message)
 
     async def invalid_request(request: Request, error: Exception) -> Response:
-        return _render(request, 422, None)
+        message = ASK_LENGTH if request.url.path == "/ask" else None
+        return _render(request, 422, message)
 
     app.add_exception_handler(StarletteHTTPException, http_error)
     app.add_exception_handler(RequestValidationError, invalid_request)

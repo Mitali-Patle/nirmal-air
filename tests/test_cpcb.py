@@ -76,3 +76,15 @@ async def test_a_timeout_raises(client: httpx.AsyncClient) -> None:
     respx.get(CPCB_URL).mock(side_effect=httpx.ReadTimeout("stalled"))
     with pytest.raises(AirDataUnavailableError, match="ReadTimeout"):
         await fetch_station(client, "test-key", STATION)
+
+
+def test_decimal_values_count_and_one_bad_row_does_not_hide_the_rest() -> None:
+    rows = [
+        {"pollutant_id": "PM2.5", "avg_value": "123.6", "last_update": "23-11-2026 17:00:00"},
+        {"pollutant_id": "PM10", "avg_value": "180", "last_update": "not a time"},
+        {"pollutant_id": "NO2", "avg_value": "-4", "last_update": "23-11-2026 17:00:00"},
+        {"pollutant_id": "CO", "avg_value": "nan", "last_update": "23-11-2026 16:00:00"},
+        {"pollutant_id": "SO2", "avg_value": "inf", "last_update": "23-11-2026 16:00:00"},
+    ]
+    reading = parse_station({"records": rows}, STATION)
+    assert dict(reading.sub_indices) == {Pollutant.PM25: 124}

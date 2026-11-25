@@ -21,6 +21,8 @@ from app.web.session import ThemeChoice
 DARK_PHASES = frozenset({Phase.DUSK, Phase.NIGHT})
 SLOT_ORDER = (Slot.MORNING, Slot.AFTERNOON, Slot.EVENING)
 TICK_EVERY_HOURS = 6
+# Steps about the home (windows, the main room) are blue signs; steps people take are green.
+HOME_FACTS = ("windows", "indoor_", "home")
 FIGURE_PREFERENCE = ("swap_", "routine_", "windows", "indoor_", "cleanest", "worst")
 
 
@@ -143,9 +145,10 @@ def _sign(item: PlanItem, by_id: dict[str, Fact]) -> Sign:
     cited = tuple(by_id[fact_id] for fact_id in item.fact_ids if fact_id in by_id)
     with_figures = sorted((fact for fact in cited if fact.figure), key=_figure_rank)
     figure = with_figures[0].figure if with_figures else None
-    return Sign(
-        item.member, item.action, item.why, figure, item.member == EVERYONE, item.slot, cited
+    home = (
+        any(fact.id.startswith(HOME_FACTS) for fact in cited) if cited else item.member == EVERYONE
     )
+    return Sign(item.member, item.action, item.why, figure, home, item.slot, cited)
 
 
 def _figure_rank(fact: Fact) -> int:

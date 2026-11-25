@@ -57,7 +57,9 @@ flowchart LR
   log are packed (compact JSON, compressed), so the largest household with a full week stays
   well under the 4 KB cookie limit (tested). CSRF tokens on every POST.
 - **AI quota:** routes that call a model are rate-limited per client (20 in 10 minutes) and
-  per instance (60 a minute). Over the limit, the plan is the labelled standard advice.
+  per instance (60 a minute). Counts live in each serverless instance's memory, so they stop a
+  loop or a script rather than a determined attacker spread over many instances. In production
+  the client is the address Vercel's proxy writes; forwarded headers are ignored elsewhere. Over the limit, the plan is the labelled standard advice.
   Cached answers do not count.
 - **Errors:** 403, 404 and 422 render as readable pages (or htmx fragments) that never echo
   what was sent.

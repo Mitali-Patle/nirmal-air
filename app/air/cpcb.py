@@ -104,15 +104,26 @@ def parse_station(payload: object, station: str) -> StationReading:
         rows = _Payload.model_validate(payload).records
     except ValidationError as error:
         raise AirDataUnavailableError("CPCB returned an unexpected payload") from error
-    known = {pollutant.value for pollutant in Pollutant}
-    usable = [row for row in rows if row.pollutant_id in known and row.avg_value.isdigit()]
-    if not usable:
+    readings = [reading for row in rows if (reading := _read_row(row)) is not None]
+    if not readings:
         raise AirDataUnavailableError(f"No readings for {station.strip()}")
-    try:
-        measured_at = max(
-            datetime.strptime(row.last_update, TIME_FORMAT).replace(tzinfo=IST) for row in usable
-        )
-    except ValueError as error:
-        raise AirDataUnavailableError("CPCB returned an unreadable time") from error
-    sub_indices = {Pollutant(row.pollutant_id): int(row.avg_value) for row in usable}
+    measured_at = max(time for _, _, time in readings)
+    sub_indices = {pollutant: value for pollutant, value, _ in readings}
     return StationReading(station=station, measured_at=measured_at, sub_indices=sub_indices)
+
+
+def _read_row(row: _Row) -> tuple[Pollutant, int, datetime] | None:
+    """One row's pollutant, sub-index and time, or None for "NA", unknown or unreadable rows.
+
+    Each row is read on its own, so one bad row never hides the station's other pollutants.
+    Values such as "123.0" are accepted and rounded.
+    """
+    try:
+        pollutant = Pollutant(row.pollutant_id)
+        value = round(float(row.avg_value))
+        measured_at = datetime.strptime(row.last_update, TIME_FORMAT).replace(tzinfo=IST)
+    except (ValueError, OverflowError):  # "NA", "nan", "inf", unknown ids, bad times
+        return None
+    if value < 0:
+        return None
+    return pollutant, value, measured_at

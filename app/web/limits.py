@@ -13,6 +13,7 @@ from fastapi import Request
 PER_CLIENT = (20, 10 * 60)  # 20 AI requests per client in 10 minutes
 OVERALL = (60, 60)  # 60 AI requests per instance per minute
 MAX_CLIENTS = 2048
+PROXY_HEADERS = ("x-vercel-forwarded-for", "x-real-ip", "x-forwarded-for")
 
 
 class RateLimiter:
@@ -49,11 +50,20 @@ class RateLimiter:
 
 
 class AILimits:
-    """The per-client and overall limits together."""
+    """The per-client and overall limits together.
 
-    def __init__(self, clock: Callable[[], float] = time.monotonic) -> None:
+    Args:
+        behind_proxy: True on Vercel, where the platform sets the client's address in a header
+            it does not let clients override; elsewhere the socket peer is used.
+        clock: Monotonic clock (tests pass a fake one).
+    """
+
+    def __init__(
+        self, *, behind_proxy: bool = False, clock: Callable[[], float] = time.monotonic
+    ) -> None:
         self._per_client = RateLimiter(*PER_CLIENT, clock=clock)
         self._overall = RateLimiter(*OVERALL, clock=clock)
+        self._behind_proxy = behind_proxy
 
     def allow(self, request: Request) -> bool:
         """Whether this request may call a model now.
@@ -64,19 +74,27 @@ class AILimits:
         Returns:
             True when both the client's and the overall limit allow it.
         """
-        return self._per_client.allow(client_key(request)) and self._overall.allow("all")
+        key = client_key(request, behind_proxy=self._behind_proxy)
+        return self._per_client.allow(key) and self._overall.allow("all")
 
 
-def client_key(request: Request) -> str:
-    """The client's address: Vercel's forwarded address in production, else the socket peer.
+def client_key(request: Request, *, behind_proxy: bool) -> str:
+    """The client's address.
+
+    Behind Vercel's proxy the platform writes these headers itself (it overwrites any a client
+    sends), so they can be trusted there. Elsewhere they are ignored, because anyone can send
+    them.
 
     Args:
         request: The incoming request.
+        behind_proxy: Whether the app runs behind Vercel's proxy.
 
     Returns:
         An address string.
     """
-    forwarded = request.headers.get("x-forwarded-for", "")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
+    if behind_proxy:
+        for header in PROXY_HEADERS:
+            forwarded = request.headers.get(header, "")
+            if forwarded:
+                return forwarded.split(",")[0].strip()
     return request.client.host if request.client else "unknown"
