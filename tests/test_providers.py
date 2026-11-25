@@ -5,6 +5,7 @@ import pytest
 import respx
 from pydantic import BaseModel
 
+from app.ai.models import default_providers
 from app.ai.providers import (
     GEMINI_URL,
     GROQ_URL,
@@ -13,7 +14,6 @@ from app.ai.providers import (
     LLMRequest,
     ProviderError,
     RateLimitedError,
-    default_providers,
 )
 
 

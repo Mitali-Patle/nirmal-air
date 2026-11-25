@@ -13,7 +13,7 @@ from pydantic import SecretStr
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.ai.chain import AIChain
-from app.ai.providers import default_providers
+from app.ai.models import default_providers
 from app.air.cpcb import IST, USER_AGENT
 from app.air.lookup import AirLookup
 from app.air.places import PlaceFinder
@@ -51,6 +51,19 @@ def create_app(settings: Settings | None = None, http: httpx.AsyncClient | None 
         openapi_url=None if settings.is_production else "/openapi.json",
         lifespan=_lifespan,
     )
+    _add_services(app, settings, http)
+    _add_middleware(app, settings)
+    register_error_handlers(app)
+    for router in (health.router, start.router, today.router, week.router):
+        app.include_router(router)
+    if not settings.is_production:
+        # In production Vercel serves public/ from its CDN; mount it for local runs and tests.
+        app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+    return app
+
+
+def _add_services(app: FastAPI, settings: Settings, http: httpx.AsyncClient) -> None:
+    """The air lookup, places, AI chain and limits the routes use, kept on `app.state`."""
     app.state.settings = settings
     app.state.http = http
     key = settings.data_gov_api_key
@@ -63,6 +76,10 @@ def create_app(settings: Settings | None = None, http: httpx.AsyncClient | None 
     app.state.ai = AIChain(
         default_providers(http, _secret(settings.groq_api_key), _secret(settings.gemini_api_key))
     )
+
+
+def _add_middleware(app: FastAPI, settings: Settings) -> None:
+    """The signed session cookie and the security headers."""
     app.add_middleware(
         SessionMiddleware,
         # Outside production a fresh secret per start is fine: sessions just reset.
@@ -73,13 +90,6 @@ def create_app(settings: Settings | None = None, http: httpx.AsyncClient | None 
         https_only=settings.is_production,
     )
     app.add_middleware(SecurityHeadersMiddleware, hsts=settings.is_production)
-    register_error_handlers(app)
-    for router in (health.router, start.router, today.router, week.router):
-        app.include_router(router)
-    if not settings.is_production:
-        # In production Vercel serves public/ from its CDN; mount it for local runs and tests.
-        app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
-    return app
 
 
 def _secret(value: SecretStr | None) -> str | None:

@@ -1,11 +1,10 @@
 """Facts about the household: who lives here, routines, commutes and swaps, and the home."""
 
 from app.advice.facts import MINUS, Fact, Kind, Today, clock, number
-from app.domain.assumptions import TYPICAL_PURIFIER_CADR_M3H
+from app.advice.indoor_facts import home_fact, indoor_facts
 from app.domain.commute import Swap, offered_swaps, trip_impact
 from app.domain.guidance import routine_decision
-from app.domain.household import Commute, Home, Household, Mode
-from app.domain.indoor import cigarettes, indoor_estimates
+from app.domain.household import Commute, Household, Mode
 
 SWAPS_PER_COMMUTE = 2
 
@@ -28,9 +27,9 @@ def household_facts(today: Today) -> list[Fact]:
         ranked = offered_swaps(commute, sensitive=commute.member in sensitive)
         for rank, swap in enumerate(ranked[:SWAPS_PER_COMMUTE], start=1):
             facts.append(_swap_fact(f"swap_{index}_{rank}", commute.member, swap))
-    facts.append(_home_fact(household.home))
+    facts.append(home_fact(household.home))
     if pm25 is not None:
-        facts += _indoor_facts(pm25, household.home, today.approx)
+        facts += indoor_facts(pm25, household.home, today.approx)
     return facts
 
 
@@ -127,72 +126,3 @@ def _mode_label(mode: Mode, people: int, member: str) -> str:
     if people > 1 and mode in {Mode.CAR, Mode.SUV}:
         return f"{mode.value} shared by {people} people ({member} and {people - 1} others)"
     return mode.value
-
-
-def _home_fact(home: Home) -> Fact:
-    habits = [f"cooking on {home.cooking_fuel.value}"]
-    if home.incense_or_coils:
-        habits.append("incense or mosquito coils are used")
-    if home.smoking_indoors:
-        habits.append("someone smokes indoors")
-    purifier = (
-        f"an air purifier ({home.purifier_cadr_m3h} m³/h)"
-        if home.purifier_cadr_m3h
-        else "no air purifier"
-    )
-    return Fact(
-        "home",
-        Kind.HOUSEHOLD,
-        f"Main room {home.room_sqft} sq ft with {purifier}; {'; '.join(habits)}.",
-    )
-
-
-def _purifier_if_fact(pm25: float, home: Home, approx: str) -> Fact:
-    """What a typical purifier would change, for a home that has none."""
-    typical = home.model_copy(update={"purifier_cadr_m3h": TYPICAL_PURIFIER_CADR_M3H})
-    level = indoor_estimates(pm25, typical).with_purifier
-    return Fact(
-        "indoor_purifier_if",
-        Kind.ESTIMATE,
-        f"A typical air purifier ({TYPICAL_PURIFIER_CADR_M3H} m³/h) running with windows shut "
-        f"would bring the main room to {approx} {level} µg/m³.",
-        f"{level} µg/m³",
-        f"Main room with a {TYPICAL_PURIFIER_CADR_M3H} m³/h purifier",
-    )
-
-
-def _indoor_facts(pm25: float, home: Home, approx: str) -> list[Fact]:
-    estimate = indoor_estimates(pm25, home)
-    shut_pct = round((1 - estimate.windows_shut / pm25) * 100)
-    facts = [
-        Fact(
-            "indoor_open",
-            Kind.ESTIMATE,
-            f"With windows open, the main room is {approx} {estimate.windows_open} µg/m³ of PM2.5.",
-            f"{estimate.windows_open} µg/m³",
-            "Main room, windows open",
-        ),
-        Fact(
-            "indoor_shut",
-            Kind.ESTIMATE,
-            f"With windows shut, the main room is {approx} {estimate.windows_shut} µg/m³, "
-            f"{shut_pct}% below outdoors.",
-            f"{estimate.windows_shut} µg/m³",
-            "Main room, windows shut",
-        ),
-    ]
-    if estimate.with_purifier is None:
-        facts.append(_purifier_if_fact(pm25, home, approx))
-    else:
-        facts.append(
-            Fact(
-                "indoor_purifier",
-                Kind.ESTIMATE,
-                f"With windows shut and the purifier on, {approx} {estimate.with_purifier} µg/m³: "
-                f"{approx} {number(cigarettes(estimate.with_purifier))} cigarettes a day instead "
-                f"of {approx} {number(cigarettes(pm25))} outdoors.",
-                f"{estimate.with_purifier} µg/m³",
-                "Main room, purifier on",
-            )
-        )
-    return facts

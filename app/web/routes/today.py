@@ -13,10 +13,13 @@ from app.advice.tasks import ASK_TASK, PLAN_TASK
 from app.advice.week_steps import step_options
 from app.ai.chain import AIChain
 from app.services.today import Day, PlaceChoice, TodayService
+from app.web.csrf import CsrfChecked
 from app.web.limits import AILimits
-from app.web.session import CsrfChecked, load_household, load_log, sample_title, theme_choice
+from app.web.session import load_household, load_log, sample_title, theme_choice
+from app.web.sky_view import scene_for, sky_for
 from app.web.templating import templates
-from app.web.views import KIND_LABELS, scene_for, sign_board, sky_for, strip, week_view
+from app.web.views import KIND_LABELS, sign_board, strip
+from app.web.week_view import week_view
 
 router = APIRouter()
 Lang = Annotated[str, Query(pattern="^(en|hi)$")]

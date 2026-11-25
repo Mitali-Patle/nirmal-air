@@ -93,17 +93,28 @@ def scene(
         The scene.
     """
     dark = phase in {Phase.DUSK, Phase.NIGHT}
-    body = Body("moon", 1040, 34) if dark else sun_position(now, sun)
-    if body is None and not dark:
-        body = Body("sun", 1040, 40)  # a forced light theme before sunrise still shows a sun
-    visible_stars = round(MAX_STARS * (1 - haze / (MAX_HAZE + 1))) if dark else 0
     cover, raining = weather if weather is not None else (0, False)
+    overcast = cover >= CLOUD_STEPS[-1]  # no sun or moon shows through
+    body = None if overcast else _body(now, sun, dark=dark)
+    visible_stars = round(MAX_STARS * (1 - haze / (MAX_HAZE + 1))) if dark else 0
+    return Scene(body, STARS[:visible_stars], _clouds(cover, raining=raining), raining)
+
+
+def _body(now: datetime, sun: SunTimes, *, dark: bool) -> Body:
+    """The moon after dark, else the sun on its arc.
+
+    A light theme chosen before sunrise still shows a sun, high on the right.
+    """
+    if dark:
+        return Body("moon", 1040, 34)
+    return sun_position(now, sun) or Body("sun", 1040, 40)
+
+
+def _clouds(cover: int, *, raining: bool) -> tuple[Cloud, ...]:
+    """One, two or three clouds on each side for the cloud cover; at least one when raining."""
     count = sum(cover >= step for step in CLOUD_STEPS) or (1 if raining else 0)
-    if cover >= CLOUD_STEPS[-1]:
-        body = None  # overcast: no sun or moon shows through
-    clouds = tuple(
+    return tuple(
         Cloud(x if side == "left" else WIDTH - x - 120, y, scale, side)
         for side in ("left", "right")
         for x, y, scale in CLOUD_SLOTS[:count]
     )
-    return Scene(body, STARS[:visible_stars], clouds, raining)

@@ -4,7 +4,7 @@ Empty rows are skipped. Everything else is validated by the `Household` model, a
 errors come back as short sentences naming the field, for the form to show.
 """
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from typing import Any
 
 from pydantic import ValidationError
@@ -35,22 +35,10 @@ def parse_household(form: Mapping[str, str]) -> tuple[Household | None, list[str
         The household and no errors, or None and the problems to show.
     """
     data: dict[str, Any] = {
-        "members": [
-            _member(form, row) for row in range(MEMBER_ROWS) if _filled(form, f"m{row}_name")
-        ],
-        "routines": [
-            _routine(form, row) for row in range(ROUTINE_ROWS) if _filled(form, f"r{row}_member")
-        ],
-        "commutes": [
-            _commute(form, row) for row in range(COMMUTE_ROWS) if _filled(form, f"c{row}_member")
-        ],
-        "home": {
-            "room_sqft": form.get("home_sqft") or 150,
-            "purifier_cadr_m3h": form.get("home_cadr") or 0,
-            "cooking_fuel": form.get("home_fuel", "LPG"),
-            "incense_or_coils": "home_incense" in form,
-            "smoking_indoors": "home_smoking" in form,
-        },
+        "members": _rows(form, "m", "name", MEMBER_ROWS, _member),
+        "routines": _rows(form, "r", "member", ROUTINE_ROWS, _routine),
+        "commutes": _rows(form, "c", "member", COMMUTE_ROWS, _commute),
+        "home": _home(form),
     }
     unknown = _match_names(data)
     try:
@@ -105,6 +93,27 @@ def _match_names(data: dict[str, Any]) -> list[str]:
             else:
                 row["member"] = match
     return problems
+
+
+def _rows(
+    form: Mapping[str, str],
+    prefix: str,
+    key: str,
+    count: int,
+    read: Callable[[Mapping[str, str], int], dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """The filled rows of one section: a row counts when its name or "who" field is filled."""
+    return [read(form, row) for row in range(count) if _filled(form, f"{prefix}{row}_{key}")]
+
+
+def _home(form: Mapping[str, str]) -> dict[str, Any]:
+    return {
+        "room_sqft": form.get("home_sqft") or 150,
+        "purifier_cadr_m3h": form.get("home_cadr") or 0,
+        "cooking_fuel": form.get("home_fuel", "LPG"),
+        "incense_or_coils": "home_incense" in form,
+        "smoking_indoors": "home_smoking" in form,
+    }
 
 
 def _filled(form: Mapping[str, str], key: str) -> bool:

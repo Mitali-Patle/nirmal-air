@@ -5,8 +5,9 @@ from typing import Any
 from app.advice.week_steps import step_options
 from app.domain.household import Activity, Household, Routine
 from app.domain.week import MAX_ENTRIES, DayImpact, LogEntry, add_entry, indoors_day, week_totals
-from app.web.session import load_log, pack, save_log, unpack
-from app.web.views import week_view
+from app.web.cookie import pack, unpack
+from app.web.session import load_log, save_log
+from app.web.week_view import week_view
 from tests.builders import FAMILY, measured, today
 
 MON = date(2026, 11, 23)

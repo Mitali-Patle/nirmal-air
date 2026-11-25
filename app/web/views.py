@@ -1,38 +1,23 @@
-"""Turns the day's data into what the Today page draws: the sky, the signs and the time strip."""
+"""Turns the day's data into the plan's signs and the 24-hour strip.
+
+The page's sky lives in `sky_view` and the "This week" section in `week_view`.
+"""
 
 from collections.abc import Sequence
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import datetime
 
 from app.advice.facts import Fact, Kind, clock
 from app.advice.plan import EVERYONE, Plan, PlanItem, Slot
-from app.advice.week_steps import StepOption
 from app.air.cpcb import IST
 from app.air.forecast import HourlyPm25
-from app.air.weather import Weather
-from app.domain.aqi import Category
-from app.domain.scene import Scene, scene
-from app.domain.sky import Phase, haze_level, phase_at, sun_times
 from app.domain.timing import DayTiming, Level, levels
-from app.domain.week import WEEK, LogEntry, WeekTotals, week_totals
-from app.services.today import PlaceChoice
-from app.web.session import ThemeChoice
 
-DARK_PHASES = frozenset({Phase.DUSK, Phase.NIGHT})
 SLOT_ORDER = (Slot.MORNING, Slot.AFTERNOON, Slot.EVENING)
 TICK_EVERY_HOURS = 6
 # Steps about the home (windows, the main room) are blue signs; steps people take are green.
 HOME_FACTS = ("windows", "indoor_", "home")
 FIGURE_PREFERENCE = ("swap_", "routine_", "windows", "indoor_", "cleanest", "worst")
-
-
-@dataclass(frozen=True)
-class Sky:
-    """How the page is painted: phase of day, haze from the AQI, and whether it is dark."""
-
-    phase: Phase
-    haze: int
-    theme: ThemeChoice
 
 
 @dataclass(frozen=True)
@@ -66,46 +51,6 @@ class StripHour:
     cleanest: bool
     worst: bool
     tick: bool
-
-
-def sky_for(
-    place: PlaceChoice, now: datetime, category: Category | None, theme: ThemeChoice
-) -> Sky:
-    """The page's sky: the real phase of day at the place, unless the visitor picked a theme.
-
-    Args:
-        place: Where the household is.
-        now: The current time.
-        category: Today's measured AQI band, if any.
-        theme: The visitor's theme choice.
-
-    Returns:
-        The sky to paint.
-    """
-    phase = phase_at(now.astimezone(IST), sun_times(place.lat, place.lon, now.astimezone(IST)))
-    if theme is ThemeChoice.DARK:
-        phase = Phase.NIGHT
-    elif theme is ThemeChoice.LIGHT and phase in DARK_PHASES:
-        phase = Phase.MORNING
-    return Sky(phase, haze_level(category), theme)
-
-
-def scene_for(place: PlaceChoice, now: datetime, sky: Sky, weather: Weather | None) -> Scene:
-    """The sky band's drawing for this page.
-
-    Args:
-        place: Where the household is.
-        now: The current time.
-        sky: The page's sky (phase and haze).
-        weather: Cloud cover and rain, if known.
-
-    Returns:
-        The scene to draw.
-    """
-    local = now.astimezone(IST)
-    sun = sun_times(place.lat, place.lon, local)
-    known = (weather.cloud_cover, weather.raining) if weather else None
-    return scene(local, sun, sky.phase, sky.haze, known)
 
 
 def slot_of(now: datetime) -> Slot:
@@ -195,33 +140,3 @@ KIND_LABELS = {
     Kind.ESTIMATE: "Estimate",
     Kind.HOUSEHOLD: "Your household",
 }
-
-
-@dataclass(frozen=True)
-class WeekView:
-    """The "This week" section: today's steps (and whether each is ticked) and the totals."""
-
-    steps: tuple[tuple[StepOption, bool], ...]
-    totals: WeekTotals
-    recent: tuple[LogEntry, ...]
-
-
-def week_view(entries: Sequence[LogEntry], options: Sequence[StepOption], today: date) -> WeekView:
-    """What the "This week" section shows.
-
-    Args:
-        entries: The household's log.
-        options: Today's steps that can be ticked.
-        today: Today's date.
-
-    Returns:
-        Steps with their ticked state, the week's totals and the last week's entries, newest
-        first.
-    """
-    done = {entry.action for entry in entries if entry.day == today}
-    recent = tuple(reversed([entry for entry in entries if today - entry.day < WEEK]))
-    return WeekView(
-        steps=tuple((option, option.id in done) for option in options),
-        totals=week_totals(entries, today),
-        recent=recent,
-    )

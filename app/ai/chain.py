@@ -17,6 +17,7 @@ from typing import Any
 from pydantic import BaseModel, ValidationError
 
 from app.ai.providers import LLMRequest, Provider, ProviderError, RateLimitedError
+from app.ai.repair import MAX_REPLY_CHARS, rejection_reasons, repair_request
 from app.ai.task import AIResult, AITask, Attempt, Outcome, OutputRejectedError, Provenance
 from app.cache import TtlCache
 
@@ -25,8 +26,6 @@ TOTAL_BUDGET_S = 20.0
 MIN_CALL_S = 2.0
 DEFAULT_RETRY_AFTER_S = 60.0
 ANSWER_TTL_S = 60 * 60
-MAX_PROBLEMS = 5
-MAX_REPLY_CHARS = 4000
 
 
 @dataclass(frozen=True)
@@ -166,9 +165,9 @@ class AIChain:
             try:
                 answer = task.check(task.output.model_validate_json(text), context)
             except (ValidationError, OutputRejectedError) as error:
-                problems = _problems(error)
+                problems = rejection_reasons(error)
                 self._record(run, provider, Outcome.REJECTED, started, problems)
-                request = replace(request, user=_repair(request.user, text, problems))
+                request = replace(request, user=repair_request(request.user, text, problems))
                 continue
             self._record(run, provider, Outcome.OK, started)
             return answer, text
@@ -210,22 +209,3 @@ class AIChain:
             request=payload,
             reply=reply[:MAX_REPLY_CHARS] if reply else None,
         )
-
-
-def _problems(error: ValidationError | OutputRejectedError) -> list[str]:
-    """Short, model-readable reasons an answer was rejected."""
-    if isinstance(error, OutputRejectedError):
-        return error.problems[:MAX_PROBLEMS]
-    return [
-        f"{'.'.join(str(part) for part in item['loc']) or 'answer'}: {item['msg']}"
-        for item in error.errors()[:MAX_PROBLEMS]
-    ]
-
-
-def _repair(user: str, previous: str, problems: Sequence[str]) -> str:
-    """The original request plus the rejected answer and what to fix."""
-    note = {
-        "your_previous_answer": previous[:MAX_REPLY_CHARS],
-        "fix_these_problems": list(problems),
-    }
-    return f"{user}\n\nYour previous answer was rejected. {json.dumps(note, ensure_ascii=False)}"

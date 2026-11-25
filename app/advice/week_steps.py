@@ -28,27 +28,32 @@ def step_options(today: Today) -> list[StepOption]:
     Returns:
         The steps, commutes first.
     """
-    household = today.household
-    sensitive = {member.name for member in household.members if member.sensitive}
-    pm25 = today.outdoor_pm25
-    options = []
-    for index, commute in enumerate(household.commutes, start=1):
+    sensitive = {member.name for member in today.household.members if member.sensitive}
+    return _swap_steps(today, sensitive) + _indoor_steps(today, sensitive)
+
+
+def _swap_steps(today: Today, sensitive: set[str]) -> list[StepOption]:
+    """The swap the plan offers for each commute, if there is one."""
+    steps = []
+    for index, commute in enumerate(today.household.commutes, start=1):
         offered = offered_swaps(commute, sensitive=commute.member in sensitive)
-        if offered:
-            swap = offered[0]
-            how = swap.mode.value
-            if swap.people_in_vehicle > 1 and swap.mode in {Mode.CAR, Mode.SUV}:
-                how = f"a shared {swap.mode.value}"
-            options.append(
-                StepOption(
-                    f"swap-{index}",
-                    f"{commute.member} went by {how}",
-                    swap_day(commute, swap, pm25),
-                )
-            )
-    indoor = indoor_estimates(pm25, household.home).windows_shut if pm25 is not None else None
+        if not offered:
+            continue
+        swap = offered[0]
+        shared = swap.people_in_vehicle > 1 and swap.mode in {Mode.CAR, Mode.SUV}
+        how = f"a shared {swap.mode.value}" if shared else swap.mode.value
+        impact = swap_day(commute, swap, today.outdoor_pm25)
+        steps.append(StepOption(f"swap-{index}", f"{commute.member} went by {how}", impact))
+    return steps
+
+
+def _indoor_steps(today: Today, sensitive: set[str]) -> list[StepOption]:
+    """Each routine that today's rule moves indoors."""
+    pm25 = today.outdoor_pm25
+    indoor = indoor_estimates(pm25, today.household.home).windows_shut if pm25 is not None else None
     aqi = today.air.aqi.value if today.air else None
-    for index, routine in enumerate(household.routines, start=1):
+    steps = []
+    for index, routine in enumerate(today.household.routines, start=1):
         decision = routine_decision(
             aqi,
             routine.activity,
@@ -56,11 +61,6 @@ def step_options(today: Today) -> list[StepOption]:
             has_forecast=today.timing is not None,
         )
         if decision is Decision.INDOORS:
-            options.append(
-                StepOption(
-                    f"indoors-{index}",
-                    f"{routine.member}'s {routine.activity.value} moved indoors",
-                    indoors_day(routine, pm25, indoor),
-                )
-            )
-    return options
+            label = f"{routine.member}'s {routine.activity.value} moved indoors"
+            steps.append(StepOption(f"indoors-{index}", label, indoors_day(routine, pm25, indoor)))
+    return steps

@@ -13,7 +13,7 @@ from fastapi.templating import Jinja2Templates
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
 from app.advice.facts import clock, distance_label, number
-from app.web.session import csrf_token
+from app.web.csrf import csrf_token
 
 TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
 # Vercel sets the commit of each deploy; locally the version is simply "dev".

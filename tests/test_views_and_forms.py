@@ -12,8 +12,9 @@ from app.air.weather import WEATHER_URL, Weather
 from app.cache import TtlCache
 from app.domain.household import Mode
 from app.services.today import PlaceChoice, TodayService
+from app.web.cookie import pack
 from app.web.household_form import parse_household
-from app.web.session import ThemeChoice, load_household, pack, theme_choice
+from app.web.session import ThemeChoice, load_household, theme_choice
 from app.web.views import sign_board, slot_of
 from tests.builders import FAMILY
 

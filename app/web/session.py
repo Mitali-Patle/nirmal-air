@@ -1,32 +1,27 @@
 """What the app remembers about a visitor, kept in a signed cookie (no accounts, no database).
 
-The cookie holds the chosen place, the household profile, a CSRF token and a theme choice.
+The cookie holds the chosen place, the household profile, the week's log, a theme choice and
+the CSRF token (see `app.web.csrf`).
 It is signed with SESSION_SECRET, so it cannot be altered, and it is HttpOnly, so page
 scripts cannot read it. Nothing about the household is stored on the server.
 """
 
-import base64
-import json
-import secrets
-import zlib
 from datetime import date
 from enum import StrEnum
-from typing import Annotated
 
-from fastapi import Depends, Form, HTTPException, Request, status
+from fastapi import Request
 from pydantic import ValidationError
 
 from app.domain.household import Household
 from app.domain.week import DayImpact, LogEntry
 from app.services.today import PlaceChoice
+from app.web.cookie import pack, unpack
 
-CSRF_KEY = "csrf"
 PLACE_KEY = "place"
 HOUSEHOLD_KEY = "household"
 THEME_KEY = "theme"
 SAMPLE_KEY = "sample"
 LOG_KEY = "log"
-CSRF_HEADER = "x-csrf-token"
 
 
 class ThemeChoice(StrEnum):
@@ -35,41 +30,6 @@ class ThemeChoice(StrEnum):
     AUTO = "auto"
     LIGHT = "light"
     DARK = "dark"
-
-
-def csrf_token(request: Request) -> str:
-    """This visitor's CSRF token, created on first use.
-
-    Args:
-        request: The incoming request.
-
-    Returns:
-        A random token kept in the session.
-    """
-    token = request.session.get(CSRF_KEY)
-    if not isinstance(token, str):
-        token = secrets.token_urlsafe(32)
-        request.session[CSRF_KEY] = token
-    return token
-
-
-async def require_csrf(request: Request, csrf: Annotated[str | None, Form()] = None) -> None:
-    """Reject a POST whose CSRF token (form field or htmx header) does not match the session.
-
-    Args:
-        request: The incoming request.
-        csrf: The token sent in the form, if any.
-
-    Raises:
-        HTTPException: 403 when the token is missing or wrong.
-    """
-    sent = csrf or request.headers.get(CSRF_HEADER, "")
-    expected = request.session.get(CSRF_KEY)
-    if not isinstance(expected, str) or not secrets.compare_digest(sent, expected):
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "The form expired. Reload and try again.")
-
-
-CsrfChecked = Depends(require_csrf)
 
 
 def save_household(
@@ -180,39 +140,3 @@ def save_log(request: Request, entries: list[LogEntry]) -> None:
             for e in entries
         ]
     )
-
-
-def pack(value: object) -> str:
-    """Compact JSON, compressed, as URL-safe text for the cookie.
-
-    Browsers silently drop cookies over 4 KB. Plain JSON of an eight-person household with
-    Hindi names plus a week's log came to about 9 KB; packed, it is under 2 KB.
-
-    Args:
-        value: Any JSON-serialisable value.
-
-    Returns:
-        The packed text.
-
-    >>> unpack(pack({"name": "दादी"}))
-    {'name': 'दादी'}
-    """
-    data = json.dumps(value, ensure_ascii=False, separators=(",", ":")).encode()
-    return base64.urlsafe_b64encode(zlib.compress(data, 9)).decode()
-
-
-def unpack(text: object) -> object:
-    """The value packed by `pack`, or None when there is nothing readable.
-
-    Args:
-        text: What the cookie holds.
-
-    Returns:
-        The value, or None.
-    """
-    if not isinstance(text, str):
-        return None
-    try:
-        return json.loads(zlib.decompress(base64.urlsafe_b64decode(text)))
-    except (ValueError, zlib.error):
-        return None

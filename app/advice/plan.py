@@ -140,16 +140,7 @@ def check_plan(plan: Plan, context: PlanContext) -> Plan:
     Raises:
         OutputRejectedError: If a member is left out or fewer than three items pass.
     """
-    texts = {fact.id: fact.text for fact in context.facts}
-    members = {member.name for member in context.today.household.members} | {EVERYONE}
-    problems: list[str] = []
-    kept = []
-    guard = FactGuard(texts.values())
-    for index, item in enumerate(plan.items, start=1):
-        issues = _item_issues(item, texts, members, guard)
-        problems += [f"item {index}: {issue}" for issue in issues]
-        if not issues:
-            kept.append(item)
+    kept, problems = _sort_items(plan, context)
     missing = _members_needing_items(context) - {item.member for item in kept}
     problems += [f"no item for {name}" for name in sorted(missing)]
     if missing or len(kept) < MIN_ITEMS:
@@ -157,6 +148,21 @@ def check_plan(plan: Plan, context: PlanContext) -> Plan:
             problems or [f"only {len(kept)} usable items; the rules ask for 4 to 8"]
         )
     return plan.model_copy(update={"items": kept})
+
+
+def _sort_items(plan: Plan, context: PlanContext) -> tuple[list[PlanItem], list[str]]:
+    """Split the plan's items into those that pass every rule and the problems of the rest."""
+    texts = {fact.id: fact.text for fact in context.facts}
+    members = {member.name for member in context.today.household.members} | {EVERYONE}
+    guard = FactGuard(texts.values())
+    kept: list[PlanItem] = []
+    problems: list[str] = []
+    for index, item in enumerate(plan.items, start=1):
+        issues = _item_issues(item, texts, members, guard)
+        problems += [f"item {index}: {issue}" for issue in issues]
+        if not issues:
+            kept.append(item)
+    return kept, problems
 
 
 def _members_needing_items(context: PlanContext) -> set[str]:

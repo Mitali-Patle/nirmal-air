@@ -7,10 +7,11 @@ from fastapi.responses import HTMLResponse, Response
 
 from app.advice.week_steps import step_options
 from app.domain.week import LogEntry, add_entry
+from app.web.csrf import CsrfChecked
 from app.web.routes.today import current_day
-from app.web.session import CsrfChecked, load_log, save_log
+from app.web.session import load_log, save_log
 from app.web.templating import templates
-from app.web.views import week_view
+from app.web.week_view import week_view
 
 router = APIRouter()
 

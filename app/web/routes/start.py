@@ -7,10 +7,9 @@ from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse,
 
 from app.advice.facts import distance_label
 from app.air.cpcb import AirDataUnavailableError
-from app.air.places import PlaceFinder
 from app.air.stations import nearest_stations
 from app.services.samples import SAMPLES
-from app.services.today import PlaceChoice
+from app.web.csrf import CsrfChecked
 from app.web.household_form import (
     COMMUTE_ROWS,
     MEMBER_ROWS,
@@ -19,13 +18,11 @@ from app.web.household_form import (
     hidden_rows_in_use,
     parse_household,
 )
-from app.web.session import CsrfChecked, ThemeChoice, load_household, save_household
+from app.web.place_choice import near_me, place_finder, place_from_form
+from app.web.session import ThemeChoice, load_household, save_household
 from app.web.templating import templates
 
 router = APIRouter()
-# India's bounding box, so a location outside it is refused before any lookup.
-LAT_RANGE = (6.0, 37.5)
-LON_RANGE = (68.0, 97.5)
 
 
 @router.get("/", response_class=HTMLResponse)
@@ -77,7 +74,7 @@ async def places(request: Request, q: Annotated[str, Query(max_length=60)] = "")
     results, failed = [], False
     if len(query) >= 2:  # noqa: PLR2004 - two letters before searching
         try:
-            results = await _finder(request).search(query)
+            results = await place_finder(request).search(query)
         except AirDataUnavailableError:
             failed = True
     context = {"query": query, "results": results, "failed": failed}
@@ -98,7 +95,7 @@ def near(
     Returns:
         One plain sentence for the status line (shown as text, never as HTML).
     """
-    place = _near_me(lat, lon)
+    place = near_me(lat, lon)
     if place is None:
         return "That location is outside India, so NirmalAir cannot use it. Type a place instead."
     nearest = nearest_stations(place.lat, place.lon, limit=1)[0]
@@ -120,7 +117,7 @@ async def save_profile(request: Request) -> Response:
     """
     form = {key: value for key, value in (await request.form()).items() if isinstance(value, str)}
     household, errors = parse_household(form)
-    place = await _place_from(request, form)
+    place = await place_from_form(request, form)
     if place is None:
         errors.insert(0, "Choose a place from the list, or use your location.")
     if household is None or place is None:
@@ -142,44 +139,6 @@ def set_theme(request: Request, theme: Annotated[ThemeChoice, Form()]) -> Respon
     """
     request.session["theme"] = theme.value
     return RedirectResponse("/today", status.HTTP_303_SEE_OTHER)
-
-
-async def _place_from(request: Request, form: dict[str, str]) -> PlaceChoice | None:
-    """The chosen place: a search result found again on the server, or the browser's location.
-
-    The label always comes from the geocoder or the station list, never from the form, so
-    nothing a visitor types reaches the AI as a place name.
-    """
-    if form.get("geo_lat") and form.get("geo_lon"):
-        return _near_me(form["geo_lat"], form["geo_lon"])
-    # No suggestion picked yet means the best match: typing "Lucknow" and saving just works.
-    query, index = form.get("place_query", "").strip()[:60], form.get("place_index") or "0"
-    if not query or not index.isdigit():
-        return None
-    try:
-        results = await _finder(request).search(query)
-    except AirDataUnavailableError:
-        return None
-    if int(index) >= len(results):
-        return None
-    chosen = results[int(index)]
-    return PlaceChoice(chosen.label, chosen.lat, chosen.lon)
-
-
-def _finder(request: Request) -> PlaceFinder:
-    finder: PlaceFinder = request.app.state.places
-    return finder
-
-
-def _near_me(lat_text: str, lon_text: str) -> PlaceChoice | None:
-    try:
-        lat, lon = round(float(lat_text), 4), round(float(lon_text), 4)
-    except ValueError:
-        return None
-    if not (LAT_RANGE[0] <= lat <= LAT_RANGE[1] and LON_RANGE[0] <= lon <= LON_RANGE[1]):
-        return None
-    city = nearest_stations(lat, lon, limit=1)[0].station.city
-    return PlaceChoice(f"Your location, near {city}", lat, lon)
 
 
 def _start_page(
