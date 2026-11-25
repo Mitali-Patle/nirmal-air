@@ -6,6 +6,7 @@ scripts cannot read it. Nothing about the household is stored on the server.
 """
 
 import secrets
+from datetime import date
 from enum import StrEnum
 from typing import Annotated
 
@@ -13,6 +14,7 @@ from fastapi import Depends, Form, HTTPException, Request, status
 from pydantic import ValidationError
 
 from app.domain.household import Household
+from app.domain.week import DayImpact, LogEntry
 from app.services.today import PlaceChoice
 
 CSRF_KEY = "csrf"
@@ -20,6 +22,7 @@ PLACE_KEY = "place"
 HOUSEHOLD_KEY = "household"
 THEME_KEY = "theme"
 SAMPLE_KEY = "sample"
+LOG_KEY = "log"
 CSRF_HEADER = "x-csrf-token"
 
 
@@ -83,6 +86,7 @@ def save_household(
         request.session[SAMPLE_KEY] = sample
     else:
         request.session.pop(SAMPLE_KEY, None)
+    request.session.pop(LOG_KEY, None)  # a new household starts a new week
 
 
 def sample_title(request: Request) -> str | None:
@@ -130,3 +134,43 @@ def theme_choice(request: Request) -> ThemeChoice:
         return ThemeChoice(request.session.get(THEME_KEY, ThemeChoice.AUTO))
     except ValueError:
         return ThemeChoice.AUTO
+
+
+def load_log(request: Request) -> list[LogEntry]:
+    """The household's "This week" log, skipping any entry that no longer reads cleanly.
+
+    Args:
+        request: The incoming request.
+
+    Returns:
+        The logged steps, oldest first.
+    """
+    entries = []
+    for raw in request.session.get(LOG_KEY, []):
+        try:
+            impact = DayImpact(int(raw["c"]), int(raw["p"]))
+            entries.append(
+                LogEntry(date.fromisoformat(raw["d"]), str(raw["a"]), str(raw["l"]), impact)
+            )
+        except (KeyError, TypeError, ValueError):
+            continue
+    return entries
+
+
+def save_log(request: Request, entries: list[LogEntry]) -> None:
+    """Store the log in the signed cookie with short keys, to keep the cookie small.
+
+    Args:
+        request: The incoming request.
+        entries: The log to keep.
+    """
+    request.session[LOG_KEY] = [
+        {
+            "d": e.day.isoformat(),
+            "a": e.action,
+            "l": e.label,
+            "c": e.impact.co2_g,
+            "p": e.impact.pm25_ug,
+        }
+        for e in entries
+    ]

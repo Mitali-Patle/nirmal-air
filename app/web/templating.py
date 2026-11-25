@@ -30,8 +30,13 @@ def distance_label(km: float) -> str:
     return "under 1 km" if km < 1 else f"{number(round(km, 1))} km"
 
 
-environment.filters["clock"] = clock
-environment.filters["km"] = distance_label
+def kilograms(grams: int) -> str:
+    """Grams as kilograms to one decimal place.
+
+    >>> kilograms(3000), kilograms(1680)
+    ('3', '1.7')
+    """
+    return number(round(grams / 1000, 1))
 
 
 def common_context(request: Request) -> dict[str, Any]:
@@ -45,5 +50,10 @@ def common_context(request: Request) -> dict[str, Any]:
     """
     return {"csrf_token": csrf_token(request)}
 
+
+environment.filters["clock"] = clock
+environment.filters["km"] = distance_label
+environment.filters["kg"] = kilograms
+environment.filters["num"] = number
 
 templates = Jinja2Templates(env=environment, context_processors=[common_context])

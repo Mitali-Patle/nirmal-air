@@ -1,0 +1,41 @@
+{% macro impact(i) -%}
+{%- set parts = [] -%}
+{%- if i.co2_g -%}{%- set parts = parts + [i.co2_g|kg ~ " kg less CO₂"] -%}{%- endif -%}
+{%- if i.pm25_ug > 0 -%}{%- set parts = parts + [i.pm25_ug ~ " µg less PM2.5 breathed"] -%}
+{%- elif i.pm25_ug < 0 -%}{%- set parts = parts + [(0 - i.pm25_ug) ~ " µg more PM2.5 breathed on the way"] -%}{%- endif -%}
+{{ parts|join("; ") if parts else "No change worked out today" }}
+{%- endmacro %}
+<section class="plates week" id="week" aria-labelledby="week-h">
+  <h2 id="week-h">This week <span class="kind kind-estimate">Estimate</span></h2>
+  {% if week.steps %}
+  <ul class="facts">
+    {% for option, done in week.steps %}
+    <li class="fact-row step-row">
+      <div>
+        <p class="fact-text">{{ option.label }}</p>
+        <p class="step-impact">Today: {{ impact(option.impact) }}</p>
+      </div>
+      <form method="post" action="/log" hx-post="/log" hx-target="#week" hx-swap="outerHTML">
+        <input type="hidden" name="csrf" value="{{ csrf_token }}">
+        <input type="hidden" name="step" value="{{ option.id }}">
+        <button type="submit" class="quiet" id="log-{{ option.id }}" aria-pressed="{{ 'true' if done else 'false' }}">{{ "Done today" if done else "I did this" }}</button>
+      </form>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="muted">Nothing to tick today: no commute swap or routine moved indoors is on today's plan.</p>
+  {% endif %}
+  <div class="totals">
+    <p class="total"><span class="total-n">{{ week.totals.co2_kg|num }} kg</span> CO₂ avoided</p>
+    <p class="total"><span class="total-n">{{ week.totals.pm25_ug|abs }} µg</span> {{ "less" if week.totals.pm25_ug >= 0 else "more" }} PM2.5 breathed</p>
+    <p class="muted">{{ week.totals.steps }} step{{ "" if week.totals.steps == 1 else "s" }} logged in the last 7 days, worked out from each day's measured air.</p>
+  </div>
+  {% if week.recent %}
+  <details class="logged">
+    <summary>Logged this week</summary>
+    <ul>{% for entry in week.recent %}<li>{{ entry.day.strftime("%a %d %b") }}: {{ entry.label }} ({{ impact(entry.impact) }})</li>{% endfor %}</ul>
+  </details>
+  {% endif %}
+  <p id="week-status" class="visually-hidden" role="status">{{ announce|default("") }}</p>
+</section>

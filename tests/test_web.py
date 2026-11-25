@@ -282,3 +282,34 @@ def test_the_theme_choice_is_remembered(live: respx.MockRouter) -> None:
     assert 'data-theme="light"' in page and 'data-phase="morning"' in page
     client.post("/theme", data={"csrf": token(client), "theme": "dark"})
     assert 'data-phase="night"' in client.get("/today").text
+
+
+def test_ticking_a_step_updates_this_week(live: respx.MockRouter) -> None:
+    client = make_client()
+    load_sample(client)
+    page = client.get("/today").text
+    assert "This week" in page and 'name="step" value="swap-1"' in page
+    csrf = token(client, "/today")
+    fragment = client.post("/log", data={"csrf": csrf, "step": "swap-1"}).text
+    assert 'aria-pressed="true"' in fragment
+    assert "Logged: Asha went by bus." in fragment
+    assert "3 kg</span> CO₂ avoided" in fragment
+    client.post("/log", data={"csrf": csrf, "step": "swap-1"})
+    assert "1 step logged in the last 7 days" in client.get("/today").text
+
+
+def test_logging_needs_a_real_step_a_token_and_a_household(live: respx.MockRouter) -> None:
+    client = make_client()
+    assert client.post("/log", data={"csrf": token(client), "step": "swap-1"}).status_code == 204
+    load_sample(client)
+    csrf = token(client, "/today")
+    assert client.post("/log", data={"step": "swap-1"}).status_code == 403
+    assert client.post("/log", data={"csrf": csrf, "step": "fly-1"}).status_code == 404
+
+
+def test_a_new_household_starts_a_new_week(live: respx.MockRouter) -> None:
+    client = make_client()
+    load_sample(client)
+    client.post("/log", data={"csrf": token(client, "/today"), "step": "swap-1"})
+    load_sample(client, "mumbai-commuter")
+    assert "0 steps logged" in client.get("/today").text

@@ -8,7 +8,7 @@ estimate.
 from dataclasses import dataclass
 from types import MappingProxyType
 
-from app.domain.household import Mode
+from app.domain.household import Activity, Mode
 
 # Berkeley Earth, "Air Pollution and Cigarette Equivalence" (Muller and Muller, 2015):
 # breathing 22 µg/m³ of PM2.5 for 24 hours does about as much harm as smoking one cigarette.
@@ -78,3 +78,15 @@ WAIT_BREATHING_L_PER_MIN = 10
 WALKABLE_KM = 2.0
 CYCLABLE_KM = 8.0
 CARPOOL_PEOPLE = 3
+
+# Air breathed per minute during each routine, for the "This week" log (US EPA values as
+# used by Goel et al. 2015, Table 3: 15 L/min walking, 35 L/min for vigorous activity).
+ACTIVITY_BREATHING_L_PER_MIN = MappingProxyType(
+    {
+        Activity.WALK: 15,
+        Activity.PLAY: 35,
+        Activity.SPORT: 35,
+        Activity.SCHOOL_RUN: 15,
+        Activity.ERRANDS: 15,
+    }
+)

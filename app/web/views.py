@@ -2,15 +2,17 @@
 
 from collections.abc import Sequence
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 
 from app.advice.facts import Fact, Kind, clock
 from app.advice.plan import EVERYONE, Plan, PlanItem, Slot
+from app.advice.week_steps import StepOption
 from app.air.cpcb import IST
 from app.air.forecast import HourlyPm25
 from app.domain.aqi import Category
 from app.domain.sky import Phase, haze_level, phase_at, sun_times
 from app.domain.timing import DayTiming, Level, levels
+from app.domain.week import WEEK, LogEntry, WeekTotals, week_totals
 from app.services.today import PlaceChoice
 from app.web.session import ThemeChoice
 
@@ -175,3 +177,33 @@ KIND_LABELS = {
     Kind.ESTIMATE: "Estimate",
     Kind.HOUSEHOLD: "Your household",
 }
+
+
+@dataclass(frozen=True)
+class WeekView:
+    """The "This week" section: today's steps (and whether each is ticked) and the totals."""
+
+    steps: tuple[tuple[StepOption, bool], ...]
+    totals: WeekTotals
+    recent: tuple[LogEntry, ...]
+
+
+def week_view(entries: Sequence[LogEntry], options: Sequence[StepOption], today: date) -> WeekView:
+    """What the "This week" section shows.
+
+    Args:
+        entries: The household's log.
+        options: Today's steps that can be ticked.
+        today: Today's date.
+
+    Returns:
+        Steps with their ticked state, the week's totals and the last week's entries, newest
+        first.
+    """
+    done = {entry.action for entry in entries if entry.day == today}
+    recent = tuple(reversed([entry for entry in entries if today - entry.day < WEEK]))
+    return WeekView(
+        steps=tuple((option, option.id in done) for option in options),
+        totals=week_totals(entries, today),
+        recent=recent,
+    )

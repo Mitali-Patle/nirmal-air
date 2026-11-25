@@ -29,7 +29,7 @@ to their location and lifestyle, and explain the direct impact of each choice.
 | Sustainable alternatives | Commute swaps (bus, metro, cycle, walk, carpool) with CO₂ saved per week |
 | Location | The nearest CPCB station to any Indian place, and the sky colour of that place |
 | Lifestyle | Household members, sensitivities, routines, commutes and home |
-| Direct impact of each choice | A figure on every sign, and the facts behind it one tap away |
+| Direct impact of each choice | A figure on every sign, the facts behind it one tap away, and a "This week" log that adds up what the household actually did |
 
 ## Approach and logic
 
@@ -68,7 +68,11 @@ to their location and lifestyle, and explain the direct impact of each choice.
    shows the model, prompt version, time taken, every attempt, the facts sent and the raw reply.
 6. **Ask.** The Ask box answers questions such as "Can the kids play at 5 pm?" from the same
    facts, under the same number guard, and declines off-topic requests.
-7. **The sky.** The page's colour follows the time of day at the place (morning, afternoon,
+7. **This week.** Tick "I did this" on today's commute swap or a routine moved indoors. Code
+   works out that day's CO₂ avoided and the change in PM2.5 breathed, from that day's
+   measured air, and the panel adds up the last seven days. The log lives in the same signed
+   cookie.
+8. **The sky.** The page's colour follows the time of day at the place (morning, afternoon,
    evening, dusk, night), from sunrise and sunset computed in code. It is dulled by the
    measured AQI band. Contrast stays WCAG AA in all 30 combinations, and a test checks them.
 
@@ -140,7 +144,8 @@ uv run uvicorn app.index:app --reload
 ```bash
 uv run ruff check . && uv run ruff format --check .
 uv run mypy app tests scripts                  # strict
-uv run pytest -W error --cov=app               # 256 tests, 95% branch-coverage gate (100% now)
+uv run pytest -W error --cov=app               # 273 tests, 95% branch-coverage gate (100% now)
+uv run pytest -W error -m e2e                  # 29 browser tests: axe (WCAG 2.2 AA), widths, keyboard
 ```
 
 CI runs the same checks plus a secret scan, a dependency audit and a repository-size budget

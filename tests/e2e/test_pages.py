@@ -41,11 +41,21 @@ def _today_with_answer(page: Page) -> None:
     expect(page.locator("#answer")).to_contain_text("The assistant is not available right now")
 
 
+def _today_with_a_ticked_step(page: Page) -> None:
+    open_today(page)
+    button = page.locator("#log-swap-1")
+    button.click()
+    expect(page.locator("#week-status")).to_have_text("Logged: Asha went by bus.")
+    expect(page.locator("#log-swap-1")).to_have_attribute("aria-pressed", "true")
+    expect(page.locator("#log-swap-1")).to_be_focused()
+
+
 STATES: dict[str, Callable[[Page], None]] = {
     "start": _start,
     "start with errors": _start_with_errors,
     "today": open_today,
     "today with an answer": _today_with_answer,
+    "today with a ticked step": _today_with_a_ticked_step,
 }
 
 
@@ -62,7 +72,8 @@ def axe_violations(page: Page) -> list[str]:
         "tags => axe.run(document, {runOnly: {type: 'tag', values: tags}})", WCAG_TAGS
     )
     return [
-        f"{v['id']} ({v['impact']}): {v['help']} at {[n['target'] for n in v['nodes']][:3]}"
+        f"{v['id']} ({v['impact']}): {v['help']} at {[n['target'] for n in v['nodes']][:3]}: "
+        f"{v['nodes'][0]['any'][0]['message'] if v['nodes'][0]['any'] else ''}"
         for v in results["violations"]
     ]
 

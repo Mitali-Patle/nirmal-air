@@ -82,3 +82,15 @@ shows both numbers rather than hiding the trade-off.
 **Not estimated:** tailpipe PM2.5 per trip. The only Indian per-kilometre measurements we found
 (ARAI, 2008) are for vehicles much older than today's BS-VI fleet, and road dust, which they
 leave out, is a large part of traffic PM2.5.
+
+## This week
+
+- A logged commute swap counts both directions of one day: CO₂ avoided is the difference
+  between the usual trip and the swap, and the change in PM2.5 breathed uses that day's
+  outdoor PM2.5 and the exposure ratios and breathing rates above.
+- A routine moved indoors counts the air breathed during it: its minutes × the breathing rate
+  for the activity (15 L/min walking, errands or the school run; 35 L/min for play or sport,
+  US EPA values as used by Goel et al. 2015). This is multiplied by the difference between
+  outdoor PM2.5 and the estimated indoor level with windows shut.
+- Each step is worked out on the day it is ticked and stored with its numbers, so a week's
+  totals do not change when today's air does.

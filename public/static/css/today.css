@@ -123,6 +123,18 @@
 .fact-fig { font-weight: 800; font-size: 1.125rem; white-space: nowrap; }
 .plates > .muted { font-size: 0.8125rem; margin-top: var(--space-2); }
 
+/* This week: steps to tick and the running totals. */
+.step-row { align-items: center; }
+.step-impact { font-size: 0.875rem; color: var(--muted); margin-top: 2px; }
+.step-row button { white-space: nowrap; }
+.totals { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2) var(--space-5); margin-top: var(--space-4); }
+.total { font-size: 1rem; }
+.total-n { font-weight: 800; font-size: 1.5rem; margin-right: var(--space-1); }
+.totals .muted { flex-basis: 100%; font-size: 0.8125rem; }
+.logged { margin-top: var(--space-3); font-size: 0.875rem; }
+.logged summary { cursor: pointer; font-weight: 700; }
+.logged ul { margin-top: var(--space-2); padding-left: 1.2em; display: grid; gap: var(--space-1); }
+
 /* How this was generated. */
 .how { font-size: 0.875rem; }
 .how summary { cursor: pointer; font-weight: 700; }
@@ -141,13 +153,14 @@
   .today {
     display: grid; padding: var(--space-6) var(--space-4); column-gap: var(--space-6); row-gap: var(--space-6);
     grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-    grid-template-areas: "plan side" "home side" "trips side";
-    grid-template-rows: auto auto 1fr;
+    grid-template-areas: "plan side" "home side" "trips side" "week side";
+    grid-template-rows: auto auto auto 1fr;
     align-items: start;
   }
   .plan { grid-area: plan; }
   .home { grid-area: home; }
   .trips { grid-area: trips; }
+  .week { grid-area: week; }
   .side {
     grid-area: side; position: sticky; top: var(--space-4);
     max-height: calc(100vh - 2 * var(--space-4)); overflow-y: auto; overscroll-behavior: contain;

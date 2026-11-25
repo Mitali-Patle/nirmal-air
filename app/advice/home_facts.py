@@ -1,7 +1,7 @@
 """Facts about the household: who lives here, routines, commutes and swaps, and the home."""
 
 from app.advice.facts import MINUS, Fact, Kind, Today, clock, number
-from app.domain.commute import Swap, swaps, trip_impact
+from app.domain.commute import Swap, offered_swaps, trip_impact
 from app.domain.guidance import routine_decision
 from app.domain.household import Commute, Home, Household, Mode
 from app.domain.indoor import cigarettes, indoor_estimates
@@ -24,25 +24,13 @@ def household_facts(today: Today) -> list[Fact]:
     sensitive = {member.name for member in household.members if member.sensitive}
     for index, commute in enumerate(household.commutes, start=1):
         facts.append(_commute_fact(index, commute, pm25, today.approx))
-        ranked = _ranked_swaps(commute, sensitive=commute.member in sensitive)
+        ranked = offered_swaps(commute, sensitive=commute.member in sensitive)
         for rank, swap in enumerate(ranked[:SWAPS_PER_COMMUTE], start=1):
             facts.append(_swap_fact(f"swap_{index}_{rank}", commute.member, swap))
     facts.append(_home_fact(household.home))
     if pm25 is not None:
         facts += _indoor_facts(pm25, household.home, today.approx)
     return facts
-
-
-def _ranked_swaps(commute: Commute, *, sensitive: bool) -> list[Swap]:
-    """Swaps in the order to suggest them; the first is the one the plan offers.
-
-    For someone more sensitive to polluted air, swaps that do not add to the air breathed on
-    the way come first, so the plan never trades their health for CO₂.
-    """
-    found = swaps(commute)
-    if not sensitive:
-        return found
-    return sorted(found, key=lambda swap: swap.air_change_pct > 0)
 
 
 def _member_facts(household: Household) -> list[Fact]:

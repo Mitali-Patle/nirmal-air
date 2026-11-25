@@ -9,11 +9,12 @@ from app.advice.ask import AskContext, Question
 from app.advice.bundle import build_facts
 from app.advice.plan import Language, PlanContext
 from app.advice.tasks import ASK_TASK, PLAN_TASK
+from app.advice.week_steps import step_options
 from app.ai.chain import AIChain
 from app.services.today import Day, PlaceChoice, TodayService
-from app.web.session import CsrfChecked, load_household, sample_title, theme_choice
+from app.web.session import CsrfChecked, load_household, load_log, sample_title, theme_choice
 from app.web.templating import templates
-from app.web.views import KIND_LABELS, sign_board, sky_for, strip
+from app.web.views import KIND_LABELS, sign_board, sky_for, strip, week_view
 
 router = APIRouter()
 FAR_STATION_KM = 25
@@ -31,7 +32,7 @@ async def today(request: Request, lang: Lang = "en") -> Response:
     Returns:
         The page, or a redirect to the start page when no household is saved.
     """
-    found = await _day(request)
+    found = await current_day(request)
     if found is None:
         return RedirectResponse("/", status.HTTP_303_SEE_OTHER)
     return templates.TemplateResponse(request, "today.html", _context(request, *found, lang))
@@ -48,7 +49,7 @@ async def plan(request: Request, lang: Lang = "en") -> Response:
     Returns:
         The plan fragment, or an empty response when no household is saved.
     """
-    found = await _day(request)
+    found = await current_day(request)
     if found is None:
         return Response(status_code=status.HTTP_204_NO_CONTENT)
     day = found[1]
@@ -78,7 +79,7 @@ async def ask(
     Returns:
         The answer fragment.
     """
-    found = await _day(request)
+    found = await current_day(request)
     if found is None:
         return Response(status_code=status.HTTP_204_NO_CONTENT)
     day = found[1]
@@ -97,7 +98,15 @@ async def ask(
     return templates.TemplateResponse(request, "partials/answer.html", page)
 
 
-async def _day(request: Request) -> tuple[PlaceChoice, Day] | None:
+async def current_day(request: Request) -> tuple[PlaceChoice, Day] | None:
+    """The saved household's place and today's data for it.
+
+    Args:
+        request: The incoming request.
+
+    Returns:
+        The place and the day, or None when no household is saved.
+    """
     saved = load_household(request)
     if saved is None:
         return None
@@ -122,4 +131,5 @@ def _context(request: Request, place: PlaceChoice, day: Day, lang: str) -> dict[
         "sky": sky_for(place, today.now, air.aqi.category if air else None, theme_choice(request)),
         "lang": lang,
         "sample": sample_title(request),
+        "week": week_view(load_log(request), step_options(today), today.now.date()),
     }

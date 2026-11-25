@@ -18,7 +18,7 @@ from app.air.cpcb import IST, USER_AGENT
 from app.air.lookup import AirLookup
 from app.config import Settings, get_settings
 from app.services.today import TodayService
-from app.web.routes import health, start, today
+from app.web.routes import health, start, today, week
 from app.web.security import SecurityHeadersMiddleware
 
 # Outside services get 8 seconds: long enough for a slow CPCB reply, short enough that a
@@ -68,7 +68,7 @@ def create_app(settings: Settings | None = None, http: httpx.AsyncClient | None 
         https_only=settings.is_production,
     )
     app.add_middleware(SecurityHeadersMiddleware, hsts=settings.is_production)
-    for router in (health.router, start.router, today.router):
+    for router in (health.router, start.router, today.router, week.router):
         app.include_router(router)
     if not settings.is_production:
         # In production Vercel serves public/ from its CDN; mount it for local runs and tests.

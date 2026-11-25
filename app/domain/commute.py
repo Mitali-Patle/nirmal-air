@@ -129,6 +129,25 @@ def swaps(commute: Commute) -> list[Swap]:
     return sorted(found, key=lambda swap: swap.co2_saved_kg_week, reverse=True)
 
 
+def offered_swaps(commute: Commute, *, sensitive: bool) -> list[Swap]:
+    """Swaps in the order to suggest them; the first is the one the plan offers.
+
+    For someone more sensitive to polluted air, swaps that do not add to the air breathed on
+    the way come first, so the plan never trades their health for CO₂.
+
+    Args:
+        commute: The trip as made today.
+        sensitive: Whether the traveller is a child, a senior or has a condition.
+
+    Returns:
+        The swaps, best to offer first.
+    """
+    found = swaps(commute)
+    if not sensitive:
+        return found
+    return sorted(found, key=lambda swap: swap.air_change_pct > 0)
+
+
 def _candidates(commute: Commute) -> list[tuple[Mode, int]]:
     """The other ways this trip could reasonably be made, with people per vehicle."""
     options = [(Mode.BUS, 1)]

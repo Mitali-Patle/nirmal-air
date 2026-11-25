@@ -104,5 +104,7 @@ button[aria-pressed="true"] { background: var(--ink); color: var(--ground); }
 .theme button[aria-pressed="true"] { background: var(--ink); color: var(--ground); border-color: var(--ink); }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+  /* No transitions or animations at all: a tiny duration would still start a transition on
+     every property, and colours would briefly sit halfway between two states. */
+  *, *::before, *::after { transition: none !important; animation: none !important; }
 }
