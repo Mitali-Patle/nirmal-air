@@ -16,8 +16,11 @@ from app.ai.chain import AIChain
 from app.ai.providers import default_providers
 from app.air.cpcb import IST, USER_AGENT
 from app.air.lookup import AirLookup
+from app.air.places import PlaceFinder
 from app.config import Settings, get_settings
 from app.services.today import TodayService
+from app.web.errors import register_error_handlers
+from app.web.limits import AILimits
 from app.web.routes import health, start, today, week
 from app.web.security import SecurityHeadersMiddleware
 
@@ -53,8 +56,10 @@ def create_app(settings: Settings | None = None, http: httpx.AsyncClient | None 
     key = settings.data_gov_api_key
     app.state.air_lookup = AirLookup(http, key.get_secret_value()) if key else None
     app.state.today = TodayService(http, app.state.air_lookup)
+    app.state.places = PlaceFinder(http)
     # Tests replace the clock so recorded CPCB and forecast data count as current.
     app.state.clock = lambda: datetime.now(IST)
+    app.state.ai_limits = AILimits()
     app.state.ai = AIChain(
         default_providers(http, _secret(settings.groq_api_key), _secret(settings.gemini_api_key))
     )
@@ -68,6 +73,7 @@ def create_app(settings: Settings | None = None, http: httpx.AsyncClient | None 
         https_only=settings.is_production,
     )
     app.add_middleware(SecurityHeadersMiddleware, hsts=settings.is_production)
+    register_error_handlers(app)
     for router in (health.router, start.router, today.router, week.router):
         app.include_router(router)
     if not settings.is_production:

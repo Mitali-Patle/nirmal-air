@@ -22,6 +22,8 @@ PENETRATION_WINDOWS_OPEN = 1.0  # An open window filters nothing.
 DEPOSITION_PER_HOUR = 0.2  # k: particles settling onto indoor surfaces.
 AIR_CHANGES_WINDOWS_SHUT = 1.0  # a: a typical, not airtight, Indian home with windows shut.
 AIR_CHANGES_WINDOWS_OPEN = 5.0  # a: windows open on one side of the room.
+# For homes without one: what a common mid-range home purifier (rated 250 m³/h) would do.
+TYPICAL_PURIFIER_CADR_M3H = 250
 CEILING_HEIGHT_M = 3.0  # Ten feet, common in Indian homes.
 SQ_M_PER_SQ_FT = 0.092903
 

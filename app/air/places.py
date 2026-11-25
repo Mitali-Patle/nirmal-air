@@ -10,9 +10,11 @@ import httpx
 from pydantic import BaseModel
 
 from app.air.cpcb import AirDataUnavailableError
+from app.cache import TtlCache
 
 GEOCODING_URL = "https://geocoding-api.open-meteo.com/v1/search"
 MAX_RESULTS = 5
+SEARCH_TTL_S = 24 * 60 * 60
 OLD_NAMES = {
     "bangalore": "Bengaluru",
     "bombay": "Mumbai",
@@ -111,3 +113,33 @@ async def search_places(client: httpx.AsyncClient, query: str) -> list[Place]:
         Place(result.name, result.admin2, result.admin1, result.latitude, result.longitude)
         for result in results
     ]
+
+
+class PlaceFinder:
+    """Place search with a day's cache, so typing and saving do not repeat the same lookup."""
+
+    def __init__(
+        self, client: httpx.AsyncClient, cache: TtlCache[list[Place]] | None = None
+    ) -> None:
+        self._client = client
+        self._cache = cache or TtlCache(SEARCH_TTL_S, SEARCH_TTL_S)
+
+    async def search(self, query: str) -> list[Place]:
+        """Places matching a name, from the cache when the same name was searched today.
+
+        Args:
+            query: What the person typed.
+
+        Returns:
+            Up to five matches, best first.
+
+        Raises:
+            AirDataUnavailableError: If the geocoder fails (failures are not cached).
+        """
+        key = search_name(query).casefold()
+        cached = self._cache.get(key)
+        if cached is not None:
+            return cached.value
+        found = await search_places(self._client, query)
+        self._cache.put(key, found)
+        return found

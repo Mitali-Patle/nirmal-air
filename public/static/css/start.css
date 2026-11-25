@@ -41,6 +41,8 @@
 .group > legend + * { clear: left; }
 .row { display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); padding: var(--space-3) 0; border-top: 1px solid var(--line); }
 .row:first-of-type { border-top: 0; }
+.row-legend { grid-column: 1 / -1; float: left; width: 100%; font-size: 0.8125rem; font-weight: 700; color: var(--muted); margin: 0; }
+fieldset.row { border-left: 0; border-right: 0; border-bottom: 0; margin: 0; }
 .checks { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); align-items: center; grid-column: 1 / -1; }
 .checks label { font-weight: 400; font-size: 0.9375rem; display: inline-flex; align-items: center; gap: var(--space-2); min-height: 32px; }
 .checks input { width: 18px; height: 18px; }

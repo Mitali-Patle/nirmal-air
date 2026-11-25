@@ -1,3 +1,4 @@
+import asyncio
 from dataclasses import dataclass, field
 
 from pydantic import BaseModel
@@ -127,3 +128,27 @@ async def test_models_are_skipped_once_the_time_budget_is_spent() -> None:
     result = await chain.run(TASK, "x")
     assert outcomes(result.provenance.attempts) == ["no answer", Outcome.NO_TIME.value]
     assert result.provenance.latency_ms == 19000
+
+
+async def test_a_rate_limit_gives_standard_advice_but_cached_answers_stay_free() -> None:
+    provider = Scripted("a", ['{"text": "hello"}'])
+    chain = AIChain([provider])
+    limited = await chain.run(TASK, "hello", allow=lambda: False)
+    assert limited.value.text == "standard"
+    assert outcomes(limited.provenance.attempts) == [Outcome.LIMITED.value]
+    assert (await chain.run(TASK, "hello", allow=lambda: True)).provenance.provider == "a"
+    again = await chain.run(TASK, "hello", allow=lambda: False)
+    assert again.provenance.cached is True
+
+
+async def test_identical_requests_at_the_same_time_share_one_model_call() -> None:
+    class Slow(Scripted):
+        async def generate(self, request: LLMRequest) -> str:
+            await asyncio.sleep(0.01)
+            return await super().generate(request)
+
+    provider = Slow("a", ['{"text": "hi"}'])
+    chain = AIChain([provider])
+    first, second = await asyncio.gather(chain.run(TASK, "hi"), chain.run(TASK, "hi"))
+    assert len(provider.requests) == 1
+    assert (first.provenance.cached, second.provenance.cached) == (False, True)

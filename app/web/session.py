@@ -5,7 +5,10 @@ It is signed with SESSION_SECRET, so it cannot be altered, and it is HttpOnly, s
 scripts cannot read it. Nothing about the household is stored on the server.
 """
 
+import base64
+import json
 import secrets
+import zlib
 from datetime import date
 from enum import StrEnum
 from typing import Annotated
@@ -81,7 +84,7 @@ def save_household(
         sample: The sample's title when this is a sample household, so the page can say so.
     """
     request.session[PLACE_KEY] = {"label": place.label, "lat": place.lat, "lon": place.lon}
-    request.session[HOUSEHOLD_KEY] = household.model_dump(mode="json", exclude_defaults=True)
+    request.session[HOUSEHOLD_KEY] = pack(household.model_dump(mode="json", exclude_defaults=True))
     if sample:
         request.session[SAMPLE_KEY] = sample
     else:
@@ -111,7 +114,7 @@ def load_household(request: Request) -> tuple[PlaceChoice, Household] | None:
     Returns:
         The place and household, or None when nothing (or nothing valid) is stored.
     """
-    place, household = request.session.get(PLACE_KEY), request.session.get(HOUSEHOLD_KEY)
+    place, household = request.session.get(PLACE_KEY), unpack(request.session.get(HOUSEHOLD_KEY))
     if not isinstance(place, dict) or not isinstance(household, dict):
         return None
     try:
@@ -146,7 +149,8 @@ def load_log(request: Request) -> list[LogEntry]:
         The logged steps, oldest first.
     """
     entries = []
-    for raw in request.session.get(LOG_KEY, []):
+    stored = unpack(request.session.get(LOG_KEY))
+    for raw in stored if isinstance(stored, list) else []:
         try:
             impact = DayImpact(int(raw["c"]), int(raw["p"]))
             entries.append(
@@ -158,19 +162,57 @@ def load_log(request: Request) -> list[LogEntry]:
 
 
 def save_log(request: Request, entries: list[LogEntry]) -> None:
-    """Store the log in the signed cookie with short keys, to keep the cookie small.
+    """Store the log in the signed cookie, packed with short keys to keep the cookie small.
 
     Args:
         request: The incoming request.
         entries: The log to keep.
     """
-    request.session[LOG_KEY] = [
-        {
-            "d": e.day.isoformat(),
-            "a": e.action,
-            "l": e.label,
-            "c": e.impact.co2_g,
-            "p": e.impact.pm25_ug,
-        }
-        for e in entries
-    ]
+    request.session[LOG_KEY] = pack(
+        [
+            {
+                "d": e.day.isoformat(),
+                "a": e.action,
+                "l": e.label,
+                "c": e.impact.co2_g,
+                "p": e.impact.pm25_ug,
+            }
+            for e in entries
+        ]
+    )
+
+
+def pack(value: object) -> str:
+    """Compact JSON, compressed, as URL-safe text for the cookie.
+
+    Browsers silently drop cookies over 4 KB. Plain JSON of an eight-person household with
+    Hindi names plus a week's log came to about 9 KB; packed, it is under 2 KB.
+
+    Args:
+        value: Any JSON-serialisable value.
+
+    Returns:
+        The packed text.
+
+    >>> unpack(pack({"name": "दादी"}))
+    {'name': 'दादी'}
+    """
+    data = json.dumps(value, ensure_ascii=False, separators=(",", ":")).encode()
+    return base64.urlsafe_b64encode(zlib.compress(data, 9)).decode()
+
+
+def unpack(text: object) -> object:
+    """The value packed by `pack`, or None when there is nothing readable.
+
+    Args:
+        text: What the cookie holds.
+
+    Returns:
+        The value, or None.
+    """
+    if not isinstance(text, str):
+        return None
+    try:
+        return json.loads(zlib.decompress(base64.urlsafe_b64decode(text)))
+    except (ValueError, zlib.error):
+        return None

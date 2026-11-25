@@ -2,14 +2,23 @@
 
 from datetime import datetime
 
-from app.advice.facts import TIMES, Fact, Kind, Today, clock, clock_span, number
+from app.advice.facts import (
+    FAR_STATION_KM,
+    TIMES,
+    Fact,
+    Kind,
+    Today,
+    clock,
+    clock_span,
+    distance_label,
+    number,
+)
 from app.air.cpcb import IST
 from app.domain.guidance import WindowRule, window_rule
 from app.domain.indoor import cigarettes
 
 # India's 24-hour PM2.5 standard (CPCB, National Ambient Air Quality Standards, 2009).
 PM25_DAILY_LIMIT = 60
-FAR_STATION_KM = 25
 
 
 def air_facts(today: Today) -> list[Fact]:
@@ -34,7 +43,7 @@ def air_facts(today: Today) -> list[Fact]:
     air = today.air
     station = air.nearby
     km = station.distance_km
-    distance = "under 1 km" if km < 1 else f"{number(round(km, 1))} km"
+    distance = distance_label(km)
     facts = [
         Fact(
             "air_now",

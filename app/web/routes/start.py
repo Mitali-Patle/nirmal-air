@@ -5,8 +5,9 @@ from typing import Annotated
 from fastapi import APIRouter, Form, HTTPException, Query, Request, status
 from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse, Response
 
+from app.advice.facts import distance_label
 from app.air.cpcb import AirDataUnavailableError
-from app.air.places import search_places
+from app.air.places import PlaceFinder
 from app.air.stations import nearest_stations
 from app.services.samples import SAMPLES
 from app.services.today import PlaceChoice
@@ -19,7 +20,7 @@ from app.web.household_form import (
     parse_household,
 )
 from app.web.session import CsrfChecked, ThemeChoice, load_household, save_household
-from app.web.templating import distance_label, templates
+from app.web.templating import templates
 
 router = APIRouter()
 # India's bounding box, so a location outside it is refused before any lookup.
@@ -76,7 +77,7 @@ async def places(request: Request, q: Annotated[str, Query(max_length=60)] = "")
     results, failed = [], False
     if len(query) >= 2:  # noqa: PLR2004 - two letters before searching
         try:
-            results = await search_places(request.app.state.http, query)
+            results = await _finder(request).search(query)
         except AirDataUnavailableError:
             failed = True
     context = {"query": query, "results": results, "failed": failed}
@@ -156,13 +157,18 @@ async def _place_from(request: Request, form: dict[str, str]) -> PlaceChoice | N
     if not query or not index.isdigit():
         return None
     try:
-        results = await search_places(request.app.state.http, query)
+        results = await _finder(request).search(query)
     except AirDataUnavailableError:
         return None
     if int(index) >= len(results):
         return None
     chosen = results[int(index)]
     return PlaceChoice(chosen.label, chosen.lat, chosen.lon)
+
+
+def _finder(request: Request) -> PlaceFinder:
+    finder: PlaceFinder = request.app.state.places
+    return finder
 
 
 def _near_me(lat_text: str, lon_text: str) -> PlaceChoice | None:

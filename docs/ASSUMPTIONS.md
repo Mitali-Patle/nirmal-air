@@ -36,6 +36,9 @@ Steady-state mass balance for outdoor particles coming indoors:
 | CADR | Purifier clean-air delivery rate | From the household (m³/h, printed on the box) |
 | V | Room volume | Floor area × 3 m ceiling |
 
+For a home without a purifier, the page also shows what a typical one would do, taking a
+common mid-range rating of 250 m³/h (an assumption, not a product recommendation).
+
 The model is the one reviewed by Chen and Zhao, *Atmospheric Environment* 45 (2011); the
 values are assumptions from the middle of published ranges, not measurements of any home.
 It leaves out indoor sources: cooking, incense, mosquito coils and smoking make a room worse

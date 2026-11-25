@@ -5,7 +5,6 @@ real fact ids and use only numbers found in the facts. Bad items are dropped; an
 too few good items is sent back for repair, then replaced by standard advice.
 """
 
-from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
@@ -13,13 +12,15 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.advice.facts import Fact, Today, clock
-from app.ai.guard import unknown_numbers
+from app.ai.guard import guard_problems
 from app.ai.task import OutputRejectedError
 
 PLAN_VERSION = "plan-v4"
 EVERYONE = "Everyone"
 MIN_ITEMS = 3
 MAX_ITEMS = 12
+AFTERNOON_FROM = 12
+EVENING_FROM = 17
 
 SYSTEM = """You are NirmalAir, a clean-air assistant for Indian households during winter smog.
 Write today's plan for one household using only the facts in the request.
@@ -63,6 +64,17 @@ class Slot(StrEnum):
     MORNING = "morning"
     AFTERNOON = "afternoon"
     EVENING = "evening"
+
+    @classmethod
+    def of_hour(cls, hour: int) -> "Slot":
+        """The part of the day an hour (0 to 23) falls in.
+
+        >>> Slot.of_hour(13).value
+        'afternoon'
+        """
+        if hour < AFTERNOON_FROM:
+            return cls.MORNING
+        return cls.AFTERNOON if hour < EVENING_FROM else cls.EVENING
 
 
 class PlanItem(BaseModel):
@@ -140,7 +152,9 @@ def check_plan(plan: Plan, context: PlanContext) -> Plan:
     missing = _members_needing_items(context) - {item.member for item in kept}
     problems += [f"no item for {name}" for name in sorted(missing)]
     if missing or len(kept) < MIN_ITEMS:
-        raise OutputRejectedError(problems or [f"only {len(kept)} items; write at least 4"])
+        raise OutputRejectedError(
+            problems or [f"only {len(kept)} items; write at least {MIN_ITEMS + 1}"]
+        )
     return plan.model_copy(update={"items": kept})
 
 
@@ -159,10 +173,5 @@ def _item_issues(item: PlanItem, texts: dict[str, str], members: set[str]) -> li
     unknown = [fact_id for fact_id in item.fact_ids if fact_id not in texts]
     if unknown:
         issues.append(f"unknown fact ids {unknown}")
-    issues += _number_issues(f"{item.action} {item.why}", texts.values())
+    issues += guard_problems(f"{item.action} {item.why}", texts.values())
     return issues
-
-
-def _number_issues(text: str, sources: Iterable[str]) -> list[str]:
-    unknown = unknown_numbers(text, sources)
-    return [f"numbers not in the facts: {sorted(unknown)}"] if unknown else []

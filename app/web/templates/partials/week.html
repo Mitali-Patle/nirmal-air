@@ -18,7 +18,7 @@
       <form method="post" action="/log" hx-post="/log" hx-target="#week" hx-swap="outerHTML">
         <input type="hidden" name="csrf" value="{{ csrf_token }}">
         <input type="hidden" name="step" value="{{ option.id }}">
-        <button type="submit" class="quiet" id="log-{{ option.id }}" aria-pressed="{{ 'true' if done else 'false' }}">{{ "Done today" if done else "I did this" }}</button>
+        <button type="submit" class="quiet" id="log-{{ option.id }}" aria-pressed="{{ 'true' if done else 'false' }}">I did this</button>
       </form>
     </li>
     {% endfor %}

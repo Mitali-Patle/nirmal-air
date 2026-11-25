@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} · NirmalAir{% endblock %}
+{% block main %}
+<div class="error-page">
+  <h1>{{ title }}</h1>
+  {% include "partials/error.html" %}
+  <p><a href="/today">Go to today's plan</a> or <a href="/">start again</a>.</p>
+</div>
+{% endblock %}

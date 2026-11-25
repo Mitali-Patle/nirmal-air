@@ -90,6 +90,7 @@
       {{ fact_row(facts.indoor_open) }}
       {{ fact_row(facts.indoor_shut) }}
       {% if facts.indoor_purifier is defined %}{{ fact_row(facts.indoor_purifier) }}{% endif %}
+      {% if facts.indoor_purifier_if is defined %}{{ fact_row(facts.indoor_purifier_if) }}{% endif %}
       {{ fact_row(facts.cigarettes) }}
     </ul>
     <p class="muted">From outdoor air only; cooking, incense and smoking add to these.</p>
@@ -113,7 +114,7 @@
 {% block foot %}
 <nav class="foot-links" aria-label="Household and display">
   <a href="/">Edit household or place</a>
-  {% if lang == 'hi' %}<a href="/today">Plan in English</a>{% else %}<a href="/today?lang=hi" hreflang="hi">योजना हिंदी में</a>{% endif %}
+  {% if lang == 'hi' %}<a href="/today">Plan in English</a>{% else %}<a href="/today?lang=hi" hreflang="hi" lang="hi">योजना हिंदी में</a>{% endif %}
 </nav>
 <form class="theme" method="post" action="/theme">
   <input type="hidden" name="csrf" value="{{ csrf_token }}">

@@ -7,17 +7,18 @@ from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
 from app.advice.ask import AskContext, Question
 from app.advice.bundle import build_facts
+from app.advice.facts import FAR_STATION_KM
 from app.advice.plan import Language, PlanContext
 from app.advice.tasks import ASK_TASK, PLAN_TASK
 from app.advice.week_steps import step_options
 from app.ai.chain import AIChain
 from app.services.today import Day, PlaceChoice, TodayService
+from app.web.limits import AILimits
 from app.web.session import CsrfChecked, load_household, load_log, sample_title, theme_choice
 from app.web.templating import templates
 from app.web.views import KIND_LABELS, sign_board, sky_for, strip, week_view
 
 router = APIRouter()
-FAR_STATION_KM = 25
 Lang = Annotated[str, Query(pattern="^(en|hi)$")]
 
 
@@ -55,18 +56,23 @@ async def plan(request: Request, lang: Lang = "en") -> Response:
     day = found[1]
     facts = build_facts(day.today)
     chain: AIChain = request.app.state.ai
-    result = await chain.run(PLAN_TASK, PlanContext(day.today, facts, _language(lang)))
+    limits: AILimits = request.app.state.ai_limits
+    plan_context = PlanContext(day.today, facts, _language(lang))
+    result = await chain.run(PLAN_TASK, plan_context, allow=lambda: limits.allow(request))
     context = {
         "board": sign_board(result.value, facts, day.today.now),
         "provenance": result.provenance,
         "kind_labels": KIND_LABELS,
+        "lang": lang,
     }
     return templates.TemplateResponse(request, "partials/plan.html", context)
 
 
 @router.post("/ask", response_class=HTMLResponse, dependencies=[CsrfChecked])
 async def ask(
-    request: Request, question: Annotated[Question, Form()], lang: Annotated[str, Form()] = "en"
+    request: Request,
+    question: Annotated[Question, Form()],
+    lang: Annotated[str, Form(pattern="^(en|hi)$")] = "en",
 ) -> Response:
     """Answer a question about today from the facts (an htmx fragment).
 
@@ -85,7 +91,8 @@ async def ask(
     facts = build_facts(day.today)
     context = AskContext(question, PlanContext(day.today, facts, _language(lang)))
     chain: AIChain = request.app.state.ai
-    result = await chain.run(ASK_TASK, context)
+    limits: AILimits = request.app.state.ai_limits
+    result = await chain.run(ASK_TASK, context, allow=lambda: limits.allow(request))
     by_id = {fact.id: fact for fact in facts}
     page = {
         "question": question,
@@ -93,6 +100,7 @@ async def ask(
         "cited": [by_id[fact_id] for fact_id in result.value.fact_ids if fact_id in by_id],
         "provenance": result.provenance,
         "kind_labels": KIND_LABELS,
+        "lang": lang,
     }
     return templates.TemplateResponse(request, "partials/answer.html", page)
 

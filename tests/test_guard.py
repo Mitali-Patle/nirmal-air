@@ -1,6 +1,6 @@
 import pytest
 
-from app.ai.guard import numbers_in, unknown_numbers
+from app.ai.guard import guard_problems, numbers_in, unknown_numbers
 
 
 @pytest.mark.parametrize(
@@ -23,3 +23,15 @@ def test_numbers_must_come_from_the_facts() -> None:
     assert unknown_numbers("Play between 1 pm and 4 pm; AQI is 326.", facts) == set()
     assert unknown_numbers("Play at 2 pm for 30 minutes.", facts) == {2.0, 30.0}
     assert unknown_numbers("Nothing to check.", []) == set()
+
+
+def test_number_words_need_a_source_too() -> None:
+    facts = ["Worst time: 7 pm to 10 pm, with about 2.3 times the PM2.5 of the cleanest time."]
+    assert guard_problems("Air is twice as bad at 7 pm.", facts) == [
+        "number words not in the facts: ['twice']"
+    ]
+    assert guard_problems("Half the purifier time at 9 pm.", facts) == [
+        "numbers not in the facts: [9.0]",
+        "number words not in the facts: ['half']",
+    ]
+    assert guard_problems("Double-check windows at 7 pm.", [*facts, "Double the cost."]) == []

@@ -121,12 +121,14 @@ at 5 pm?", or an off-topic request such as "Write me a poem" to see it declined.
 
 ## Limitations
 
-- No accounts or cross-device sync; the household lives in one browser's cookie.
+- No accounts or cross-device sync; the household lives in one browser's cookie. The cookie
+  is signed (it cannot be altered) but not encrypted: whoever holds the browser can decode it.
 - No indoor sensors: indoor values are estimates from outdoor air.
 - Tailpipe PM2.5 per trip is not estimated (no current Indian per-kilometre data for today's
   vehicles).
-- The number guard proves every number came from the facts, not that the AI used it in the
-  right place. Each sign shows the facts it cites so a reader can check.
+- The number guard proves every number (and number words such as "twice" or "half") came from
+  the facts, not that the AI used it in the right place. Each sign shows the facts it cites
+  so a reader can check.
 - Not medical advice: the app says when to keep medicines handy or see a doctor, nothing more.
 - Free model quotas are limited. When every model is busy, the page shows labelled standard
   advice instead.
@@ -144,7 +146,7 @@ uv run uvicorn app.index:app --reload
 ```bash
 uv run ruff check . && uv run ruff format --check .
 uv run mypy app tests scripts                  # strict
-uv run pytest -W error --cov=app               # 277 tests, 95% branch-coverage gate (100% now)
+uv run pytest -W error --cov=app               # 289 tests, 95% branch-coverage gate (100% now)
 uv run pytest -W error -m e2e                  # 31 browser tests: axe (WCAG 2.2 AA), widths, keyboard
 ```
 

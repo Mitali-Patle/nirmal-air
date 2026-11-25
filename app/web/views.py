@@ -16,8 +16,6 @@ from app.domain.week import WEEK, LogEntry, WeekTotals, week_totals
 from app.services.today import PlaceChoice
 from app.web.session import ThemeChoice
 
-AFTERNOON_FROM = 12
-EVENING_FROM = 17
 DARK_PHASES = frozenset({Phase.DUSK, Phase.NIGHT})
 SLOT_ORDER = (Slot.MORNING, Slot.AFTERNOON, Slot.EVENING)
 TICK_EVERY_HOURS = 6
@@ -94,10 +92,7 @@ def slot_of(now: datetime) -> Slot:
     >>> slot_of(datetime(2026, 11, 25, 13, tzinfo=IST)).value
     'afternoon'
     """
-    hour = now.astimezone(IST).hour
-    if hour < AFTERNOON_FROM:
-        return Slot.MORNING
-    return Slot.AFTERNOON if hour < EVENING_FROM else Slot.EVENING
+    return Slot.of_hour(now.astimezone(IST).hour)
 
 
 def sign_board(plan: Plan, facts: Sequence[Fact], now: datetime) -> SignBoard:

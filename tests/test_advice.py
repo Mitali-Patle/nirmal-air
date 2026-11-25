@@ -16,6 +16,7 @@ from app.ai.guard import unknown_numbers
 from app.ai.task import OutputRejectedError
 from app.domain.guidance import Decision, routine_decision
 from app.domain.household import Activity, Household
+from app.services.samples import SAMPLES
 from tests.builders import FAMILY, context, measured, timing, today
 
 
@@ -218,3 +219,29 @@ def test_sensitive_commuters_are_offered_swaps_that_do_not_add_exposure() -> Non
     facts = facts_of(today(household=Household.model_validate(data)))
     assert facts["swap_1_1"].startswith("If Asha went by car shared by 3 people")
     assert facts_of()["swap_1_1"].startswith("If Asha went by bus")
+
+
+def test_a_home_without_a_purifier_sees_what_one_would_change() -> None:
+    data = FAMILY.model_dump(mode="json")
+    data["home"]["purifier_cadr_m3h"] = 0
+    facts = facts_of(today(household=Household.model_validate(data)))
+    assert "indoor_purifier" not in facts
+    assert facts["indoor_purifier_if"].startswith("A typical air purifier (250 m³/h)")
+    assert "about 17 µg/m³" in facts["indoor_purifier_if"]
+
+
+def test_different_households_in_the_same_air_get_different_advice() -> None:
+    plans = {
+        key: standard_plan(context(today(household=sample.household)))
+        for key, sample in SAMPLES.items()
+    }
+    members = {key: {entry.member for entry in plan.items} for key, plan in plans.items()}
+    assert members["delhi-family"] >= {"Aarav", "Dadi", "Asha"}
+    assert "Ravi" in members["bengaluru-cyclist"]
+    assert "Imran" in members["mumbai-commuter"]
+    delhi_swap = facts_of(today(household=SAMPLES["delhi-family"].household))["swap_1_1"]
+    mumbai_swap = facts_of(today(household=SAMPLES["mumbai-commuter"].household))["swap_1_1"]
+    assert delhi_swap.startswith("If Asha went by bus")  # healthy adult: biggest CO2 saving
+    assert mumbai_swap.startswith(
+        "If Imran went by car shared"
+    )  # heart condition: no added exposure

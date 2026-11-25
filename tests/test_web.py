@@ -209,7 +209,8 @@ def test_place_suggestions(live: respx.MockRouter) -> None:
     live.get(GEOCODING_URL).respond(json={"results": []})
     assert "No place in India matches" in client.get("/places?q=Zzz").text
     live.get(GEOCODING_URL).respond(500)
-    assert "Place search is not answering" in client.get("/places?q=Andheri").text
+    assert "Place search is not answering" in client.get("/places?q=Powai").text
+    assert 'value="0" checked' in client.get("/places?q=Andheri").text  # cached earlier
 
 
 def household_form(csrf: str, **extra: str) -> dict[str, str]:
@@ -388,3 +389,19 @@ def test_a_household_of_just_people_works(live: respx.MockRouter) -> None:
     assert "Getting around" not in page
     assert "Nothing to tick today" in page
     assert "Standard advice" in client.get("/today/plan").text
+
+
+def test_errors_are_readable_pages_and_htmx_fragments() -> None:
+    client = make_client()
+    missing = client.get("/nowhere")
+    assert (
+        missing.status_code == 404 and "Page not found" in missing.text and "<html" in missing.text
+    )
+    invalid = client.get("/today?lang=xx")
+    assert invalid.status_code == 422 and "Some of that could not be read" in invalid.text
+    expired = client.post(
+        "/sample", data={"sample": "delhi-family"}, headers={"HX-Request": "true"}
+    )
+    assert expired.status_code == 403 and expired.text.startswith(
+        '<p class="note" role="alert">The form expired'
+    )

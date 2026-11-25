@@ -15,6 +15,8 @@ from app.domain.household import Household
 from app.domain.timing import DayTiming
 
 NOON = 12
+# A station further than this may not reflect the air where the household is.
+FAR_STATION_KM = 25
 # Typographic marks for figures: an en dash for ranges, a true minus for reductions.
 EN_DASH = "\u2013"
 MINUS = "\u2212"
@@ -106,6 +108,15 @@ def clock_span(start: datetime, end: datetime) -> str:
     if first[-2:] == last[-2:]:
         return f"{first[:-3]}{EN_DASH}{last}"
     return f"{first}{EN_DASH}{last}"
+
+
+def distance_label(km: float) -> str:
+    """A station distance as people say it.
+
+    >>> distance_label(0.4), distance_label(12.34)
+    ('under 1 km', '12.3 km')
+    """
+    return "under 1 km" if km < 1 else f"{number(round(km, 1))} km"
 
 
 def number(value: float) -> str:

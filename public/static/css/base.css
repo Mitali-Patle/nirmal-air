@@ -108,3 +108,6 @@ button[aria-pressed="true"] { background: var(--ink); color: var(--ground); }
      every property, and colours would briefly sit halfway between two states. */
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
+
+.error-page { max-width: 640px; margin: 0 auto; padding: var(--space-7) var(--space-4); display: grid; gap: var(--space-4); }
+.error-page h1 { font-size: 1.75rem; }

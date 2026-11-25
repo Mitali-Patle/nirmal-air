@@ -2,15 +2,17 @@ from datetime import datetime
 from types import SimpleNamespace
 from typing import Any
 
+import respx
+
 from app.advice.facts import Fact, Kind
 from app.advice.plan import Plan, PlanItem, Slot
 from app.air.cpcb import IST
-from app.air.forecast import HourlyPm25
+from app.air.forecast import FORECAST_URL, HourlyPm25
 from app.cache import TtlCache
 from app.domain.household import Mode
 from app.services.today import PlaceChoice, TodayService
 from app.web.household_form import parse_household
-from app.web.session import ThemeChoice, load_household, theme_choice
+from app.web.session import ThemeChoice, load_household, pack, theme_choice
 from app.web.views import sign_board, slot_of
 from tests.builders import FAMILY
 
@@ -33,8 +35,10 @@ def test_late_evening_plans_have_no_next_step_only_earlier_ones() -> None:
 
 def test_a_damaged_or_old_cookie_is_ignored() -> None:
     assert load_household(request_with({})) is None
-    bad = {"place": {"label": "X", "lat": "north", "lon": 1}, "household": {"members": []}}
+    bad = {"place": {"label": "X", "lat": "north", "lon": 1}, "household": pack({"members": []})}
     assert load_household(request_with(bad)) is None
+    unpacked = {"place": {"label": "X", "lat": 1, "lon": 1}, "household": {"members": []}}
+    assert load_household(request_with(unpacked)) is None
     assert theme_choice(request_with({"theme": "purple"})) is ThemeChoice.AUTO
     assert theme_choice(request_with({"theme": "dark"})) is ThemeChoice.DARK
 
@@ -69,7 +73,7 @@ def test_form_errors_read_as_sentences() -> None:
 
 async def test_without_a_data_key_there_is_no_measured_air(client: Any) -> None:
     forecasts: TtlCache[tuple[HourlyPm25, ...]] = TtlCache(60, 60)
-    forecasts.put("28.61,77.21,2026112508", ())
+    forecasts.put("28.61,77.21", ())
     service = TodayService(client, None, forecasts)
     day = await service.day(
         PlaceChoice("Delhi", 28.61, 77.21), FAMILY, datetime(2026, 11, 25, 8, tzinfo=IST)
@@ -112,3 +116,17 @@ def test_signs_show_what_the_step_changes_first() -> None:
         "AQI 326",
         None,
     ]
+
+
+async def test_an_old_forecast_is_used_when_open_meteo_is_down(client: Any) -> None:
+    forecasts: TtlCache[tuple[HourlyPm25, ...]] = TtlCache(0, 3 * 3600)
+    earlier = datetime(2026, 11, 25, 7, tzinfo=IST)
+    hours = tuple(HourlyPm25(earlier.replace(hour=h), 50.0) for h in range(7, 12))
+    forecasts.put("28.61,77.21", hours)
+    service = TodayService(client, None, forecasts)
+    with respx.mock:
+        respx.get(FORECAST_URL).respond(503)
+        day = await service.day(
+            PlaceChoice("Delhi", 28.61, 77.21), FAMILY, earlier.replace(hour=9, minute=40)
+        )
+    assert [hour.starts_at.hour for hour in day.hours] == [9, 10, 11]

@@ -1,6 +1,7 @@
 """Facts about the household: who lives here, routines, commutes and swaps, and the home."""
 
 from app.advice.facts import MINUS, Fact, Kind, Today, clock, number
+from app.domain.assumptions import TYPICAL_PURIFIER_CADR_M3H
 from app.domain.commute import Swap, offered_swaps, trip_impact
 from app.domain.guidance import routine_decision
 from app.domain.household import Commute, Home, Household, Mode
@@ -146,6 +147,20 @@ def _home_fact(home: Home) -> Fact:
     )
 
 
+def _purifier_if_fact(pm25: float, home: Home, approx: str) -> Fact:
+    """What a typical purifier would change, for a home that has none."""
+    typical = home.model_copy(update={"purifier_cadr_m3h": TYPICAL_PURIFIER_CADR_M3H})
+    level = indoor_estimates(pm25, typical).with_purifier
+    return Fact(
+        "indoor_purifier_if",
+        Kind.ESTIMATE,
+        f"A typical air purifier ({TYPICAL_PURIFIER_CADR_M3H} m³/h) running with windows shut "
+        f"would bring the main room to {approx} {level} µg/m³.",
+        f"{level} µg/m³",
+        f"Main room with a {TYPICAL_PURIFIER_CADR_M3H} m³/h purifier",
+    )
+
+
 def _indoor_facts(pm25: float, home: Home, approx: str) -> list[Fact]:
     estimate = indoor_estimates(pm25, home)
     shut_pct = round((1 - estimate.windows_shut / pm25) * 100)
@@ -166,7 +181,9 @@ def _indoor_facts(pm25: float, home: Home, approx: str) -> list[Fact]:
             "Main room, windows shut",
         ),
     ]
-    if estimate.with_purifier is not None:
+    if estimate.with_purifier is None:
+        facts.append(_purifier_if_fact(pm25, home, approx))
+    else:
         facts.append(
             Fact(
                 "indoor_purifier",

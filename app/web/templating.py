@@ -11,7 +11,7 @@ from fastapi import Request
 from fastapi.templating import Jinja2Templates
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
-from app.advice.facts import clock, number
+from app.advice.facts import clock, distance_label, number
 from app.web.session import csrf_token
 
 TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
@@ -19,15 +19,6 @@ TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
 environment = Environment(
     loader=FileSystemLoader(TEMPLATES_DIR), autoescape=True, undefined=StrictUndefined
 )
-
-
-def distance_label(km: float) -> str:
-    """A station distance as people say it.
-
-    >>> distance_label(0.4), distance_label(12.34)
-    ('under 1 km', '12.3 km')
-    """
-    return "under 1 km" if km < 1 else f"{number(round(km, 1))} km"
 
 
 def kilograms(grams: int) -> str:

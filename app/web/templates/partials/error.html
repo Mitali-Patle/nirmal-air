@@ -1,0 +1,1 @@
+<p class="note" role="alert">{% if message %}{{ message }}{% elif code == 404 %}There is nothing at this address.{% elif code == 422 %}Please check what you entered and try again.{% else %}Please try again in a moment.{% endif %}</p>

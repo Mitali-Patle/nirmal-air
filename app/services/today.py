@@ -72,13 +72,22 @@ class TodayService:
         return await self._air.measured_air(place.lat, place.lon, now)
 
     async def _forecast(self, place: PlaceChoice, now: datetime) -> tuple[HourlyPm25, ...]:
-        key = f"{place.lat:.2f},{place.lon:.2f},{now:%Y%m%d%H}"
+        """The forecast from this hour on, cached for an hour.
+
+        When Open-Meteo does not answer, a copy up to three hours old is used instead.
+        """
+        key = f"{place.lat:.2f},{place.lon:.2f}"
         cached = self._forecasts.get(key)
-        if cached is not None:
-            return cached.value
+        if cached is not None and not cached.stale:
+            return _from_this_hour(cached.value, now)
         try:
             hours = tuple(await fetch_forecast(self._client, place.lat, place.lon, now))
         except AirDataUnavailableError:
-            return ()
+            return _from_this_hour(cached.value, now) if cached is not None else ()
         self._forecasts.put(key, hours)
         return hours
+
+
+def _from_this_hour(hours: tuple[HourlyPm25, ...], now: datetime) -> tuple[HourlyPm25, ...]:
+    this_hour = now.replace(minute=0, second=0, microsecond=0)
+    return tuple(hour for hour in hours if hour.starts_at >= this_hour)

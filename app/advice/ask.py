@@ -12,7 +12,7 @@ from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
 from app.advice.facts import Fact
 from app.advice.plan import PlanContext, plan_payload
-from app.ai.guard import unknown_numbers
+from app.ai.guard import guard_problems
 from app.ai.task import OutputRejectedError
 
 ASK_VERSION = "ask-v1"
@@ -93,9 +93,7 @@ def check_answer(answer: Answer, context: AskContext) -> Answer:
         problems.append(f"unknown fact ids {unknown_ids}")
     if answer.kind is AnswerKind.ANSWER and not answer.fact_ids:
         problems.append("an answer must cite at least one fact id")
-    numbers = unknown_numbers(answer.text, texts.values())
-    if numbers:
-        problems.append(f"numbers not in the facts: {sorted(numbers)}")
+    problems += guard_problems(answer.text, texts.values())
     if problems:
         raise OutputRejectedError(problems)
     return answer

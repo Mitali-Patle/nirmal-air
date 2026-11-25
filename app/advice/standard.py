@@ -16,8 +16,6 @@ from app.domain.guidance import (
 )
 from app.domain.household import Condition, CookingFuel, Household
 
-AFTERNOON_FROM = 12
-EVENING_FROM = 17
 WINDOW_ACTIONS = {
     WindowRule.OPEN: "Open the windows to air the house.",
     WindowRule.SHUT_EXCEPT_CLEANEST: (
@@ -59,12 +57,6 @@ def _item(slot: Slot, member: str, action: str, fact: Fact) -> PlanItem:
     return PlanItem(slot=slot, member=member, action=action, why=fact.text, fact_ids=[fact.id])
 
 
-def _slot(hour: int) -> Slot:
-    if hour < AFTERNOON_FROM:
-        return Slot.MORNING
-    return Slot.AFTERNOON if hour < EVENING_FROM else Slot.EVENING
-
-
 def _windows(aqi: int | None, facts: dict[str, Fact]) -> PlanItem:
     rule = window_rule(aqi, has_forecast="cleanest" in facts)
     return _item(Slot.MORNING, EVERYONE, WINDOW_ACTIONS[rule], facts["windows"])
@@ -84,7 +76,7 @@ def _routines(aqi: int | None, household: Household, facts: dict[str, Fact]) -> 
         reason = (
             facts["cleanest"] if decision is Decision.CLEANEST_TIME else facts[f"routine_{index}"]
         )
-        items.append(_item(_slot(routine.hour), routine.member, action, reason))
+        items.append(_item(Slot.of_hour(routine.hour), routine.member, action, reason))
     return items
 
 
@@ -93,7 +85,7 @@ def _commutes(household: Household, facts: dict[str, Fact]) -> list[PlanItem]:
     for index, commute in enumerate(household.commutes, start=1):
         swap = facts.get(f"swap_{index}_1")
         if swap is not None:
-            slot = _slot(commute.leaves_at_hour)
+            slot = Slot.of_hour(commute.leaves_at_hour)
             items.append(_item(slot, commute.member, "Try the lower-CO₂ way for this trip.", swap))
     return items
 

@@ -69,8 +69,8 @@
         <p class="field-note">Names are only used to say who each step is for.</p>
         {% for row in member_rows %}
         {% if row == shown.members %}<details class="more-rows"{% if open_more.members %} open{% endif %}><summary>Add more people (up to 8)</summary>{% endif %}
-        <div class="row row-person">
-          <div><label for="m{{ row }}_name">Name {{ row + 1 }}</label>
+        <fieldset class="row row-person"><legend class="row-legend">Person {{ row + 1 }}</legend>
+          <div><label for="m{{ row }}_name">Name</label>
             <input id="m{{ row }}_name" name="m{{ row }}_name" type="text" maxlength="20" value="{{ form.get('m%d_name'|format(row), '') }}"></div>
           <div><label for="m{{ row }}_role">Age group</label>
             <select id="m{{ row }}_role" name="m{{ row }}_role">{% for value, label in roles %}<option value="{{ value }}"{% if form.get('m%d_role'|format(row)) == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
@@ -79,7 +79,7 @@
             <label><input type="checkbox" name="m{{ row }}_heart"{% if form.get('m%d_heart'|format(row)) %} checked{% endif %}> Heart condition</label>
             <label><input type="checkbox" name="m{{ row }}_pregnant"{% if form.get('m%d_pregnant'|format(row)) %} checked{% endif %}> Pregnant</label>
           </div>
-        </div>
+        </fieldset>
         {% endfor %}
         {% if member_rows|length > shown.members %}</details>{% endif %}
       </fieldset>
@@ -89,12 +89,12 @@
         <p class="field-note">"Who" is one of the names above.</p>
         {% for row in routine_rows %}
         {% if row == shown.routines %}<details class="more-rows"{% if open_more.routines %} open{% endif %}><summary>Add more routines (up to 6)</summary>{% endif %}
-        <div class="row">
+        <fieldset class="row"><legend class="row-legend">Routine {{ row + 1 }}</legend>
           <div><label for="r{{ row }}_member">Who</label><input id="r{{ row }}_member" name="r{{ row }}_member" type="text" maxlength="20" value="{{ form.get('r%d_member'|format(row), '') }}"></div>
           <div><label for="r{{ row }}_activity">What</label><select id="r{{ row }}_activity" name="r{{ row }}_activity">{% for value, label in activities %}<option value="{{ value }}"{% if form.get('r%d_activity'|format(row)) == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
           <div><label for="r{{ row }}_hour">Usual time</label><select id="r{{ row }}_hour" name="r{{ row }}_hour">{{ hour_options('r%d_hour'|format(row), 7) }}</select></div>
           <div><label for="r{{ row }}_minutes">Minutes</label><input id="r{{ row }}_minutes" name="r{{ row }}_minutes" type="number" min="10" max="180" step="5" value="{{ form.get('r%d_minutes'|format(row), '30') }}"></div>
-        </div>
+        </fieldset>
         {% endfor %}
         {% if routine_rows|length > shown.routines %}</details>{% endif %}
       </fieldset>
@@ -103,7 +103,7 @@
         <legend>Regular trips</legend>
         {% for row in commute_rows %}
         {% if row == shown.commutes %}<details class="more-rows"{% if open_more.commutes %} open{% endif %}><summary>Add more trips (up to 4)</summary>{% endif %}
-        <div class="row">
+        <fieldset class="row"><legend class="row-legend">Trip {{ row + 1 }}</legend>
           <div><label for="c{{ row }}_member">Who</label><input id="c{{ row }}_member" name="c{{ row }}_member" type="text" maxlength="20" value="{{ form.get('c%d_member'|format(row), '') }}"></div>
           <div><label for="c{{ row }}_mode">How</label><select id="c{{ row }}_mode" name="c{{ row }}_mode">{% for value, label in modes %}<option value="{{ value }}"{% if form.get('c%d_mode'|format(row)) == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
           <div><label for="c{{ row }}_km">Km one way</label><input id="c{{ row }}_km" name="c{{ row }}_km" type="number" min="0.5" max="60" step="0.5" value="{{ form.get('c%d_km'|format(row), '') }}"></div>
@@ -111,7 +111,7 @@
           <div><label for="c{{ row }}_hour">Leaves at</label><select id="c{{ row }}_hour" name="c{{ row }}_hour">{{ hour_options('c%d_hour'|format(row), 9) }}</select></div>
           <div><label for="c{{ row }}_people">People in the car</label><input id="c{{ row }}_people" name="c{{ row }}_people" type="number" min="1" max="4" value="{{ form.get('c%d_people'|format(row), '1') }}"></div>
           <div class="checks"><label><input type="checkbox" name="c{{ row }}_metro"{% if form.get('c%d_metro'|format(row)) %} checked{% endif %}> A metro could do this trip</label></div>
-        </div>
+        </fieldset>
         {% endfor %}
         {% if commute_rows|length > shown.commutes %}</details>{% endif %}
       </fieldset>

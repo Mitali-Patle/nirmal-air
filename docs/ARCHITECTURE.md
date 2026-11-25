@@ -51,8 +51,16 @@ flowchart LR
 
 - **Strict Content Security Policy:** scripts, styles, fonts and images come from the app's
   own origin only, with no inline code. HSTS and frame denial in production.
-- **Cookie:** signed, HttpOnly and SameSite=Lax, holding only the household profile (no
-  account, no server-side personal data). CSRF tokens on every POST.
+- **Cookie:** signed, HttpOnly, Secure and SameSite=Lax, holding only the household profile
+  and the week's log (no account, no server-side personal data). It is signed, not encrypted:
+  it cannot be altered, but its content is readable to whoever holds the browser. Profile and
+  log are packed (compact JSON, compressed), so the largest household with a full week stays
+  well under the 4 KB cookie limit (tested). CSRF tokens on every POST.
+- **AI quota:** routes that call a model are rate-limited per client (20 in 10 minutes) and
+  per instance (60 a minute). Over the limit, the plan is the labelled standard advice.
+  Cached answers do not count.
+- **Errors:** 403, 404 and 422 render as readable pages (or htmx fragments) that never echo
+  what was sent.
 - **Inputs:** every input is validated with limits. Member names accept letters only, so
   nothing typed can carry instructions to the AI. Place names come from the geocoder, never
   from the form. Questions reach the model as a JSON string and are treated as data.
@@ -64,7 +72,9 @@ flowchart LR
 - The nearest station is asked first, and the next two only when it has no valid reading.
   Station readings are cached for 15 minutes. When CPCB stops answering, the last cached
   reading is reused and labelled as such, as long as it was measured in the last 3 hours.
-- The forecast is cached per place for an hour, and identical AI requests for an hour.
+- The forecast is cached per place for an hour, with an older copy (up to 3 hours) used when
+  Open-Meteo does not answer. Place searches are cached for a day. Identical AI requests are
+  cached for an hour, and identical requests arriving together share one model call.
 - The air and the forecast are fetched concurrently. The plan loads after the page, so
   the first paint never waits for a model.
 - No front-end framework: htmx (52 KB, vendored) and one small script for "Use my location".

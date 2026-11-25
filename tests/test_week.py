@@ -5,7 +5,7 @@ from typing import Any
 from app.advice.week_steps import step_options
 from app.domain.household import Activity, Household, Routine
 from app.domain.week import MAX_ENTRIES, DayImpact, LogEntry, add_entry, indoors_day, week_totals
-from app.web.session import load_log, save_log
+from app.web.session import load_log, pack, save_log, unpack
 from app.web.views import week_view
 from tests.builders import FAMILY, measured, today
 
@@ -75,8 +75,12 @@ def test_the_week_view_marks_todays_ticks_newest_first() -> None:
 def test_the_log_round_trips_through_the_cookie_and_skips_damaged_entries() -> None:
     request: Any = SimpleNamespace(session={})
     save_log(request, [entry(MON)])
-    request.session["log"].append({"d": "not a date"})
+    stored = unpack(request.session["log"])
+    assert isinstance(stored, list)
+    request.session["log"] = pack([*stored, {"d": "not a date"}])
     assert load_log(request) == [entry(MON)]
+    request.session["log"] = "not packed at all"
+    assert load_log(request) == []
 
 
 def test_a_cycle_commute_has_no_swap_to_log() -> None:

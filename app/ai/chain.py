@@ -6,6 +6,7 @@ rate-limited model sits out until it may be asked again. The chain never raises 
 problems, and every result records how it was produced.
 """
 
+import asyncio
 import hashlib
 import json
 import time
@@ -26,6 +27,15 @@ DEFAULT_RETRY_AFTER_S = 60.0
 ANSWER_TTL_S = 60 * 60
 MAX_PROBLEMS = 5
 MAX_REPLY_CHARS = 4000
+
+
+@dataclass(frozen=True)
+class _Asked:
+    """One request to the chain: the payload, its JSON text and its cache key."""
+
+    payload: dict[str, Any]
+    user: str
+    key: str
 
 
 @dataclass
@@ -50,13 +60,20 @@ class AIChain:
         self._cache = cache or TtlCache(ANSWER_TTL_S, ANSWER_TTL_S)
         self._clock = clock
         self._resting_until: dict[str, float] = {}
+        self._in_flight: dict[str, asyncio.Lock] = {}
 
-    async def run[C, T: BaseModel](self, task: AITask[C, T], context: C) -> AIResult[T]:
+    async def run[C, T: BaseModel](
+        self, task: AITask[C, T], context: C, allow: Callable[[], bool] | None = None
+    ) -> AIResult[T]:
         """Produce a checked answer, or the task's standard advice if every model fails.
+
+        Identical requests that arrive together wait for one model call instead of each making
+        their own; a cached answer is reused without asking `allow`.
 
         Args:
             task: What to ask.
             context: The facts and household the answer must rest on.
+            allow: Asked before any model is called; False means standard advice (a rate limit).
 
         Returns:
             The answer and its provenance.
@@ -64,12 +81,36 @@ class AIChain:
         payload = task.payload(context)
         user = json.dumps(payload, ensure_ascii=False, sort_keys=True)
         key = f"{task.name}:{task.version}:{hashlib.sha256(user.encode()).hexdigest()}"
+        asked = _Asked(payload, user, key)
+        lock = self._in_flight.setdefault(key, asyncio.Lock())
+        try:
+            async with lock:
+                return await self._answer(task, context, asked, allow)
+        finally:
+            if not lock.locked():
+                self._in_flight.pop(key, None)
+
+    async def _answer[C, T: BaseModel](
+        self,
+        task: AITask[C, T],
+        context: C,
+        asked: "_Asked",
+        allow: Callable[[], bool] | None,
+    ) -> AIResult[T]:
+        payload, user, key = asked.payload, asked.user, asked.key
         cached = self._cache.get(key)
         if cached is not None and not cached.stale:
             hit: AIResult[T] = cached.value
             return replace(hit, provenance=hit.provenance.model_copy(update={"cached": True}))
         started = self._clock()
         run = _Run(started, started + TOTAL_BUDGET_S, [])
+        if allow is not None and not allow():
+            run.attempts.append(
+                Attempt(provider="all models", outcome=Outcome.LIMITED, latency_ms=0)
+            )
+            return AIResult(
+                task.fallback(context), self._provenance(task, payload, run, None, None)
+            )
         request = LLMRequest(
             system=task.system,
             user=user,

@@ -1,5 +1,7 @@
 """The number guard: an AI sentence may only use numbers that appear in the facts it was given.
 
+Number words that state an amount ("twice", "half", "double") count too.
+
 Names that contain digits, such as PM2.5, PM10, CO₂ or N95, are not numbers and are ignored.
 Digits in any script count, so Hindi answers written with Devanagari digits are checked too.
 
@@ -14,6 +16,8 @@ from collections.abc import Iterable
 # A word that starts with letters and ends in digits: PM2.5, PM10, NO2, N95, FFP2.
 _NAMED = re.compile(r"\b[^\W\d_]+\d+(?:\.\d+)?\b")
 _NUMBER = re.compile(r"\d+(?:[.,]\d+)*")
+# Words that state an amount without digits ("twice the PM2.5") need a source too.
+_NUMBER_WORDS = re.compile(r"\b(twice|thrice|double|triple|quadruple|half)\b", re.IGNORECASE)
 
 
 def numbers_in(text: str) -> set[float]:
@@ -51,3 +55,28 @@ def unknown_numbers(text: str, allowed: Iterable[str]) -> set[float]:
     """
     known = set().union(*(numbers_in(item) for item in allowed))
     return numbers_in(text) - known
+
+
+def guard_problems(text: str, allowed: Iterable[str]) -> list[str]:
+    """Everything in `text` that states an amount the facts do not: digits and number words.
+
+    Args:
+        text: An AI-written sentence.
+        allowed: The fact texts it was given.
+
+    Returns:
+        Problems to send back to the model; empty when the sentence is clean.
+
+    >>> guard_problems("Twice as bad after 7 pm", ["Worst time: 7 pm to 10 pm."])
+    ["number words not in the facts: ['twice']"]
+    """
+    sources = list(allowed)
+    problems = []
+    numbers = unknown_numbers(text, sources)
+    if numbers:
+        problems.append(f"numbers not in the facts: {sorted(numbers)}")
+    known_words = {word.casefold() for source in sources for word in _NUMBER_WORDS.findall(source)}
+    words = {word.casefold() for word in _NUMBER_WORDS.findall(text)} - known_words
+    if words:
+        problems.append(f"number words not in the facts: {sorted(words)}")
+    return problems

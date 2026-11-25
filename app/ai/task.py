@@ -57,6 +57,7 @@ class Outcome(StrEnum):
     RATE_LIMITED = "rate limited"
     RESTING = "skipped: rate limited earlier"
     NO_TIME = "skipped: out of time"
+    LIMITED = "skipped: too many requests, try again in a few minutes"
 
 
 class Attempt(BaseModel):
