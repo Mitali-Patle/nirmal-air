@@ -78,3 +78,8 @@ def test_fact_chips_are_readable(kind: str) -> None:
 
 def test_all_six_haze_levels_are_defined() -> None:
     assert len(HAZES) == 6
+
+
+@pytest.mark.parametrize("ground", ["sign-yellow", "sign-legend"])
+def test_dark_text_on_the_yellow_sign_and_white_plate_is_readable(ground: str) -> None:
+    assert contrast(ROOT["on-yellow"], ROOT[ground]) >= AA_TEXT
