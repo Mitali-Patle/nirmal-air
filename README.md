@@ -75,6 +75,9 @@ to their location and lifestyle, and explain the direct impact of each choice.
 8. **The sky.** The page's colour follows the time of day at the place (morning, afternoon,
    evening, dusk, night), from sunrise and sunset computed in code. It is dulled by the
    measured AQI band. Contrast stays WCAG AA in all 30 combinations, and a test checks them.
+   A sky band at the top draws the sun on its real path for the place (or the moon and
+   stars at night, fewer through smog), clouds from the real cloud cover and rain when it
+   rains. It is decoration only and never carries text; motion stops for reduced motion.
 
 Identical AI requests are answered from a one-hour cache, station readings are cached for
 15 minutes and the forecast for an hour, so repeat visits are fast and stay within the free
@@ -115,8 +118,8 @@ at 5 pm?", or an off-topic request such as "Write me a poem" to see it declined.
 - **Central Pollution Control Board**, real-time air quality, via
   [data.gov.in](https://www.data.gov.in/resource/real-time-air-quality-index-various-locations)
   (Government Open Data License, India).
-- **[Open-Meteo](https://open-meteo.com/)**: air-quality forecast (CAMS, CC BY 4.0) and
-  place search.
+- **[Open-Meteo](https://open-meteo.com/)**: air-quality forecast (CAMS, CC BY 4.0), place
+  search, and current cloud cover and rain for the sky drawing.
 - Published sources for every constant are listed in [docs/ASSUMPTIONS.md](docs/ASSUMPTIONS.md).
 
 ## Limitations
@@ -146,7 +149,7 @@ uv run uvicorn app.index:app --reload
 ```bash
 uv run ruff check . && uv run ruff format --check .
 uv run mypy app tests scripts                  # strict
-uv run pytest -W error --cov=app               # 289 tests, 95% branch-coverage gate (100% now)
+uv run pytest -W error --cov=app               # 301 tests, 95% branch-coverage gate (100% now)
 uv run pytest -W error -m e2e                  # 31 browser tests: axe (WCAG 2.2 AA), widths, keyboard
 ```
 

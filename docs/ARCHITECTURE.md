@@ -8,7 +8,7 @@ flowchart LR
     Browser["Browser<br/>Jinja pages + htmx"] -->|"GET /today"| Web["app/web<br/>routes, session, views"]
     Web --> Service["app/services/today<br/>air + forecast, side by side"]
     Service --> CPCB["CPCB via data.gov.in<br/>measured AQI"]
-    Service --> Meteo["Open-Meteo<br/>hourly forecast"]
+    Service --> Meteo["Open-Meteo<br/>hourly forecast, current weather"]
     Service --> Domain["app/domain<br/>AQI, timing, sky, indoor,<br/>commute, decision rules"]
     Domain --> Facts["app/advice<br/>facts bundle"]
     Browser -->|"GET /today/plan, POST /ask"| Web
@@ -72,6 +72,7 @@ flowchart LR
 - The nearest station is asked first, and the next two only when it has no valid reading.
   Station readings are cached for 15 minutes. When CPCB stops answering, the last cached
   reading is reused and labelled as such, as long as it was measured in the last 3 hours.
+- The current weather (for the sky drawing only) is cached per place for 30 minutes.
 - The forecast is cached per place for an hour, with an older copy (up to 3 hours) used when
   Open-Meteo does not answer. Place searches are cached for a day. Identical AI requests are
   cached for an hour, and identical requests arriving together share one model call.

@@ -8,6 +8,7 @@ from app.advice.facts import Fact, Kind
 from app.advice.plan import Plan, PlanItem, Slot
 from app.air.cpcb import IST
 from app.air.forecast import FORECAST_URL, HourlyPm25
+from app.air.weather import WEATHER_URL, Weather
 from app.cache import TtlCache
 from app.domain.household import Mode
 from app.services.today import PlaceChoice, TodayService
@@ -126,7 +127,9 @@ async def test_an_old_forecast_is_used_when_open_meteo_is_down(client: Any) -> N
     service = TodayService(client, None, forecasts)
     with respx.mock:
         respx.get(FORECAST_URL).respond(503)
+        respx.get(WEATHER_URL).respond(json={"current": {"cloud_cover": 90, "precipitation": 1.2}})
         day = await service.day(
             PlaceChoice("Delhi", 28.61, 77.21), FAMILY, earlier.replace(hour=9, minute=40)
         )
     assert [hour.starts_at.hour for hour in day.hours] == [9, 10, 11]
+    assert day.weather == Weather(90, raining=True)

@@ -16,7 +16,7 @@ from app.services.today import Day, PlaceChoice, TodayService
 from app.web.limits import AILimits
 from app.web.session import CsrfChecked, load_household, load_log, sample_title, theme_choice
 from app.web.templating import templates
-from app.web.views import KIND_LABELS, sign_board, sky_for, strip, week_view
+from app.web.views import KIND_LABELS, scene_for, sign_board, sky_for, strip, week_view
 
 router = APIRouter()
 Lang = Annotated[str, Query(pattern="^(en|hi)$")]
@@ -129,13 +129,15 @@ def _context(request: Request, place: PlaceChoice, day: Day, lang: str) -> dict[
     today = day.today
     air = today.air
     facts = {fact.id: fact for fact in build_facts(today)}
+    sky = sky_for(place, today.now, air.aqi.category if air else None, theme_choice(request))
     return {
         "today": today,
         "air": air,
         "far": air is not None and air.nearby.distance_km > FAR_STATION_KM,
         "facts": facts,
         "strip": strip(day.hours, today.timing),
-        "sky": sky_for(place, today.now, air.aqi.category if air else None, theme_choice(request)),
+        "sky": sky,
+        "scene": scene_for(place, today.now, sky, day.weather),
         "lang": lang,
         "sample": sample_title(request),
         "week": week_view(load_log(request), step_options(today), today.now.date()),

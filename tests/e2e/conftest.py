@@ -25,6 +25,7 @@ from pydantic import SecretStr
 from app.air.cpcb import CPCB_URL, IST
 from app.air.forecast import FORECAST_URL
 from app.air.places import GEOCODING_URL
+from app.air.weather import WEATHER_URL
 from app.config import Settings
 from app.main import create_app
 from tests.conftest import load_fixture
@@ -62,6 +63,7 @@ def live() -> Iterator[LiveApp]:
         router.route(host="127.0.0.1").pass_through()
         router.get(CPCB_URL).respond(json=load_fixture("cpcb_talkatora.json"))
         router.get(FORECAST_URL).respond(json=load_fixture("forecast_delhi.json"))
+        router.get(WEATHER_URL).respond(json=load_fixture("weather_delhi.json"))
         router.get(GEOCODING_URL).respond(json=load_fixture("places_andheri.json"))
         port = _free_port()
         server = uvicorn.Server(

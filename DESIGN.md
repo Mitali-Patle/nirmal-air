@@ -445,3 +445,16 @@ The top bar in bar-sky (hazed like the ground) with a 1px line under it: NirmalA
 - **Don't** build an AQI dashboard: no gauge, no giant AQI number, no pollutant tiles.
 - **Don't** use decorative gradients, glass, drop shadows, emoji or icon fonts. The hatched worst-hours fill is a data encoding with a text legend, not decoration.
 - **Don't** add a second typeface for display or body.
+
+## Sky band
+
+A decorative strip (72px on phones, 104px from 960px) above the top bar on the Today page,
+drawn in SVG from `app/domain/scene.py`. It carries no text and is `aria-hidden`.
+
+- **Sun:** on its real arc for the place, from sunrise at the left to sunset at the right; warm orange in the evening.
+- **Moon and stars:** a crescent moon at dusk and night, and up to 24 stars, fewer as the AQI haze rises.
+- **Weather:** clouds from the real cloud cover (none, one, two or three each side), grey clouds and falling rain when it rains, and no sun or moon under full overcast.
+- **Smog:** a smog veil over everything, in step with `data-haze`.
+- **Blend:** the band's sky colour comes from the phase (`--sky-high`) and fades into the top bar, so there is no edge.
+- **Motion:** clouds drift in from both sides and the sun or moon rises once on arrival; then clouds float and rain falls. Reduced motion stops all of it.
+- **Phone layout:** phones get a narrower drawing, so the sun is not cropped near sunrise or sunset.

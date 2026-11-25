@@ -15,6 +15,7 @@ from app.ai.providers import LLMRequest
 from app.air.cpcb import CPCB_URL, IST
 from app.air.forecast import FORECAST_URL
 from app.air.places import GEOCODING_URL
+from app.air.weather import WEATHER_URL
 from app.config import Settings
 from app.main import create_app
 from tests.conftest import load_fixture
@@ -59,6 +60,7 @@ def live() -> Iterator[respx.MockRouter]:
     with respx.mock(assert_all_called=False) as router:
         router.get(CPCB_URL).respond(json=load_fixture("cpcb_talkatora.json"))
         router.get(FORECAST_URL).respond(json=load_fixture("forecast_delhi.json"))
+        router.get(WEATHER_URL).respond(json=load_fixture("weather_delhi.json"))
         router.get(GEOCODING_URL).respond(json=load_fixture("places_andheri.json"))
         yield router
 
@@ -116,6 +118,7 @@ def test_without_a_station_or_forecast_the_page_says_so() -> None:
     with respx.mock:
         respx.get(CPCB_URL).respond(json={"records": []})
         respx.get(FORECAST_URL).respond(503)
+        respx.get(WEATHER_URL).respond(503)
         page = client.get("/today").text
     assert "No CPCB station near ITO, New Delhi has reported" in page
     assert "The forecast is not available right now" in page
@@ -405,3 +408,15 @@ def test_errors_are_readable_pages_and_htmx_fragments() -> None:
     assert expired.status_code == 403 and expired.text.startswith(
         '<p class="note" role="alert">The form expired'
     )
+
+
+def test_today_draws_the_sky_from_the_weather(live: respx.MockRouter) -> None:
+    client = make_client()
+    load_sample(client)
+    page = client.get("/today").text
+    assert '<div class="sky" aria-hidden="true">' in page
+    assert page.count('class="cloud cloud-') == 2 * 4  # 64% cover: two each side, two drawings
+    live.get(WEATHER_URL).respond(json={"current": {"cloud_cover": 95, "precipitation": 3}})
+    rainy = make_client()
+    load_sample(rainy)
+    assert '<div class="sky sky-rain" aria-hidden="true">' in rainy.get("/today").text

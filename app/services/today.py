@@ -10,12 +10,14 @@ from app.advice.facts import Today
 from app.air.cpcb import AirDataUnavailableError
 from app.air.forecast import HourlyPm25, fetch_forecast
 from app.air.lookup import AirLookup, MeasuredAir
+from app.air.weather import Weather, fetch_weather
 from app.cache import TtlCache
 from app.domain.household import Household
 from app.domain.timing import day_timing
 
 FORECAST_TTL_S = 60 * 60
 FORECAST_KEEP_S = 3 * 60 * 60
+WEATHER_TTL_S = 30 * 60
 
 
 @dataclass(frozen=True)
@@ -29,10 +31,15 @@ class PlaceChoice:
 
 @dataclass(frozen=True)
 class Day:
-    """Today's data for a household plus the hourly forecast, for the timing strip."""
+    """Today's data for a household, the forecast and the weather.
+
+    The hourly forecast feeds the timing strip; the weather (None when it could not be
+    fetched) only feeds the sky drawn at the top of the page.
+    """
 
     today: Today
     hours: tuple[HourlyPm25, ...]
+    weather: Weather | None = None
 
 
 class TodayService:
@@ -47,6 +54,7 @@ class TodayService:
         self._client = client
         self._air = air
         self._forecasts = forecasts or TtlCache(FORECAST_TTL_S, FORECAST_KEEP_S)
+        self._weathers: TtlCache[Weather] = TtlCache(WEATHER_TTL_S, WEATHER_TTL_S)
 
     async def day(self, place: PlaceChoice, household: Household, now: datetime) -> Day:
         """Measured air and forecast for a place, fetched at the same time.
@@ -62,9 +70,23 @@ class TodayService:
         Returns:
             The day's data.
         """
-        air, hours = await asyncio.gather(self._measured(place, now), self._forecast(place, now))
+        air, hours, weather = await asyncio.gather(
+            self._measured(place, now), self._forecast(place, now), self._weather(place)
+        )
         today = Today(place.label, now, air, day_timing(hours), household)
-        return Day(today, hours)
+        return Day(today, hours, weather)
+
+    async def _weather(self, place: PlaceChoice) -> Weather | None:
+        key = f"{place.lat:.2f},{place.lon:.2f}"
+        cached = self._weathers.get(key)
+        if cached is not None:
+            return cached.value
+        try:
+            weather = await fetch_weather(self._client, place.lat, place.lon)
+        except AirDataUnavailableError:
+            return None
+        self._weathers.put(key, weather)
+        return weather
 
     async def _measured(self, place: PlaceChoice, now: datetime) -> MeasuredAir | None:
         if self._air is None:

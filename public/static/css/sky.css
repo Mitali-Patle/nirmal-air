@@ -1,0 +1,59 @@
+/* The sky band at the top of the Today page. It carries no text, fades into the top bar, and
+   only decorates: sun or moon on the real path for the place, stars at night (fewer through
+   smog), clouds from the real cloud cover, rain when it rains, all dulled by the AQI haze.
+   Motion plays once on arrival (clouds drift in from both sides, the sun or moon rises),
+   then only clouds float and rain falls. Reduced motion stops all of it (base.css). */
+
+html[data-phase="morning"] { --sky-high: #A9CDEB; --cloud: #FFFFFF; --sun: #FFE27A; --glow: rgba(255, 226, 122, 0.55); }
+html[data-phase="afternoon"] { --sky-high: #B9D3E3; --cloud: #FFFDF5; --sun: #FFD860; --glow: rgba(255, 216, 96, 0.5); }
+html[data-phase="evening"] { --sky-high: #E99A5B; --cloud: #F7D3AE; --sun: #F27B35; --glow: rgba(242, 123, 53, 0.55); }
+html[data-phase="dusk"] { --sky-high: #3A2556; --cloud: #6D5A8A; --sun: #F27B35; --glow: rgba(242, 123, 53, 0.4); }
+html[data-phase="night"] { --sky-high: #070A12; --cloud: #3B414B; --sun: #FFE27A; --glow: rgba(255, 226, 122, 0.4); }
+@media (prefers-color-scheme: dark) {
+  html[data-theme="auto"] { --sky-high: #070A12; --cloud: #3B414B; }
+}
+html[data-haze="1"] { --haze-veil: 0.1; }
+html[data-haze="2"] { --haze-veil: 0.18; }
+html[data-haze="3"] { --haze-veil: 0.28; }
+html[data-haze="4"] { --haze-veil: 0.38; }
+html[data-haze="5"] { --haze-veil: 0.5; }
+
+.sky { position: relative; height: 72px; overflow: hidden; background: var(--bar); }
+.sky svg { display: block; width: 100%; height: 100%; }
+/* A narrower drawing on phones, so the sun near sunrise or sunset is not cropped away. */
+.sky-narrow { display: none; }
+@media (max-width: 720px) { .sky .sky-wide { display: none; } .sky .sky-narrow { display: block; } }
+/* The bottom of the sky melts into the top bar, so the band has no edge. */
+.sky::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 45%; background: linear-gradient(to bottom, transparent, var(--bar)); }
+.sky + .bar { border-top: 0; }
+@media (min-width: 960px) { .sky { height: 104px; } }
+
+.sky-top { stop-color: var(--sky-high); }
+.sky-bottom { stop-color: var(--bar); }
+.glow-in { stop-color: var(--glow); }
+.glow-out { stop-color: transparent; }
+.sun { fill: var(--sun); }
+.moon { fill: #E9E6D8; }
+.moon-shade { fill: var(--sky-high); }
+.star { fill: #F4F1E6; }
+.cloud path { fill: var(--cloud); opacity: 0.92; }
+.sky-rain .cloud path { fill: #8F98A3; }
+.rain line { stroke: #9FB3C8; stroke-width: 1.6; stroke-linecap: round; opacity: 0.7; }
+.sky-haze { fill: var(--smog); opacity: var(--haze-veil, 0); }
+
+.rise { animation: rise 1.6s var(--ease-out) both; }
+.cloud-left { animation: in-left 1.8s var(--ease-out) both, float 38s ease-in-out 1.8s infinite alternate; }
+.cloud-right { animation: in-right 1.8s var(--ease-out) both, float 44s ease-in-out 1.8s infinite alternate-reverse; }
+.cloud-2 { animation-delay: 0.15s, 2s; }
+.cloud-3 { animation-delay: 0.3s, 2.2s; }
+.twinkle { animation: twinkle 3.2s ease-in-out infinite alternate; }
+.rain line { animation: fall 0.9s linear infinite; }
+.rain line:nth-child(3n) { animation-delay: -0.3s; }
+.rain line:nth-child(3n + 1) { animation-delay: -0.6s; }
+
+@keyframes rise { from { transform: translateY(26px); opacity: 0; } }
+@keyframes in-left { from { transform: translateX(-280px); opacity: 0; } }
+@keyframes in-right { from { transform: translateX(280px); opacity: 0; } }
+@keyframes float { to { transform: translateX(26px); } }
+@keyframes twinkle { to { opacity: 0.35; } }
+@keyframes fall { from { transform: translateY(-24px); } to { transform: translateY(36px); } }

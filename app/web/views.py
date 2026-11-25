@@ -9,7 +9,9 @@ from app.advice.plan import EVERYONE, Plan, PlanItem, Slot
 from app.advice.week_steps import StepOption
 from app.air.cpcb import IST
 from app.air.forecast import HourlyPm25
+from app.air.weather import Weather
 from app.domain.aqi import Category
+from app.domain.scene import Scene, scene
 from app.domain.sky import Phase, haze_level, phase_at, sun_times
 from app.domain.timing import DayTiming, Level, levels
 from app.domain.week import WEEK, LogEntry, WeekTotals, week_totals
@@ -84,6 +86,24 @@ def sky_for(
     elif theme is ThemeChoice.LIGHT and phase in DARK_PHASES:
         phase = Phase.MORNING
     return Sky(phase, haze_level(category), theme)
+
+
+def scene_for(place: PlaceChoice, now: datetime, sky: Sky, weather: Weather | None) -> Scene:
+    """The sky band's drawing for this page.
+
+    Args:
+        place: Where the household is.
+        now: The current time.
+        sky: The page's sky (phase and haze).
+        weather: Cloud cover and rain, if known.
+
+    Returns:
+        The scene to draw.
+    """
+    local = now.astimezone(IST)
+    sun = sun_times(place.lat, place.lon, local)
+    known = (weather.cloud_cover, weather.raining) if weather else None
+    return scene(local, sun, sky.phase, sky.haze, known)
 
 
 def slot_of(now: datetime) -> Slot:

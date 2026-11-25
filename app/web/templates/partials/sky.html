@@ -1,0 +1,24 @@
+<div class="sky{{ ' sky-rain' if scene.rain else '' }}" aria-hidden="true">
+  {% for name, width, f in [("wide", 1200, 1), ("narrow", 600, 0.5)] %}
+  <svg class="sky-{{ name }}" viewBox="0 0 {{ width }} 120" preserveAspectRatio="xMidYMax slice" focusable="false">
+    <defs>
+      <linearGradient id="sky-fill-{{ name }}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" class="sky-top"/><stop offset="1" class="sky-bottom"/>
+      </linearGradient>
+      <radialGradient id="sun-glow-{{ name }}">
+        <stop offset="0" class="glow-in"/><stop offset="1" class="glow-out"/>
+      </radialGradient>
+    </defs>
+    <rect width="{{ width }}" height="120" fill="url(#sky-fill-{{ name }})"/>
+    {% for x, y, r in scene.stars %}<circle class="star{{ ' twinkle' if loop.index is divisibleby 3 else '' }}" cx="{{ (x * f)|round|int }}" cy="{{ y }}" r="{{ r }}"/>{% endfor %}
+    {% if scene.body and scene.body.kind == "sun" %}
+    <g class="rise"><circle cx="{{ (scene.body.x * f)|round|int }}" cy="{{ scene.body.y }}" r="52" fill="url(#sun-glow-{{ name }})"/><circle class="sun" cx="{{ (scene.body.x * f)|round|int }}" cy="{{ scene.body.y }}" r="18"/></g>
+    {% elif scene.body %}
+    <g class="rise"><circle class="moon" cx="{{ (scene.body.x * f)|round|int }}" cy="{{ scene.body.y }}" r="14"/><circle class="moon-shade" cx="{{ (scene.body.x * f)|round|int + 7 }}" cy="{{ scene.body.y - 4 }}" r="12"/></g>
+    {% endif %}
+    {% for cloud in scene.clouds %}<g transform="translate({{ (cloud.x * f)|round|int }} {{ cloud.y }}) scale({{ cloud.scale * (0.8 if f < 1 else 1) }})"><g class="cloud cloud-{{ cloud.side }} cloud-{{ loop.index }}"><path d="M18 40C4 40 0 26 12 20 10 8 26 2 36 10 42-2 66-2 72 12 84 6 100 14 96 26 110 28 108 40 96 40Z"/></g></g>{% endfor %}
+    {% if scene.rain %}<g class="rain">{% for i in range(48) %}<line x1="{{ ((i * 53) % 1200 * f)|round|int }}" y1="{{ (i * 29) % 90 }}" x2="{{ ((i * 53) % 1200 * f)|round|int - 4 }}" y2="{{ (i * 29) % 90 + 12 }}"/>{% endfor %}</g>{% endif %}
+    <rect class="sky-haze" width="{{ width }}" height="120"/>
+  </svg>
+  {% endfor %}
+</div>
