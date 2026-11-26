@@ -224,8 +224,7 @@ def test_a_form_shown_again_keeps_the_place_picked(live: respx.MockRouter) -> No
     page = client.post(
         "/household", data={"csrf": token(client), "place_query": "Andheri", "place_index": "2"}
     )
-    assert 'hx-trigger="load"' in page.text
-    assert "&#34;chosen&#34;: &#34;2&#34;" in page.text or '"chosen": "2"' in page.text
+    assert """hx-vals='{"chosen": "2", "place_query": "Andheri"}'""" in page.text
 
 
 def household_form(csrf: str, **extra: str) -> dict[str, str]:
