@@ -2,8 +2,8 @@ import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
-from app.air.cpcb import Pollutant
 from app.domain.aqi import Category, category_for, pm25_from_sub_index, station_aqi
+from app.domain.readings import Pollutant
 
 
 @pytest.mark.parametrize(

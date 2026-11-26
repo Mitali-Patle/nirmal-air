@@ -64,7 +64,7 @@ def sun_position(now: datetime, sun: SunTimes) -> Body | None:
     Returns:
         The sun, or None when it has set or not yet risen.
 
-    >>> from app.air.cpcb import IST
+    >>> from app.domain.readings import IST
     >>> rise, noon, dusk = (datetime(2026, 11, 25, h, tzinfo=IST) for h in (7, 12, 17))
     >>> sun_position(noon, SunTimes(rise, dusk))
     Body(kind='sun', x=600, y=28)

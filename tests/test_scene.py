@@ -4,8 +4,9 @@ import httpx
 import pytest
 import respx
 
-from app.air.cpcb import IST, AirDataUnavailableError
+from app.air.errors import WeatherUnavailableError
 from app.air.weather import WEATHER_URL, Weather, fetch_weather
+from app.domain.readings import IST
 from app.domain.scene import MAX_STARS, Body, scene, sun_position
 from app.domain.sky import Phase, SunTimes
 
@@ -65,5 +66,5 @@ async def test_weather_is_fetched_and_failures_raise(client: httpx.AsyncClient) 
     assert await fetch_weather(client, 28.6, 77.2) == Weather(83, raining=False)
     assert route.calls.last.request.url.params["current"] == "cloud_cover,precipitation"
     respx.get(WEATHER_URL).respond(200, json={"current": {}})
-    with pytest.raises(AirDataUnavailableError):
+    with pytest.raises(WeatherUnavailableError):
         await fetch_weather(client, 28.6, 77.2)

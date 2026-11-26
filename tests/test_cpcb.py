@@ -4,14 +4,9 @@ import httpx
 import pytest
 import respx
 
-from app.air.cpcb import (
-    CPCB_URL,
-    IST,
-    AirDataUnavailableError,
-    Pollutant,
-    fetch_station,
-    parse_station,
-)
+from app.air.cpcb import CPCB_URL, fetch_station, parse_station
+from app.air.errors import AirDataUnavailableError
+from app.domain.readings import IST, Pollutant
 from tests.conftest import load_fixture
 
 STATION = "Talkatora Garden, Delhi - DPCC"

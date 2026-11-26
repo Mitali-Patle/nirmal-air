@@ -93,7 +93,7 @@ class AIChain:
         self,
         task: AITask[C, T],
         context: C,
-        asked: "_Asked",
+        asked: _Asked,
         allow: Callable[[], bool] | None,
     ) -> AIResult[T]:
         payload, user, key = asked.payload, asked.user, asked.key
@@ -107,9 +107,7 @@ class AIChain:
             run.attempts.append(
                 Attempt(provider="all models", outcome=Outcome.LIMITED, latency_ms=0)
             )
-            return AIResult(
-                task.fallback(context), self._provenance(task, payload, run, None, None)
-            )
+            return self._fallback(task, context, payload, run)
         request = LLMRequest(
             system=task.system,
             user=user,
@@ -126,7 +124,7 @@ class AIChain:
                 )
                 self._cache.put(key, result)
                 return result
-        return AIResult(task.fallback(context), self._provenance(task, payload, run, None, None))
+        return self._fallback(task, context, payload, run)
 
     async def _ask[C, T: BaseModel](
         self,
@@ -190,6 +188,12 @@ class AIChain:
                 problems=tuple(problems),
             )
         )
+
+    def _fallback[C, T: BaseModel](
+        self, task: AITask[C, T], context: C, payload: dict[str, Any], run: _Run
+    ) -> AIResult[T]:
+        """The task's standard advice, with the attempts that led to it."""
+        return AIResult(task.fallback(context), self._provenance(task, payload, run, None, None))
 
     def _provenance(
         self,

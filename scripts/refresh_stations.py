@@ -12,8 +12,8 @@ from pathlib import Path
 
 import httpx
 
-from app.air.cpcb import CPCB_URL, USER_AGENT
-from app.config import get_settings
+from app.air.cpcb import CPCB_URL
+from app.config import USER_AGENT, get_settings
 
 OUTPUT = Path(__file__).resolve().parent.parent / "app" / "air" / "stations.json"
 PAGE_SIZE = 1000

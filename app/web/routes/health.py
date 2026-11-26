@@ -2,10 +2,10 @@
 
 from datetime import datetime
 
-from fastapi import APIRouter, Request, Response, status
+from fastapi import APIRouter, Response, status
 
-from app.air.cpcb import IST
-from app.air.lookup import AirLookup
+from app.domain.readings import IST
+from app.web.deps import AppServices
 
 router = APIRouter(tags=["health"])
 # Central Delhi has several stations, so a lookup there fails only if the feed is down.
@@ -33,19 +33,19 @@ def healthz_head() -> Response:
 
 
 @router.get("/readyz")
-async def readyz(request: Request, response: Response) -> dict[str, str]:
+async def readyz(services: AppServices, response: Response) -> dict[str, str]:
     """Report whether a live CPCB reading can be fetched from where the app runs.
 
     The reply never says why the data is unavailable, so no configuration is exposed.
 
     Args:
-        request: The incoming request, for the app's air lookup.
+        services: The app's services, for its air lookup.
         response: Response used to set the status code.
 
     Returns:
         `{"status": "ok"}` with 200, or `{"status": "unavailable"}` with 503.
     """
-    lookup: AirLookup | None = request.app.state.air_lookup
+    lookup = services.air_lookup
     if lookup is None or await lookup.measured_air(*PROBE_POINT, datetime.now(IST)) is None:
         response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
         return {"status": "unavailable"}

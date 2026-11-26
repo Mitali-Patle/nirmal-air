@@ -9,7 +9,7 @@ from dataclasses import dataclass
 import httpx
 from pydantic import BaseModel
 
-from app.air.cpcb import AirDataUnavailableError
+from app.air.errors import WeatherUnavailableError
 
 WEATHER_URL = "https://api.open-meteo.com/v1/forecast"
 RAIN_MM = 0.1
@@ -44,7 +44,7 @@ async def fetch_weather(client: httpx.AsyncClient, lat: float, lon: float) -> We
         The weather now.
 
     Raises:
-        AirDataUnavailableError: If the request fails or the reply is malformed.
+        WeatherUnavailableError: If the request fails or the reply is malformed.
     """
     params: dict[str, str | float] = {
         "latitude": round(lat, 3),
@@ -57,7 +57,7 @@ async def fetch_weather(client: httpx.AsyncClient, lat: float, lon: float) -> We
         response.raise_for_status()
         return parse_weather(response.json())
     except (httpx.HTTPError, ValueError) as error:
-        raise AirDataUnavailableError(f"Weather request failed: {type(error).__name__}") from error
+        raise WeatherUnavailableError(f"Weather request failed: {type(error).__name__}") from error
 
 
 def parse_weather(payload: object) -> Weather:

@@ -12,7 +12,7 @@ from app.advice.bundle import build_facts
 from app.advice.facts import Kind, Today
 from app.advice.plan import Language, Plan, PlanItem, Slot, check_plan, plan_payload
 from app.advice.standard import standard_plan
-from app.ai.guard import unknown_numbers
+from app.ai.guard import FactGuard
 from app.ai.task import OutputRejectedError
 from app.domain.guidance import Decision, routine_decision
 from app.domain.household import Activity, Household
@@ -181,8 +181,9 @@ def test_standard_advice_covers_smoke_at_home_and_zero_emission_commutes() -> No
 
 def test_standard_reasons_never_invent_numbers() -> None:
     facts = facts_of()
+    guard = FactGuard(facts.values())
     for entry in standard_plan(context()).items:
-        assert unknown_numbers(entry.why, facts.values()) == set()
+        assert guard.problems(entry.why) == []
 
 
 def test_answers_are_checked_like_plans() -> None:

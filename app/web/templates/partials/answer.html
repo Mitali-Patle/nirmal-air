@@ -5,7 +5,7 @@
   {% if provenance.fallback %}<p class="std-label">Standard answer (not AI-generated){% if lang == "hi" %}, in English only{% endif %}.</p>{% endif %}
   {% if cited %}
   <ul class="answer-facts">
-    {% for fact in cited %}<li><span class="kind kind-{{ fact.kind.name|lower }}">{{ kind_labels[fact.kind] }}</span> {{ fact.text }}</li>{% endfor %}
+    {% for fact in cited %}<li><span class="kind kind-{{ fact.kind.name|lower }}">{{ fact.kind.label }}</span> {{ fact.text }}</li>{% endfor %}
   </ul>
   {% endif %}
   {{ how(provenance) }}

@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 
-from app.air.cpcb import IST
-from app.air.forecast import HourlyPm25
+from app.domain.readings import IST, HourlyPm25
 from app.domain.timing import Level, day_timing, levels
 
 START = datetime(2026, 11, 24, 0, tzinfo=IST)

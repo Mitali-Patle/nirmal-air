@@ -6,13 +6,15 @@ from datetime import datetime, timedelta
 
 import httpx
 
-from app.air.cpcb import AirDataUnavailableError, StationReading, fetch_station
+from app.air.cpcb import StationReading, fetch_station
+from app.air.errors import AirDataUnavailableError
 from app.air.stations import NearbyStation, nearest_stations
 from app.cache import TtlCache
 from app.domain.aqi import StationAqi, station_aqi
 
 STATIONS_TRIED = 3
-MAX_AGE = timedelta(hours=3)
+MAX_AGE_HOURS = 3
+MAX_AGE = timedelta(hours=MAX_AGE_HOURS)
 READING_TTL_S = 15 * 60
 READING_KEEP_S = 6 * 60 * 60
 

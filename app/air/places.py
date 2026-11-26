@@ -9,7 +9,7 @@ from dataclasses import dataclass
 import httpx
 from pydantic import BaseModel
 
-from app.air.cpcb import AirDataUnavailableError
+from app.air.errors import PlaceSearchError
 from app.cache import TtlCache
 
 GEOCODING_URL = "https://geocoding-api.open-meteo.com/v1/search"
@@ -94,7 +94,7 @@ async def search_places(client: httpx.AsyncClient, query: str) -> list[Place]:
         Up to five matches, best first; empty when nothing matches.
 
     Raises:
-        AirDataUnavailableError: If the geocoder fails or replies with something unexpected.
+        PlaceSearchError: If the geocoder fails or replies with something unexpected.
     """
     params: dict[str, str | int] = {
         "name": search_name(query),
@@ -108,7 +108,7 @@ async def search_places(client: httpx.AsyncClient, query: str) -> list[Place]:
         response.raise_for_status()
         results = _Payload.model_validate(response.json()).results
     except (httpx.HTTPError, ValueError) as error:  # ValidationError is a ValueError
-        raise AirDataUnavailableError(f"Place search failed: {type(error).__name__}") from error
+        raise PlaceSearchError(f"Place search failed: {type(error).__name__}") from error
     return [
         Place(result.name, result.admin2, result.admin1, result.latitude, result.longitude)
         for result in results
@@ -134,7 +134,7 @@ class PlaceFinder:
             Up to five matches, best first.
 
         Raises:
-            AirDataUnavailableError: If the geocoder fails (failures are not cached).
+            PlaceSearchError: If the geocoder fails (failures are not cached).
         """
         key = search_name(query).casefold()
         cached = self._cache.get(key)

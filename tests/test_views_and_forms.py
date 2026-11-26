@@ -6,11 +6,11 @@ import respx
 
 from app.advice.facts import Fact, Kind
 from app.advice.plan import Plan, PlanItem, Slot
-from app.air.cpcb import IST
-from app.air.forecast import FORECAST_URL, HourlyPm25
+from app.air.forecast import FORECAST_URL
 from app.air.weather import WEATHER_URL, Weather
 from app.cache import TtlCache
 from app.domain.household import Mode
+from app.domain.readings import IST, HourlyPm25
 from app.services.today import PlaceChoice, TodayService
 from app.web.cookie import pack
 from app.web.household_form import parse_household

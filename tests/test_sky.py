@@ -2,8 +2,8 @@ from datetime import datetime
 
 import pytest
 
-from app.air.cpcb import IST
 from app.domain.aqi import Category
+from app.domain.readings import IST
 from app.domain.sky import Phase, haze_level, phase_at, sun_times
 
 DELHI = (28.61, 77.21)

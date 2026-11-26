@@ -5,24 +5,59 @@ errors come back as short sentences naming the field, for the form to show.
 """
 
 from collections.abc import Callable, Mapping
+from dataclasses import dataclass
+from functools import partial
 from typing import Any
 
 from pydantic import ValidationError
 
 from app.domain.household import Condition, Household
 
-MEMBER_ROWS = 8
-ROUTINE_ROWS = 6
-COMMUTE_ROWS = 4
-# Rows shown open; the rest sit behind "Add more…" so the usual household sees a short form.
-SHOWN_ROWS = {"members": 4, "routines": 3, "commutes": 2}
-ROW_PREFIX = {"members": ("m", "name"), "routines": ("r", "member"), "commutes": ("c", "member")}
 CONDITION_FIELDS = {
     "lung": Condition.LUNG,
     "heart": Condition.HEART,
     "pregnant": Condition.PREGNANT,
 }
-SECTION_LABELS = {"members": "Person", "routines": "Routine", "commutes": "Commute", "home": "Home"}
+HOME_LABEL = "Home"
+Field = Callable[[str], str]
+
+
+@dataclass(frozen=True)
+class Section:
+    """One repeating part of the form, such as the people or the trips.
+
+    A row's fields are named `{prefix}{row}_{field}` ("c1_km"), and a row counts as filled when
+    its `key` field is. The first `shown` rows are open; the rest sit behind "Add more…", so
+    the usual household sees a short form.
+    """
+
+    name: str
+    prefix: str
+    key: str
+    label: str
+    rows: int
+    shown: int
+    read: Callable[[Mapping[str, str], Field], dict[str, Any]]
+
+    def field(self, row: int, name: str) -> str:
+        """The form field name for one field of one row.
+
+        >>> COMMUTES.field(1, "km")
+        'c1_km'
+        """
+        return f"{self.prefix}{row}_{name}"
+
+    def filled(self, form: Mapping[str, str], row: int) -> bool:
+        """Whether a row holds something (its name or "who" field is filled)."""
+        return bool(form.get(self.field(row, self.key), "").strip())
+
+    def values(self, form: Mapping[str, str]) -> list[dict[str, Any]]:
+        """The filled rows, read into the shape the `Household` model takes."""
+        return [
+            self.read(form, partial(self.field, row))
+            for row in range(self.rows)
+            if self.filled(form, row)
+        ]
 
 
 def parse_household(form: Mapping[str, str]) -> tuple[Household | None, list[str]]:
@@ -34,12 +69,8 @@ def parse_household(form: Mapping[str, str]) -> tuple[Household | None, list[str
     Returns:
         The household and no errors, or None and the problems to show.
     """
-    data: dict[str, Any] = {
-        "members": _rows(form, "m", "name", MEMBER_ROWS, _member),
-        "routines": _rows(form, "r", "member", ROUTINE_ROWS, _routine),
-        "commutes": _rows(form, "c", "member", COMMUTE_ROWS, _commute),
-        "home": _home(form),
-    }
+    data: dict[str, Any] = {section.name: section.values(form) for section in SECTIONS}
+    data["home"] = _home(form)
     unknown = _match_names(data)
     try:
         return Household.model_validate(data), []
@@ -58,13 +89,9 @@ def hidden_rows_in_use(form: Mapping[str, str]) -> dict[str, bool]:
     Returns:
         For people, routines and trips: whether any row past the shown ones is filled.
     """
-    totals = {"members": MEMBER_ROWS, "routines": ROUTINE_ROWS, "commutes": COMMUTE_ROWS}
     return {
-        kind: any(
-            _filled(form, f"{ROW_PREFIX[kind][0]}{row}_{ROW_PREFIX[kind][1]}")
-            for row in range(SHOWN_ROWS[kind], totals[kind])
-        )
-        for kind in totals
+        section.name: any(section.filled(form, row) for row in range(section.shown, section.rows))
+        for section in SECTIONS
     }
 
 
@@ -83,27 +110,17 @@ def _match_names(data: dict[str, Any]) -> list[str]:
         _key(member["name"]): " ".join(str(member["name"]).split()) for member in data["members"]
     }
     problems = []
-    for section, label in (("routines", "Routine"), ("commutes", "Trip")):
-        for number, row in enumerate(data[section], start=1):
+    for section in (ROUTINES, COMMUTES):
+        for number, row in enumerate(data[section.name], start=1):
             match = people.get(_key(row["member"]))
             if match is None:
+                name = row["member"].strip()
                 problems.append(
-                    f'{label} {number}: "{row["member"].strip()}" is not one of the people above.'
+                    f'{section.label} {number}: "{name}" is not one of the people above.'
                 )
             else:
                 row["member"] = match
     return problems
-
-
-def _rows(
-    form: Mapping[str, str],
-    prefix: str,
-    key: str,
-    count: int,
-    read: Callable[[Mapping[str, str], int], dict[str, Any]],
-) -> list[dict[str, Any]]:
-    """The filled rows of one section: a row counts when its name or "who" field is filled."""
-    return [read(form, row) for row in range(count) if _filled(form, f"{prefix}{row}_{key}")]
 
 
 def _home(form: Mapping[str, str]) -> dict[str, Any]:
@@ -116,39 +133,42 @@ def _home(form: Mapping[str, str]) -> dict[str, Any]:
     }
 
 
-def _filled(form: Mapping[str, str], key: str) -> bool:
-    return bool(form.get(key, "").strip())
-
-
-def _member(form: Mapping[str, str], row: int) -> dict[str, Any]:
+def _member(form: Mapping[str, str], field: Field) -> dict[str, Any]:
     return {
-        "name": form.get(f"m{row}_name", ""),
-        "role": form.get(f"m{row}_role", "adult"),
+        "name": form.get(field("name"), ""),
+        "role": form.get(field("role"), "adult"),
         "conditions": [
-            condition for field, condition in CONDITION_FIELDS.items() if f"m{row}_{field}" in form
+            condition for name, condition in CONDITION_FIELDS.items() if field(name) in form
         ],
     }
 
 
-def _routine(form: Mapping[str, str], row: int) -> dict[str, Any]:
+def _routine(form: Mapping[str, str], field: Field) -> dict[str, Any]:
     return {
-        "member": form.get(f"r{row}_member", ""),
-        "activity": form.get(f"r{row}_activity", ""),
-        "hour": form.get(f"r{row}_hour", ""),
-        "minutes": form.get(f"r{row}_minutes", ""),
+        "member": form.get(field("member"), ""),
+        "activity": form.get(field("activity"), ""),
+        "hour": form.get(field("hour"), ""),
+        "minutes": form.get(field("minutes"), ""),
     }
 
 
-def _commute(form: Mapping[str, str], row: int) -> dict[str, Any]:
+def _commute(form: Mapping[str, str], field: Field) -> dict[str, Any]:
     return {
-        "member": form.get(f"c{row}_member", ""),
-        "mode": form.get(f"c{row}_mode", ""),
-        "km_one_way": form.get(f"c{row}_km", ""),
-        "days_per_week": form.get(f"c{row}_days", ""),
-        "leaves_at_hour": form.get(f"c{row}_hour", ""),
-        "people_in_vehicle": form.get(f"c{row}_people") or 1,
-        "metro_possible": f"c{row}_metro" in form,
+        "member": form.get(field("member"), ""),
+        "mode": form.get(field("mode"), ""),
+        "km_one_way": form.get(field("km"), ""),
+        "days_per_week": form.get(field("days"), ""),
+        "leaves_at_hour": form.get(field("hour"), ""),
+        "people_in_vehicle": form.get(field("people")) or 1,
+        "metro_possible": field("metro") in form,
     }
+
+
+MEMBERS = Section("members", "m", "name", "Person", rows=8, shown=4, read=_member)
+ROUTINES = Section("routines", "r", "member", "Routine", rows=6, shown=3, read=_routine)
+COMMUTES = Section("commutes", "c", "member", "Trip", rows=4, shown=2, read=_commute)
+SECTIONS = (MEMBERS, ROUTINES, COMMUTES)
+SECTION_LABELS = {section.name: section.label for section in SECTIONS} | {"home": HOME_LABEL}
 
 
 def _message(error: Mapping[str, Any]) -> str:

@@ -14,11 +14,12 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from app.ai.chain import AIChain
 from app.ai.models import default_providers
-from app.air.cpcb import IST, USER_AGENT
 from app.air.lookup import AirLookup
 from app.air.places import PlaceFinder
-from app.config import Settings, get_settings
+from app.config import USER_AGENT, Settings, get_settings
+from app.domain.readings import IST
 from app.services.today import TodayService
+from app.web.deps import Services
 from app.web.errors import register_error_handlers
 from app.web.limits import AILimits
 from app.web.routes import health, start, today, week
@@ -64,17 +65,22 @@ def create_app(settings: Settings | None = None, http: httpx.AsyncClient | None 
 
 def _add_services(app: FastAPI, settings: Settings, http: httpx.AsyncClient) -> None:
     """The air lookup, places, AI chain and limits the routes use, kept on `app.state`."""
-    app.state.settings = settings
-    app.state.http = http
     key = settings.data_gov_api_key
-    app.state.air_lookup = AirLookup(http, key.get_secret_value()) if key else None
-    app.state.today = TodayService(http, app.state.air_lookup)
-    app.state.places = PlaceFinder(http)
-    # Tests replace the clock so recorded CPCB and forecast data count as current.
-    app.state.clock = lambda: datetime.now(IST)
-    app.state.ai_limits = AILimits(behind_proxy=settings.is_production)
-    app.state.ai = AIChain(
-        default_providers(http, _secret(settings.groq_api_key), _secret(settings.gemini_api_key))
+    air_lookup = AirLookup(http, key.get_secret_value()) if key else None
+    app.state.services = Services(
+        settings=settings,
+        http=http,
+        air_lookup=air_lookup,
+        today=TodayService(http, air_lookup),
+        places=PlaceFinder(http),
+        ai=AIChain(
+            default_providers(
+                http, _secret(settings.groq_api_key), _secret(settings.gemini_api_key)
+            )
+        ),
+        ai_limits=AILimits(behind_proxy=settings.is_production),
+        # Tests replace the clock so recorded CPCB and forecast data count as current.
+        clock=lambda: datetime.now(IST),
     )
 
 
@@ -100,4 +106,4 @@ def _secret(value: SecretStr | None) -> str | None:
 async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Close the shared HTTP client when the server shuts down."""
     yield
-    await app.state.http.aclose()
+    await app.state.services.http.aclose()

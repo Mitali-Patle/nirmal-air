@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from enum import StrEnum
 from statistics import fmean, median
 
-from app.air.forecast import HourlyPm25
+from app.domain.readings import HourlyPm25
 
 WINDOW_HOURS = 3
 # Windows are kept between 6 am and 10 pm, when people are up and about.

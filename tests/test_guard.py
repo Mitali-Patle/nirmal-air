@@ -1,6 +1,6 @@
 import pytest
 
-from app.ai.guard import guard_problems, numbers_in, unknown_numbers
+from app.ai.guard import FactGuard, numbers_in
 
 
 @pytest.mark.parametrize(
@@ -20,18 +20,22 @@ def test_numbers_are_found_and_pollutant_names_ignored(text: str, numbers: set[f
 
 def test_numbers_must_come_from_the_facts() -> None:
     facts = ["Cleanest time: 1 pm to 4 pm today.", "AQI 326 (Very Poor)."]
-    assert unknown_numbers("Play between 1 pm and 4 pm; AQI is 326.", facts) == set()
-    assert unknown_numbers("Play at 2 pm for 30 minutes.", facts) == {2.0, 30.0}
-    assert unknown_numbers("Nothing to check.", []) == set()
+    guard = FactGuard(facts)
+    assert guard.problems("Play between 1 pm and 4 pm; AQI is 326.") == []
+    assert guard.problems("Play at 2 pm for 30 minutes.") == [
+        "numbers not in the facts: [2.0, 30.0]"
+    ]
+    assert FactGuard([]).problems("Nothing to check.") == []
 
 
 def test_number_words_need_a_source_too() -> None:
     facts = ["Worst time: 7 pm to 10 pm, with about 2.3 times the PM2.5 of the cleanest time."]
-    assert guard_problems("Air is twice as bad at 7 pm.", facts) == [
+    guard = FactGuard(facts)
+    assert guard.problems("Air is twice as bad at 7 pm.") == [
         "number words not in the facts: ['twice']"
     ]
-    assert guard_problems("Half the purifier time at 9 pm.", facts) == [
+    assert guard.problems("Half the purifier time at 9 pm.") == [
         "numbers not in the facts: [9.0]",
         "number words not in the facts: ['half']",
     ]
-    assert guard_problems("Double-check windows at 7 pm.", [*facts, "Double the cost."]) == []
+    assert FactGuard([*facts, "Double the cost."]).problems("Double-check windows at 7 pm.") == []

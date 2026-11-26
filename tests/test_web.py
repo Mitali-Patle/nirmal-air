@@ -12,11 +12,12 @@ from pydantic import SecretStr
 
 from app.ai.chain import AIChain
 from app.ai.providers import LLMRequest
-from app.air.cpcb import CPCB_URL, IST
+from app.air.cpcb import CPCB_URL
 from app.air.forecast import FORECAST_URL
 from app.air.places import GEOCODING_URL
 from app.air.weather import WEATHER_URL
 from app.config import Settings
+from app.domain.readings import IST
 from app.main import create_app
 from tests.conftest import load_fixture
 
@@ -38,8 +39,8 @@ class Replies:
 def make_client(*providers: Any) -> TestClient:
     settings = Settings(_env_file=None, app_env="test", data_gov_api_key=SecretStr("key"))
     app = create_app(settings)
-    app.state.clock = lambda: EVENING
-    app.state.ai = AIChain(list(providers))
+    app.state.services.clock = lambda: EVENING
+    app.state.services.ai = AIChain(list(providers))
     return TestClient(app)
 
 

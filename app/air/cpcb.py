@@ -8,35 +8,16 @@ worked out from these sub-indices in `app.domain.aqi`, never by the AI.
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
-from enum import StrEnum
-from zoneinfo import ZoneInfo
 
 import httpx
 from pydantic import BaseModel, ValidationError
 
+from app.air.errors import AirDataUnavailableError
+from app.domain.readings import IST, Pollutant
+
 CPCB_URL = "https://api.data.gov.in/resource/3b01bcb8-0b14-4abf-b6f2-c1bfd384ba69"
-# data.gov.in stalls requests that carry Python's default User-Agent (python-httpx,
-# Python-urllib) until they time out, so every request names the app instead.
-USER_AGENT = "NirmalAir/0.1"
-IST = ZoneInfo("Asia/Kolkata")
 TIME_FORMAT = "%d-%m-%Y %H:%M:%S"
 MAX_ROWS = 20
-
-
-class Pollutant(StrEnum):
-    """Pollutants CPCB reports, named as the feed names them."""
-
-    PM25 = "PM2.5"
-    PM10 = "PM10"
-    NO2 = "NO2"
-    SO2 = "SO2"
-    CO = "CO"
-    OZONE = "OZONE"
-    NH3 = "NH3"
-
-
-class AirDataUnavailableError(Exception):
-    """CPCB did not answer in time, or answered without usable readings."""
 
 
 @dataclass(frozen=True)

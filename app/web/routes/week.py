@@ -8,7 +8,7 @@ from fastapi.responses import HTMLResponse, Response
 from app.advice.week_steps import step_options
 from app.domain.week import LogEntry, add_entry
 from app.web.csrf import CsrfChecked
-from app.web.routes.today import current_day
+from app.web.deps import saved_day
 from app.web.session import load_log, save_log
 from app.web.templating import templates
 from app.web.week_view import week_view
@@ -30,10 +30,10 @@ async def log_step(request: Request, step: Annotated[str, Form(max_length=20)]) 
     Raises:
         HTTPException: 404 when the step is not one of today's steps.
     """
-    found = await current_day(request)
-    if found is None:
+    saved = await saved_day(request)
+    if saved is None:
         return Response(status_code=status.HTTP_204_NO_CONTENT)
-    today = found[1].today
+    today = saved.day.today
     options = step_options(today)
     option = next((item for item in options if item.id == step), None)
     if option is None:

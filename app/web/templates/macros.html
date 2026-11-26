@@ -1,4 +1,4 @@
-{% macro sign(s, kind_labels, big=false) -%}
+{% macro sign(s, big=false) -%}
 <article class="sign {{ 'sign-home' if s.home else 'sign-step' }}{{ ' sign-big' if big else '' }}">
   <div class="sign-in">
     <p class="sign-who">{{ s.member }}<span class="sep" aria-hidden="true"></span><span class="visually-hidden">, </span>{{ s.slot.value|capitalize }}</p>
@@ -20,7 +20,7 @@
     {% if not big %}<p class="plate-why">{{ s.why }}</p>{% endif %}
     {% if s.facts %}
     <ul>
-      {% for fact in s.facts %}<li><span class="kind kind-{{ fact.kind.name|lower }}">{{ kind_labels[fact.kind] }}</span> {{ fact.text }}</li>{% endfor %}
+      {% for fact in s.facts %}<li><span class="kind kind-{{ fact.kind.name|lower }}">{{ fact.kind.label }}</span> {{ fact.text }}</li>{% endfor %}
     </ul>
     {% endif %}
   </details>

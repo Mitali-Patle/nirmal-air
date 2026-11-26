@@ -3,9 +3,9 @@
 from dataclasses import dataclass
 from datetime import datetime
 
-from app.air.cpcb import IST
 from app.air.weather import Weather
 from app.domain.aqi import Category
+from app.domain.readings import IST
 from app.domain.scene import Scene, scene
 from app.domain.sky import Phase, haze_level, phase_at, sun_times
 from app.services.today import PlaceChoice

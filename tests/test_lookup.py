@@ -4,10 +4,11 @@ import httpx
 import pytest
 import respx
 
-from app.air.cpcb import CPCB_URL, IST
+from app.air.cpcb import CPCB_URL
 from app.air.lookup import AirLookup
 from app.air.stations import nearest_stations
 from app.cache import Cached, TtlCache
+from app.domain.readings import IST
 from tests.conftest import load_fixture
 
 DELHI = (28.6139, 77.209)

@@ -138,19 +138,19 @@ def check_plan(plan: Plan, context: PlanContext) -> Plan:
         The plan with only valid items.
 
     Raises:
-        OutputRejectedError: If a member is left out or fewer than three items pass.
+        OutputRejectedError: If a member is left out or fewer than `MIN_ITEMS` items pass.
     """
-    kept, problems = _sort_items(plan, context)
+    kept, problems = _partition_items(plan, context)
     missing = _members_needing_items(context) - {item.member for item in kept}
     problems += [f"no item for {name}" for name in sorted(missing)]
     if missing or len(kept) < MIN_ITEMS:
         raise OutputRejectedError(
-            problems or [f"only {len(kept)} usable items; the rules ask for 4 to 8"]
+            problems or [f"only {len(kept)} usable items; at least {MIN_ITEMS} are needed"]
         )
     return plan.model_copy(update={"items": kept})
 
 
-def _sort_items(plan: Plan, context: PlanContext) -> tuple[list[PlanItem], list[str]]:
+def _partition_items(plan: Plan, context: PlanContext) -> tuple[list[PlanItem], list[str]]:
     """Split the plan's items into those that pass every rule and the problems of the rest."""
     texts = {fact.id: fact.text for fact in context.facts}
     members = {member.name for member in context.today.household.members} | {EVERYONE}

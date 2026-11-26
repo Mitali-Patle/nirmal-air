@@ -10,14 +10,22 @@ from typing import Annotated, Any
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
-from app.advice.facts import Fact
+from app.advice.facts import Fact, FactId
 from app.advice.plan import PlanContext, plan_payload
-from app.ai.guard import guard_problems
+from app.ai.guard import FactGuard
 from app.ai.task import OutputRejectedError
 
 ASK_VERSION = "ask-v1"
 
-Question = Annotated[str, StringConstraints(strip_whitespace=True, min_length=3, max_length=200)]
+QUESTION_MIN_CHARS = 3
+QUESTION_MAX_CHARS = 200
+ANSWER_MAX_CHARS = 600
+Question = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace=True, min_length=QUESTION_MIN_CHARS, max_length=QUESTION_MAX_CHARS
+    ),
+]
 
 SYSTEM = """You are NirmalAir, a clean-air assistant for Indian households during winter smog.
 Answer one question from this household using only the facts in the request.
@@ -49,7 +57,7 @@ class Answer(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     kind: AnswerKind
-    text: str = Field(min_length=3, max_length=600)
+    text: str = Field(min_length=3, max_length=ANSWER_MAX_CHARS)
     fact_ids: list[str] = Field(default_factory=list, max_length=5)
 
 
@@ -93,7 +101,7 @@ def check_answer(answer: Answer, context: AskContext) -> Answer:
         problems.append(f"unknown fact ids {unknown_ids}")
     if answer.kind is AnswerKind.ANSWER and not answer.fact_ids:
         problems.append("an answer must cite at least one fact id")
-    problems += guard_problems(answer.text, texts.values())
+    problems += FactGuard(texts.values()).problems(answer.text)
     if problems:
         raise OutputRejectedError(problems)
     return answer
@@ -109,6 +117,10 @@ def standard_answer(context: AskContext) -> Answer:
         An answer built from facts, without AI.
     """
     facts: dict[str, Fact] = {fact.id: fact for fact in context.plan.facts}
-    cited = [fact for fact in (facts.get("air_now"), facts.get("health")) if fact is not None]
+    cited = [
+        fact for fact in (facts.get(FactId.AIR_NOW), facts.get(FactId.HEALTH)) if fact is not None
+    ]
     text = "The assistant is not available right now. " + " ".join(fact.text for fact in cited)
-    return Answer(kind=AnswerKind.ANSWER, text=text[:600], fact_ids=[fact.id for fact in cited])
+    return Answer(
+        kind=AnswerKind.ANSWER, text=text[:ANSWER_MAX_CHARS], fact_ids=[fact.id for fact in cited]
+    )

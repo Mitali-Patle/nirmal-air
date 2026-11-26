@@ -11,14 +11,13 @@ from app.advice.facts import FAR_STATION_KM
 from app.advice.plan import Language, PlanContext
 from app.advice.tasks import ASK_TASK, PLAN_TASK
 from app.advice.week_steps import step_options
-from app.ai.chain import AIChain
-from app.services.today import Day, PlaceChoice, TodayService
+from app.services.today import Day, PlaceChoice
 from app.web.csrf import CsrfChecked
-from app.web.limits import AILimits
-from app.web.session import load_household, load_log, sample_title, theme_choice
+from app.web.deps import ask_ai, saved_day
+from app.web.session import THEME_LABELS, load_log, sample_title, theme_choice
 from app.web.sky_view import scene_for, sky_for
 from app.web.templating import templates
-from app.web.views import KIND_LABELS, sign_board, strip
+from app.web.views import sign_board, strip
 from app.web.week_view import week_view
 
 router = APIRouter()
@@ -36,10 +35,11 @@ async def today(request: Request, lang: Lang = "en") -> Response:
     Returns:
         The page, or a redirect to the start page when no household is saved.
     """
-    found = await current_day(request, weather=True)
-    if found is None:
+    saved = await saved_day(request, weather=True)
+    if saved is None:
         return RedirectResponse("/", status.HTTP_303_SEE_OTHER)
-    return templates.TemplateResponse(request, "today.html", _context(request, *found, lang))
+    context = _context(request, saved.place, saved.day, lang)
+    return templates.TemplateResponse(request, "today.html", context)
 
 
 @router.get("/today/plan", response_class=HTMLResponse)
@@ -53,19 +53,14 @@ async def plan(request: Request, lang: Lang = "en") -> Response:
     Returns:
         The plan fragment, or an empty response when no household is saved.
     """
-    found = await current_day(request)
-    if found is None:
+    saved = await saved_day(request)
+    if saved is None:
         return Response(status_code=status.HTTP_204_NO_CONTENT)
-    day = found[1]
-    facts = build_facts(day.today)
-    chain: AIChain = request.app.state.ai
-    limits: AILimits = request.app.state.ai_limits
-    plan_context = PlanContext(day.today, facts, _language(lang))
-    result = await chain.run(PLAN_TASK, plan_context, allow=lambda: limits.allow(request))
+    plan_context = _plan_context(saved.day, lang)
+    result = await ask_ai(request, PLAN_TASK, plan_context)
     context = {
-        "board": sign_board(result.value, facts, day.today.now),
+        "board": sign_board(result.value, plan_context.facts, saved.day.today.now),
         "provenance": result.provenance,
-        "kind_labels": KIND_LABELS,
         "lang": lang,
     }
     return templates.TemplateResponse(request, "partials/plan.html", context)
@@ -81,52 +76,32 @@ async def ask(
 
     Args:
         request: The incoming request.
-        question: The visitor's question, 3 to 200 characters.
+        question: The visitor's question (its length limits are on `Question`).
         lang: Language of the answer.
 
     Returns:
         The answer fragment.
     """
-    found = await current_day(request)
-    if found is None:
+    saved = await saved_day(request)
+    if saved is None:
         return Response(status_code=status.HTTP_204_NO_CONTENT)
-    day = found[1]
-    facts = build_facts(day.today)
-    context = AskContext(question, PlanContext(day.today, facts, _language(lang)))
-    chain: AIChain = request.app.state.ai
-    limits: AILimits = request.app.state.ai_limits
-    result = await chain.run(ASK_TASK, context, allow=lambda: limits.allow(request))
-    by_id = {fact.id: fact for fact in facts}
+    plan_context = _plan_context(saved.day, lang)
+    result = await ask_ai(request, ASK_TASK, AskContext(question, plan_context))
+    by_id = {fact.id: fact for fact in plan_context.facts}
     page = {
         "question": question,
         "answer": result.value,
         "cited": [by_id[fact_id] for fact_id in result.value.fact_ids if fact_id in by_id],
         "provenance": result.provenance,
-        "kind_labels": KIND_LABELS,
         "lang": lang,
     }
     return templates.TemplateResponse(request, "partials/answer.html", page)
 
 
-async def current_day(request: Request, *, weather: bool = False) -> tuple[PlaceChoice, Day] | None:
-    """The saved household's place and today's data for it.
-
-    Args:
-        request: The incoming request.
-        weather: Also fetch the weather (only the Today page draws the sky).
-
-    Returns:
-        The place and the day, or None when no household is saved.
-    """
-    saved = load_household(request)
-    if saved is None:
-        return None
-    service: TodayService = request.app.state.today
-    return saved[0], await service.day(*saved, request.app.state.clock(), weather=weather)
-
-
-def _language(lang: str) -> Language:
-    return Language.HINDI if lang == "hi" else Language.ENGLISH
+def _plan_context(day: Day, lang: str) -> PlanContext:
+    """The day's facts in the visitor's language, as the AI tasks take them."""
+    language = Language.HINDI if lang == "hi" else Language.ENGLISH
+    return PlanContext(day.today, build_facts(day.today), language)
 
 
 def _context(request: Request, place: PlaceChoice, day: Day, lang: str) -> dict[str, Any]:
@@ -145,4 +120,5 @@ def _context(request: Request, place: PlaceChoice, day: Day, lang: str) -> dict[
         "lang": lang,
         "sample": sample_title(request),
         "week": week_view(load_log(request), step_options(today), today.now.date()),
+        "theme_labels": THEME_LABELS,
     }

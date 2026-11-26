@@ -5,24 +5,16 @@ never as the air quality value it shows: its absolute values can be far from wha
 stations measure.
 """
 
-from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 import httpx
 from pydantic import BaseModel, ValidationError
 
-from app.air.cpcb import IST, AirDataUnavailableError
+from app.air.errors import AirDataUnavailableError
+from app.domain.readings import IST, HourlyPm25
 
 FORECAST_URL = "https://air-quality-api.open-meteo.com/v1/air-quality"
 HOURS_AHEAD = 24
-
-
-@dataclass(frozen=True)
-class HourlyPm25:
-    """Forecast PM2.5 for the hour starting at `starts_at` (India time)."""
-
-    starts_at: datetime
-    pm25: float
 
 
 class _Hourly(BaseModel):

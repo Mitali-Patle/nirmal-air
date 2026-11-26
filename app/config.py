@@ -7,6 +7,9 @@ from pydantic import SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 MIN_SESSION_SECRET_LENGTH = 32
+# data.gov.in stalls requests that carry Python's default User-Agent (python-httpx,
+# Python-urllib) until they time out, so every outside request names the app instead.
+USER_AGENT = "NirmalAir/0.1"
 
 
 class Settings(BaseSettings):

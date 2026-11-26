@@ -8,10 +8,10 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
 
-from app.air.cpcb import IST, Pollutant
 from app.air.lookup import MeasuredAir
 from app.domain.aqi import PM25_BREAKPOINTS, pm25_from_sub_index
 from app.domain.household import Household
+from app.domain.readings import IST, Pollutant
 from app.domain.timing import DayTiming
 
 NOON = 12
@@ -31,6 +31,75 @@ class Kind(StrEnum):
     FORECAST = "forecast"
     ESTIMATE = "estimate"
     HOUSEHOLD = "your household"
+
+    @property
+    def label(self) -> str:
+        """The kind as a tag on screen, capitalised.
+
+        >>> Kind.HOUSEHOLD.label
+        'Your household'
+        """
+        return self.value[0].upper() + self.value[1:]
+
+
+class FactId(StrEnum):
+    """Ids of the facts a day has at most once; the helpers below name the numbered ones."""
+
+    AIR_NOW = "air_now"
+    HEALTH = "health"
+    FAR_STATION = "far_station"
+    PM25 = "pm25"
+    CIGARETTES = "cigarettes"
+    WINDOWS = "windows"
+    CLEANEST = "cleanest"
+    WORST = "worst"
+    HOME = "home"
+    INDOOR_OPEN = "indoor_open"
+    INDOOR_SHUT = "indoor_shut"
+    INDOOR_PURIFIER = "indoor_purifier"
+    INDOOR_PURIFIER_IF = "indoor_purifier_if"
+
+
+MEMBER_PREFIX = "member_"
+ROUTINE_PREFIX = "routine_"
+COMMUTE_PREFIX = "commute_"
+SWAP_PREFIX = "swap_"
+INDOOR_PREFIX = "indoor_"
+# Facts about the home rather than about people, which the page draws as blue signs.
+HOME_FACT_IDS = frozenset(
+    {
+        FactId.WINDOWS,
+        FactId.HOME,
+        FactId.INDOOR_OPEN,
+        FactId.INDOOR_SHUT,
+        FactId.INDOOR_PURIFIER,
+        FactId.INDOOR_PURIFIER_IF,
+    }
+)
+
+
+def member_id(index: int) -> str:
+    """The id of a household member's fact (`index` counts from 1)."""
+    return f"{MEMBER_PREFIX}{index}"
+
+
+def routine_id(index: int) -> str:
+    """The id of a routine's fact (`index` counts from 1)."""
+    return f"{ROUTINE_PREFIX}{index}"
+
+
+def commute_id(index: int) -> str:
+    """The id of a commute's fact (`index` counts from 1)."""
+    return f"{COMMUTE_PREFIX}{index}"
+
+
+def swap_id(commute: int, rank: int) -> str:
+    """The id of a commute's swap; rank 1 is the swap code chose to offer.
+
+    >>> swap_id(2, 1)
+    'swap_2_1'
+    """
+    return f"{SWAP_PREFIX}{commute}_{rank}"
 
 
 @dataclass(frozen=True)
@@ -97,7 +166,7 @@ def clock(moment: datetime | int) -> str:
 def clock_span(start: datetime, end: datetime) -> str:
     """A short time range, sharing am or pm when both ends do.
 
-    >>> from app.air.cpcb import IST
+    >>> from app.domain.readings import IST
     >>> one, four = (datetime(2026, 11, 25, hour, tzinfo=IST) for hour in (13, 16))
     >>> clock_span(one, four) == f"1{EN_DASH}4 pm"
     True

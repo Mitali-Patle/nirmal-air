@@ -7,17 +7,31 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
 
-from app.advice.facts import Fact, Kind, clock
+from app.advice.facts import (
+    HOME_FACT_IDS,
+    INDOOR_PREFIX,
+    ROUTINE_PREFIX,
+    SWAP_PREFIX,
+    Fact,
+    FactId,
+    clock,
+)
 from app.advice.plan import EVERYONE, Plan, PlanItem, Slot
-from app.air.cpcb import IST
-from app.air.forecast import HourlyPm25
+from app.domain.readings import IST, HourlyPm25
 from app.domain.timing import DayTiming, Level, levels
 
 SLOT_ORDER = (Slot.MORNING, Slot.AFTERNOON, Slot.EVENING)
 TICK_EVERY_HOURS = 6
-# Steps about the home (windows, the main room) are blue signs; steps people take are green.
-HOME_FACTS = ("windows", "indoor_", "home")
-FIGURE_PREFERENCE = ("swap_", "routine_", "windows", "indoor_", "cleanest", "worst")
+# Steps about the home (`HOME_FACT_IDS`) are blue signs; steps people take are green.
+# A sign shows the figure of what its step changes before the day's background numbers.
+FIGURE_PREFERENCE = (
+    SWAP_PREFIX,
+    ROUTINE_PREFIX,
+    FactId.WINDOWS,
+    INDOOR_PREFIX,
+    FactId.CLEANEST,
+    FactId.WORST,
+)
 
 
 @dataclass(frozen=True)
@@ -90,9 +104,7 @@ def _sign(item: PlanItem, by_id: dict[str, Fact]) -> Sign:
     cited = tuple(by_id[fact_id] for fact_id in item.fact_ids if fact_id in by_id)
     with_figures = sorted((fact for fact in cited if fact.figure), key=_figure_rank)
     figure = with_figures[0].figure if with_figures else None
-    home = (
-        any(fact.id.startswith(HOME_FACTS) for fact in cited) if cited else item.member == EVERYONE
-    )
+    home = any(fact.id in HOME_FACT_IDS for fact in cited) if cited else item.member == EVERYONE
     return Sign(item.member, item.action, item.why, figure, home, item.slot, cited)
 
 
@@ -131,12 +143,3 @@ def strip(hours: Sequence[HourlyPm25], timing: DayTiming | None) -> tuple[StripH
         )
         for index, (hour, level) in enumerate(zip(hours, marks, strict=True))
     )
-
-
-KIND_LABELS = {
-    Kind.MEASURED: "Measured",
-    Kind.GUIDANCE: "CPCB guidance",
-    Kind.FORECAST: "Forecast",
-    Kind.ESTIMATE: "Estimate",
-    Kind.HOUSEHOLD: "Your household",
-}

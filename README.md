@@ -164,7 +164,7 @@ mocked with recorded replies.
 | Path | What it holds |
 |---|---|
 | `app/air/` | CPCB, forecast and place-search clients; nearest-station lookup |
-| `app/domain/` | Pure calculations: AQI, household, commute, indoor air, timing, sky, decision rules |
+| `app/domain/` | Pure calculations: AQI, household, commute, indoor air, timing, sky, decision rules; imports nothing else from the app |
 | `app/advice/` | The facts bundle, the plan and Ask tasks, and the standard advice |
 | `app/ai/` | Model providers, the fallback chain and the number guard |
-| `app/web/` | Routes, session, templates; `public/static/` holds CSS, fonts and htmx |
+| `app/web/` | Routes, typed dependencies, session, templates; `public/static/` holds CSS, fonts and htmx |

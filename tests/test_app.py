@@ -7,8 +7,9 @@ import respx
 from fastapi.testclient import TestClient
 from pydantic import SecretStr, ValidationError
 
-from app.air.cpcb import CPCB_URL, IST
+from app.air.cpcb import CPCB_URL
 from app.config import Settings
+from app.domain.readings import IST
 from app.main import create_app
 from tests.conftest import load_fixture
 

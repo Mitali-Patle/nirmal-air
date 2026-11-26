@@ -7,12 +7,13 @@ from datetime import datetime
 import httpx
 
 from app.advice.facts import Today
-from app.air.cpcb import AirDataUnavailableError
-from app.air.forecast import HourlyPm25, fetch_forecast
+from app.air.errors import AirDataUnavailableError, WeatherUnavailableError
+from app.air.forecast import fetch_forecast
 from app.air.lookup import AirLookup, MeasuredAir
 from app.air.weather import Weather, fetch_weather
 from app.cache import TtlCache
 from app.domain.household import Household
+from app.domain.readings import HourlyPm25
 from app.domain.timing import day_timing
 
 FORECAST_TTL_S = 60 * 60
@@ -27,6 +28,15 @@ class PlaceChoice:
     label: str
     lat: float
     lon: float
+
+    @property
+    def cache_key(self) -> str:
+        """The point rounded to about a kilometre, for caching data by place.
+
+        >>> PlaceChoice("Delhi", 28.6139, 77.209).cache_key
+        '28.61,77.21'
+        """
+        return f"{self.lat:.2f},{self.lon:.2f}"
 
 
 @dataclass(frozen=True)
@@ -82,13 +92,13 @@ class TodayService:
         return Day(today, hours, current)
 
     async def _weather(self, place: PlaceChoice) -> Weather | None:
-        key = f"{place.lat:.2f},{place.lon:.2f}"
+        key = place.cache_key
         cached = self._weathers.get(key)
         if cached is not None:
             return cached.value
         try:
             weather = await fetch_weather(self._client, place.lat, place.lon)
-        except AirDataUnavailableError:
+        except WeatherUnavailableError:
             return None
         self._weathers.put(key, weather)
         return weather
@@ -103,7 +113,7 @@ class TodayService:
 
         When Open-Meteo does not answer, a copy up to three hours old is used instead.
         """
-        key = f"{place.lat:.2f},{place.lon:.2f}"
+        key = place.cache_key
         cached = self._forecasts.get(key)
         if cached is not None and not cached.stale:
             return _from_this_hour(cached.value, now)

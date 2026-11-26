@@ -6,6 +6,7 @@ from app.advice.facts import (
     FAR_STATION_KM,
     TIMES,
     Fact,
+    FactId,
     Kind,
     Today,
     clock,
@@ -13,9 +14,10 @@ from app.advice.facts import (
     distance_label,
     number,
 )
-from app.air.cpcb import IST
+from app.air.lookup import MAX_AGE_HOURS
 from app.domain.guidance import WindowRule, window_rule
 from app.domain.indoor import cigarettes
+from app.domain.readings import IST
 
 # India's 24-hour PM2.5 standard (CPCB, National Ambient Air Quality Standards, 2009).
 PM25_DAILY_LIMIT = 60
@@ -33,9 +35,10 @@ def air_facts(today: Today) -> list[Fact]:
     if today.air is None:
         return [
             Fact(
-                "air_now",
+                FactId.AIR_NOW,
                 Kind.MEASURED,
-                f"No CPCB station near {today.place} has reported in the last 3 hours.",
+                f"No CPCB station near {today.place} has reported "
+                f"in the last {MAX_AGE_HOURS} hours.",
             ),
             *_timing_facts(today),
             _windows_fact(today),
@@ -46,7 +49,7 @@ def air_facts(today: Today) -> list[Fact]:
     distance = distance_label(km)
     facts = [
         Fact(
-            "air_now",
+            FactId.AIR_NOW,
             Kind.MEASURED,
             f"AQI {air.aqi.value} ({air.aqi.category.label}) at {station.station.label}, "
             f"{distance} away, measured at {clock(air.reading.measured_at)}. "
@@ -54,14 +57,18 @@ def air_facts(today: Today) -> list[Fact]:
             f"AQI {air.aqi.value}",
         ),
         Fact(
-            "health",
+            FactId.HEALTH,
             Kind.GUIDANCE,
             f"CPCB health advice for {air.aqi.category.label} air: {air.aqi.category.health}",
         ),
     ]
     if station.distance_km > FAR_STATION_KM:
         facts.append(
-            Fact("far_station", Kind.MEASURED, "The station is far away, so local air may differ.")
+            Fact(
+                FactId.FAR_STATION,
+                Kind.MEASURED,
+                "The station is far away, so local air may differ.",
+            )
         )
     pm25 = today.outdoor_pm25
     if pm25 is not None:
@@ -73,7 +80,7 @@ def _pm25_facts(pm25: float, approx: str) -> list[Fact]:
     floor = "at least " if approx == "at least" else ""
     return [
         Fact(
-            "pm25",
+            FactId.PM25,
             Kind.ESTIMATE,
             f"Outdoor PM2.5 is {approx} {round(pm25)} µg/m³ (24-hour average), "
             f"{floor}{number(round(pm25 / PM25_DAILY_LIMIT, 1))} times India's daily limit of "
@@ -81,7 +88,7 @@ def _pm25_facts(pm25: float, approx: str) -> list[Fact]:
             f"{round(pm25)} µg/m³",
         ),
         Fact(
-            "cigarettes",
+            FactId.CIGARETTES,
             Kind.ESTIMATE,
             "Breathing this outdoor air all day is as harmful as smoking "
             f"{approx} {number(cigarettes(pm25))} cigarettes (Berkeley Earth).",
@@ -105,12 +112,12 @@ def _windows_fact(today: Today) -> Fact:
         when = _span(today, timing.cleanest.starts_at, timing.cleanest.ends_at)
         figure = clock_span(timing.cleanest.starts_at, timing.cleanest.ends_at)
         return Fact(
-            "windows",
+            FactId.WINDOWS,
             Kind.GUIDANCE,
             f"Today's rule for windows on {band}: {rule.value}, {when}.",
             figure,
         )
-    return Fact("windows", Kind.GUIDANCE, f"Today's rule for windows on {band}: {rule.value}.")
+    return Fact(FactId.WINDOWS, Kind.GUIDANCE, f"Today's rule for windows on {band}: {rule.value}.")
 
 
 def _timing_facts(today: Today) -> list[Fact]:
@@ -124,14 +131,14 @@ def _timing_facts(today: Today) -> list[Fact]:
     cleanest, worst = timing.cleanest, timing.worst
     return [
         Fact(
-            "cleanest",
+            FactId.CLEANEST,
             Kind.FORECAST,
             f"Cleanest time: {span(cleanest.starts_at, cleanest.ends_at)}.",
             clock_span(cleanest.starts_at, cleanest.ends_at),
             f"Cleanest {span(cleanest.starts_at, cleanest.ends_at)}",
         ),
         Fact(
-            "worst",
+            FactId.WORST,
             Kind.FORECAST,
             f"Worst time: {span(worst.starts_at, worst.ends_at)}, with about "
             f"{number(timing.worst_vs_cleanest)} times the PM2.5 of the cleanest time.",

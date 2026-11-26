@@ -5,11 +5,12 @@ from datetime import datetime
 from app.advice.bundle import build_facts
 from app.advice.facts import Today
 from app.advice.plan import Language, PlanContext
-from app.air.cpcb import IST, Pollutant, StationReading
+from app.air.cpcb import StationReading
 from app.air.lookup import MeasuredAir
 from app.air.stations import NearbyStation, Station
 from app.domain.aqi import station_aqi
 from app.domain.household import Household
+from app.domain.readings import IST, Pollutant
 from app.domain.timing import DayTiming, Window
 
 NOW = datetime(2026, 11, 24, 8, 30, tzinfo=IST)

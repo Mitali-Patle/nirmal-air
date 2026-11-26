@@ -6,10 +6,11 @@ way the server writes its label.
 
 from fastapi import Request
 
-from app.air.cpcb import AirDataUnavailableError
+from app.air.errors import PlaceSearchError
 from app.air.places import PlaceFinder
 from app.air.stations import nearest_stations
 from app.services.today import PlaceChoice
+from app.web.deps import get_services
 
 # India's bounding box, so a location outside it is refused before any lookup.
 LAT_RANGE = (6.0, 37.5)
@@ -37,7 +38,7 @@ async def place_from_form(request: Request, form: dict[str, str]) -> PlaceChoice
         return None
     try:
         results = await place_finder(request).search(query)
-    except AirDataUnavailableError:
+    except PlaceSearchError:
         return None
     if int(index) >= len(results):
         return None
@@ -54,8 +55,7 @@ def place_finder(request: Request) -> PlaceFinder:
     Returns:
         The place finder.
     """
-    finder: PlaceFinder = request.app.state.places
-    return finder
+    return get_services(request).places
 
 
 def near_me(lat_text: str, lon_text: str) -> PlaceChoice | None:

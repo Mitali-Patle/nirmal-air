@@ -48,7 +48,7 @@ def sun_times(lat: float, lon: float, day: datetime) -> SunTimes:
     Returns:
         Sunrise and sunset.
 
-    >>> from app.air.cpcb import IST
+    >>> from app.domain.readings import IST
     >>> times = sun_times(28.61, 77.21, datetime(2026, 11, 25, tzinfo=IST))
     >>> f"{times.sunrise:%H:%M} {times.sunset:%H:%M}"
     '06:51 17:25'

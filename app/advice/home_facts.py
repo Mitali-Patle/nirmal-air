@@ -1,6 +1,17 @@
 """Facts about the household: who lives here, routines, commutes and swaps, and the home."""
 
-from app.advice.facts import MINUS, Fact, Kind, Today, clock, number
+from app.advice.facts import (
+    MINUS,
+    Fact,
+    Kind,
+    Today,
+    clock,
+    commute_id,
+    member_id,
+    number,
+    routine_id,
+    swap_id,
+)
 from app.advice.indoor_facts import home_fact, indoor_facts
 from app.domain.commute import Swap, offered_swaps, trip_impact
 from app.domain.guidance import routine_decision
@@ -26,7 +37,7 @@ def household_facts(today: Today) -> list[Fact]:
         facts.append(_commute_fact(index, commute, pm25, today.approx))
         ranked = offered_swaps(commute, sensitive=commute.member in sensitive)
         for rank, swap in enumerate(ranked[:SWAPS_PER_COMMUTE], start=1):
-            facts.append(_swap_fact(f"swap_{index}_{rank}", commute.member, swap))
+            facts.append(_swap_fact(swap_id(index, rank), commute.member, swap))
     facts.append(home_fact(household.home))
     if pm25 is not None:
         facts += indoor_facts(pm25, household.home, today.approx)
@@ -40,7 +51,7 @@ def _member_facts(household: Household) -> list[Fact]:
         if member.sensitive:
             details.append("more sensitive to polluted air")
         facts.append(
-            Fact(f"member_{index}", Kind.HOUSEHOLD, f"{member.name}: {', '.join(details)}.")
+            Fact(member_id(index), Kind.HOUSEHOLD, f"{member.name}: {', '.join(details)}.")
         )
     return facts
 
@@ -62,7 +73,7 @@ def _routine_facts(today: Today) -> list[Fact]:
         who = "a more sensitive person" if routine.member in sensitive else "this person"
         facts.append(
             Fact(
-                f"routine_{index}",
+                routine_id(index),
                 Kind.GUIDANCE,
                 f"{routine.member}'s usual {routine.activity.value}: {clock(routine.hour)}, "
                 f"for {routine.minutes} minutes. Today's rule for {band} and {who}: "
@@ -80,7 +91,7 @@ def _commute_fact(index: int, commute: Commute, pm25: float | None, approx: str)
         inhaled = f", and {approx} {number(trip.inhaled_ug(pm25))} µg of PM2.5 breathed in"
     mode = _mode_label(commute.mode, commute.people_in_vehicle, commute.member)
     return Fact(
-        f"commute_{index}",
+        commute_id(index),
         Kind.ESTIMATE,
         f"{commute.member} goes by {mode}, "
         f"{number(commute.km_one_way)} km each way, {commute.days_per_week} days a week, "

@@ -4,15 +4,15 @@
 {% if provenance.fallback %}
 <p class="std-label">Standard advice (not AI-generated). The AI could not be used just now, so these steps come from fixed rules on CPCB's bands.{% if lang == "hi" %} Standard advice is in English only.{% endif %}</p>
 {% endif %}
-{% if board.next %}{{ sign(board.next, kind_labels, big=true) }}{% endif %}
+{% if board.next %}{{ sign(board.next, big=true) }}{% endif %}
 {% if board.later %}
 <h3 class="group-head">Later today</h3>
-<div class="signs">{% for s in board.later %}{{ sign(s, kind_labels) }}{% endfor %}</div>
+<div class="signs">{% for s in board.later %}{{ sign(s) }}{% endfor %}</div>
 {% endif %}
 {% if board.earlier %}
 <details class="earlier">
   <summary>Earlier today ({{ board.earlier|length }})</summary>
-  <div class="signs">{% for s in board.earlier %}{{ sign(s, kind_labels) }}{% endfor %}</div>
+  <div class="signs">{% for s in board.earlier %}{{ sign(s) }}{% endfor %}</div>
 </details>
 {% endif %}
 </section>

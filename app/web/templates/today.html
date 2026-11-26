@@ -11,7 +11,7 @@
   <span class="band"><i class="swatch swatch-{{ air.aqi.category.name|lower }}" aria-hidden="true"></i>{{ air.aqi.category.label }}</span>
   <span class="src">Measured {{ air.reading.measured_at|clock }} at {{ air.nearby.station.label }}, {{ air.nearby.distance_km|km }} away<span class="sep" aria-hidden="true"></span><span class="visually-hidden">. </span>CPCB via data.gov.in</span>
   {% else %}
-  <span class="src">No CPCB station near {{ today.place }} has reported in the last 3 hours.</span>
+  <span class="src">No CPCB station near {{ today.place }} has reported in the last {{ max_reading_age_hours }} hours.</span>
   {% endif %}
 </p>
 {% endblock %}
@@ -62,7 +62,7 @@
       {% if air.from_cache_after_failure %}<p class="note">The station is not answering right now, so this is its last reading.</p>{% endif %}
       {% if far %}<p class="note">The nearest station with data is {{ air.nearby.distance_km|km }} away, so the air where you are may differ.</p>{% endif %}
       {% else %}
-      <p class="note">No CPCB station near {{ today.place }} has reported in the last 3 hours. The plan uses the forecast times and general advice.</p>
+      <p class="note">No CPCB station near {{ today.place }} has reported in the last {{ max_reading_age_hours }} hours. The plan uses the forecast times and general advice.</p>
       {% endif %}
       <p class="sky-note">{% if sky.theme.value == "auto" %}The page's colour follows the {{ sky.phase.value }} sky here{% else %}You chose {{ sky.theme.value }} colours (Follow the sky is in the footer){% endif %}{% if sky.haze %}, dulled by today's {{ air.aqi.category.label }} air{% endif %}.</p>
     </section>
@@ -122,8 +122,8 @@
   <input type="hidden" name="csrf" value="{{ csrf_token }}">
   <fieldset>
     <legend>Colours</legend>
-    {% for value, label in [('auto', 'Follow the sky'), ('light', 'Light'), ('dark', 'Dark')] %}
-    <button type="submit" name="theme" value="{{ value }}" aria-pressed="{{ 'true' if sky.theme.value == value else 'false' }}">{{ label }}</button>
+    {% for choice, label in theme_labels.items() %}
+    <button type="submit" name="theme" value="{{ choice.value }}" aria-pressed="{{ 'true' if sky.theme == choice else 'false' }}">{{ label }}</button>
     {% endfor %}
   </fieldset>
 </form>

@@ -47,6 +47,12 @@ flowchart LR
 | `app/ai` | Call models, validate, guard, fall back, cache, record provenance | Know about air quality |
 | `app/web` | Routes, session, CSRF, views, templates | Compute numbers |
 
+Imports only point inwards: `app/domain` imports nothing else from the app, so the shared
+vocabulary (India time, pollutants, forecast hours) lives in `app/domain/readings.py` and the
+clients in `app/air` build it. `tests/test_architecture.py` fails the build if a layer imports
+one it may not. Routes reach the app's services through one typed object (`app/web/deps.py`),
+and outside-service failures share one base error, `UpstreamUnavailableError`.
+
 ## Security
 
 - **Strict Content Security Policy:** scripts, styles, fonts and images come from the app's

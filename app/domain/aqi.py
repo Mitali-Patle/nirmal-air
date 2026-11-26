@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from enum import Enum
 from itertools import pairwise
 
-from app.air.cpcb import Pollutant
+from app.domain.readings import Pollutant
 
 MIN_POLLUTANTS = 3
 PARTICLES = frozenset({Pollutant.PM25, Pollutant.PM10})

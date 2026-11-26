@@ -32,6 +32,14 @@ class ThemeChoice(StrEnum):
     DARK = "dark"
 
 
+# The buttons in the page footer, in order.
+THEME_LABELS = {
+    ThemeChoice.AUTO: "Follow the sky",
+    ThemeChoice.LIGHT: "Light",
+    ThemeChoice.DARK: "Dark",
+}
+
+
 def save_household(
     request: Request, place: PlaceChoice, household: Household, sample: str | None = None
 ) -> None:
@@ -82,6 +90,16 @@ def load_household(request: Request) -> tuple[PlaceChoice, Household] | None:
         return choice, Household.model_validate(household)
     except (KeyError, TypeError, ValueError, ValidationError):
         return None
+
+
+def save_theme(request: Request, theme: ThemeChoice) -> None:
+    """Remember the visitor's theme choice in the session.
+
+    Args:
+        request: The incoming request.
+        theme: Time of day, light or dark.
+    """
+    request.session[THEME_KEY] = theme.value
 
 
 def theme_choice(request: Request) -> ThemeChoice:

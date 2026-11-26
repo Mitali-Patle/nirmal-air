@@ -4,10 +4,11 @@ import httpx
 import pytest
 import respx
 
-from app.air.cpcb import IST, AirDataUnavailableError
+from app.air.errors import AirDataUnavailableError, PlaceSearchError
 from app.air.forecast import FORECAST_URL, fetch_forecast, parse_forecast
 from app.air.places import GEOCODING_URL, Place, search_name, search_places
 from app.air.stations import all_stations, nearest_stations
+from app.domain.readings import IST
 from tests.conftest import load_fixture
 
 FIVE_PM = datetime(2026, 11, 23, 17, 20, tzinfo=IST)
@@ -40,7 +41,7 @@ async def test_no_match_is_an_empty_list(client: httpx.AsyncClient) -> None:
 @respx.mock
 async def test_search_failure_raises(client: httpx.AsyncClient) -> None:
     respx.get(GEOCODING_URL).respond(503)
-    with pytest.raises(AirDataUnavailableError):
+    with pytest.raises(PlaceSearchError):
         await search_places(client, "Pune")
 
 

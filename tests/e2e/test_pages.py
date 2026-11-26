@@ -9,7 +9,7 @@ from typing import Any
 import pytest
 from playwright.sync_api import ConsoleMessage, Page, expect
 
-from app.air.cpcb import IST
+from app.domain.readings import IST
 from tests.e2e.conftest import LiveApp, NewPage
 
 pytestmark = pytest.mark.e2e

@@ -73,7 +73,7 @@
         <legend>Who lives here</legend>
         <p class="field-note">Names are only used to say who each step is for.</p>
         {% for row in member_rows %}
-        {% if row == shown.members %}<details class="more-rows"{% if open_more.members %} open{% endif %}><summary>Add more people (up to 8)</summary>{% endif %}
+        {% if row == shown.members %}<details class="more-rows"{% if open_more.members %} open{% endif %}><summary>Add more people (up to {{ member_rows|length }})</summary>{% endif %}
         <fieldset class="row row-person"><legend class="row-legend">Person {{ row + 1 }}</legend>
           <div><label for="m{{ row }}_name">Name</label>
             <input id="m{{ row }}_name" name="m{{ row }}_name" type="text" maxlength="20" value="{{ form.get('m%d_name'|format(row), '') }}"></div>
@@ -93,7 +93,7 @@
         <legend>Regular time outdoors</legend>
         <p class="field-note">"Who" is one of the names above.</p>
         {% for row in routine_rows %}
-        {% if row == shown.routines %}<details class="more-rows"{% if open_more.routines %} open{% endif %}><summary>Add more routines (up to 6)</summary>{% endif %}
+        {% if row == shown.routines %}<details class="more-rows"{% if open_more.routines %} open{% endif %}><summary>Add more routines (up to {{ routine_rows|length }})</summary>{% endif %}
         <fieldset class="row"><legend class="row-legend">Routine {{ row + 1 }}</legend>
           <div><label for="r{{ row }}_member">Who</label><input id="r{{ row }}_member" name="r{{ row }}_member" type="text" maxlength="20" value="{{ form.get('r%d_member'|format(row), '') }}"></div>
           <div><label for="r{{ row }}_activity">What</label><select id="r{{ row }}_activity" name="r{{ row }}_activity">{% for value, label in activities %}<option value="{{ value }}"{% if form.get('r%d_activity'|format(row)) == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
@@ -107,7 +107,7 @@
       <fieldset class="group">
         <legend>Regular trips</legend>
         {% for row in commute_rows %}
-        {% if row == shown.commutes %}<details class="more-rows"{% if open_more.commutes %} open{% endif %}><summary>Add more trips (up to 4)</summary>{% endif %}
+        {% if row == shown.commutes %}<details class="more-rows"{% if open_more.commutes %} open{% endif %}><summary>Add more trips (up to {{ commute_rows|length }})</summary>{% endif %}
         <fieldset class="row"><legend class="row-legend">Trip {{ row + 1 }}</legend>
           <div><label for="c{{ row }}_member">Who</label><input id="c{{ row }}_member" name="c{{ row }}_member" type="text" maxlength="20" value="{{ form.get('c%d_member'|format(row), '') }}"></div>
           <div><label for="c{{ row }}_mode">How</label><select id="c{{ row }}_mode" name="c{{ row }}_mode">{% for value, label in modes %}<option value="{{ value }}"{% if form.get('c%d_mode'|format(row)) == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>

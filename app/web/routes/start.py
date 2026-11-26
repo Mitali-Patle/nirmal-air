@@ -6,20 +6,20 @@ from fastapi import APIRouter, Form, HTTPException, Query, Request, status
 from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse, Response
 
 from app.advice.facts import distance_label
-from app.air.cpcb import AirDataUnavailableError
+from app.air.errors import PlaceSearchError
 from app.air.stations import nearest_stations
 from app.services.samples import SAMPLES
 from app.web.csrf import CsrfChecked
 from app.web.household_form import (
-    COMMUTE_ROWS,
-    MEMBER_ROWS,
-    ROUTINE_ROWS,
-    SHOWN_ROWS,
+    COMMUTES,
+    MEMBERS,
+    ROUTINES,
+    SECTIONS,
     hidden_rows_in_use,
     parse_household,
 )
 from app.web.place_choice import near_me, place_finder, place_from_form
-from app.web.session import ThemeChoice, load_household, save_household
+from app.web.session import ThemeChoice, load_household, save_household, save_theme
 from app.web.templating import templates
 
 router = APIRouter()
@@ -75,7 +75,7 @@ async def places(request: Request, q: Annotated[str, Query(max_length=60)] = "")
     if len(query) >= 2:  # noqa: PLR2004 - two letters before searching
         try:
             results = await place_finder(request).search(query)
-        except AirDataUnavailableError:
+        except PlaceSearchError:
             failed = True
     context = {"query": query, "results": results, "failed": failed}
     return templates.TemplateResponse(request, "partials/places.html", context)
@@ -137,7 +137,7 @@ def set_theme(request: Request, theme: Annotated[ThemeChoice, Form()]) -> Respon
     Returns:
         A redirect back to Today.
     """
-    request.session["theme"] = theme.value
+    save_theme(request, theme)
     return RedirectResponse("/today", status.HTTP_303_SEE_OTHER)
 
 
@@ -149,10 +149,10 @@ def _start_page(
         "saved": load_household(request),
         "errors": errors,
         "form": form,
-        "member_rows": range(MEMBER_ROWS),
-        "routine_rows": range(ROUTINE_ROWS),
-        "commute_rows": range(COMMUTE_ROWS),
-        "shown": SHOWN_ROWS,
+        "member_rows": range(MEMBERS.rows),
+        "routine_rows": range(ROUTINES.rows),
+        "commute_rows": range(COMMUTES.rows),
+        "shown": {section.name: section.shown for section in SECTIONS},
         "open_more": hidden_rows_in_use(form),
     }
     return templates.TemplateResponse(request, "start.html", context, status_code=code)

@@ -13,6 +13,7 @@ from fastapi.templating import Jinja2Templates
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
 from app.advice.facts import clock, distance_label, number
+from app.air.lookup import MAX_AGE_HOURS
 from app.web.csrf import csrf_token
 
 TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
@@ -59,5 +60,7 @@ environment.filters["clock"] = clock
 environment.filters["km"] = distance_label
 environment.filters["kg"] = kilograms
 environment.filters["num"] = number
+# How old a reading may be before the page says no station has reported.
+environment.globals["max_reading_age_hours"] = MAX_AGE_HOURS
 
 templates = Jinja2Templates(env=environment, context_processors=[common_context])

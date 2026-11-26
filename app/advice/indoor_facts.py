@@ -1,6 +1,6 @@
 """Facts about the home: the main room, its habits, and the indoor PM2.5 estimates."""
 
-from app.advice.facts import Fact, Kind, number
+from app.advice.facts import Fact, FactId, Kind, number
 from app.domain.assumptions import TYPICAL_PURIFIER_CADR_M3H
 from app.domain.household import Home
 from app.domain.indoor import cigarettes, indoor_estimates
@@ -26,7 +26,7 @@ def home_fact(home: Home) -> Fact:
         else "no air purifier"
     )
     return Fact(
-        "home",
+        FactId.HOME,
         Kind.HOUSEHOLD,
         f"Main room {home.room_sqft} sq ft with {purifier}; {'; '.join(habits)}.",
     )
@@ -37,7 +37,7 @@ def _purifier_if_fact(pm25: float, home: Home, approx: str) -> Fact:
     typical = home.model_copy(update={"purifier_cadr_m3h": TYPICAL_PURIFIER_CADR_M3H})
     level = indoor_estimates(pm25, typical).with_purifier
     return Fact(
-        "indoor_purifier_if",
+        FactId.INDOOR_PURIFIER_IF,
         Kind.ESTIMATE,
         f"A typical air purifier ({TYPICAL_PURIFIER_CADR_M3H} m³/h) running with windows shut "
         f"would bring the main room to {approx} {level} µg/m³.",
@@ -61,14 +61,14 @@ def indoor_facts(pm25: float, home: Home, approx: str) -> list[Fact]:
     shut_pct = round((1 - estimate.windows_shut / pm25) * 100)
     facts = [
         Fact(
-            "indoor_open",
+            FactId.INDOOR_OPEN,
             Kind.ESTIMATE,
             f"With windows open, the main room is {approx} {estimate.windows_open} µg/m³ of PM2.5.",
             f"{estimate.windows_open} µg/m³",
             "Main room, windows open",
         ),
         Fact(
-            "indoor_shut",
+            FactId.INDOOR_SHUT,
             Kind.ESTIMATE,
             f"With windows shut, the main room is {approx} {estimate.windows_shut} µg/m³, "
             f"{shut_pct}% below outdoors.",
@@ -81,7 +81,7 @@ def indoor_facts(pm25: float, home: Home, approx: str) -> list[Fact]:
     else:
         facts.append(
             Fact(
-                "indoor_purifier",
+                FactId.INDOOR_PURIFIER,
                 Kind.ESTIMATE,
                 f"With windows shut and the purifier on, {approx} {estimate.with_purifier} µg/m³: "
                 f"{approx} {number(cigarettes(estimate.with_purifier))} cigarettes a day instead "

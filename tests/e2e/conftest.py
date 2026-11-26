@@ -22,11 +22,12 @@ from fastapi import FastAPI
 from playwright.sync_api import Browser, BrowserContext, Page, sync_playwright
 from pydantic import SecretStr
 
-from app.air.cpcb import CPCB_URL, IST
+from app.air.cpcb import CPCB_URL
 from app.air.forecast import FORECAST_URL
 from app.air.places import GEOCODING_URL
 from app.air.weather import WEATHER_URL
 from app.config import Settings
+from app.domain.readings import IST
 from app.main import create_app
 from tests.conftest import load_fixture
 
@@ -42,7 +43,7 @@ class LiveApp:
 
     def at(self, moment: datetime) -> None:
         """Set the app's clock (the recorded reading is from 5 pm on 23 Nov 2026)."""
-        self.app.state.clock = lambda: moment
+        self.app.state.services.clock = lambda: moment
 
 
 NewPage = Callable[..., Page]

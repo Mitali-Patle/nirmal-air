@@ -5,7 +5,7 @@ It follows CPCB's bands and the same facts the AI would get, and the page labels
 the same numbers as the rest of the page.
 """
 
-from app.advice.facts import Fact
+from app.advice.facts import Fact, FactId, routine_id, swap_id
 from app.advice.plan import EVERYONE, MAX_ITEMS, Plan, PlanContext, PlanItem, Slot
 from app.domain.guidance import (
     CHANGE_FROM,
@@ -58,8 +58,8 @@ def _item(slot: Slot, member: str, action: str, fact: Fact) -> PlanItem:
 
 
 def _windows(aqi: int | None, facts: dict[str, Fact]) -> PlanItem:
-    rule = window_rule(aqi, has_forecast="cleanest" in facts)
-    return _item(Slot.MORNING, EVERYONE, WINDOW_ACTIONS[rule], facts["windows"])
+    rule = window_rule(aqi, has_forecast=FactId.CLEANEST in facts)
+    return _item(Slot.MORNING, EVERYONE, WINDOW_ACTIONS[rule], facts[FactId.WINDOWS])
 
 
 def _routines(aqi: int | None, household: Household, facts: dict[str, Fact]) -> list[PlanItem]:
@@ -70,11 +70,13 @@ def _routines(aqi: int | None, household: Household, facts: dict[str, Fact]) -> 
             aqi,
             routine.activity,
             sensitive=routine.member in sensitive,
-            has_forecast="cleanest" in facts,
+            has_forecast=FactId.CLEANEST in facts,
         )
         action = ACTIONS[decision].format(routine.activity.value)
         reason = (
-            facts["cleanest"] if decision is Decision.CLEANEST_TIME else facts[f"routine_{index}"]
+            facts[FactId.CLEANEST]
+            if decision is Decision.CLEANEST_TIME
+            else facts[routine_id(index)]
         )
         items.append(_item(Slot.of_hour(routine.hour), routine.member, action, reason))
     return items
@@ -83,7 +85,7 @@ def _routines(aqi: int | None, household: Household, facts: dict[str, Fact]) -> 
 def _commutes(household: Household, facts: dict[str, Fact]) -> list[PlanItem]:
     items = []
     for index, commute in enumerate(household.commutes, start=1):
-        swap = facts.get(f"swap_{index}_1")
+        swap = facts.get(swap_id(index, 1))
         if swap is not None:
             slot = Slot.of_hour(commute.leaves_at_hour)
             items.append(_item(slot, commute.member, "Try the lower-CO₂ way for this trip.", swap))
@@ -93,9 +95,9 @@ def _commutes(household: Household, facts: dict[str, Fact]) -> list[PlanItem]:
 def _home(aqi: int | None, household: Household, facts: dict[str, Fact]) -> list[PlanItem]:
     home, fact = household.home, facts["home"]
     items = []
-    if "indoor_purifier" in facts and (aqi is None or aqi >= CHANGE_FROM):
+    if FactId.INDOOR_PURIFIER in facts and (aqi is None or aqi >= CHANGE_FROM):
         action = "Run the purifier in the main room with doors shut."
-        items.append(_item(Slot.EVENING, EVERYONE, action, facts["indoor_purifier"]))
+        items.append(_item(Slot.EVENING, EVERYONE, action, facts[FactId.INDOOR_PURIFIER]))
     if home.incense_or_coils:
         action = "Skip incense and mosquito coils today; use a net instead."
         items.append(_item(Slot.EVENING, EVERYONE, action, fact))
@@ -112,7 +114,7 @@ def _conditions(aqi: int | None, household: Household, facts: dict[str, Fact]) -
         return []
     action = "Keep usual medicines handy; see a doctor if breathing gets worse."
     return [
-        _item(Slot.MORNING, member.name, action, facts["health"])
+        _item(Slot.MORNING, member.name, action, facts[FactId.HEALTH])
         for member in household.members
         if member.conditions & {Condition.LUNG, Condition.HEART}
     ]
