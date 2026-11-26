@@ -62,7 +62,8 @@
         <input id="place_query" name="place_query" type="text" maxlength="60" autocomplete="address-level2"
                value="{{ form.get('place_query', '') }}" placeholder="Andheri, Lucknow, Salt Lake…"
                hx-get="/places" hx-trigger="input changed delay:400ms" hx-target="#place-choices" hx-sync="this:replace">
-        <div id="place-choices" aria-live="polite"></div>
+        {% set picked = form.get('place_index', '0') %}
+        <div id="place-choices" aria-live="polite"{% if form.get('place_query') %} hx-get="/places" hx-trigger="load" hx-vals='{{ {"place_query": form.place_query, "chosen": picked if picked.isdigit() else "0"}|tojson }}'{% endif %}></div>
         <input type="hidden" name="geo_lat" id="geo_lat" value="">
         <input type="hidden" name="geo_lon" id="geo_lon" value="">
         <button type="button" class="quiet" id="locate" hidden>Use my location</button>

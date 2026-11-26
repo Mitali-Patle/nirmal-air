@@ -22,6 +22,8 @@ from app.web.place_choice import near_me, place_finder, place_from_form
 from app.web.session import ThemeChoice, load_household, save_household, save_theme
 from app.web.templating import templates
 
+# The place search returns at most this many results, numbered from 0.
+MAX_PLACE_INDEX = 9
 router = APIRouter()
 
 
@@ -60,24 +62,29 @@ def use_sample(request: Request, sample: Annotated[str, Form(max_length=40)]) ->
 
 
 @router.get("/places", response_class=HTMLResponse)
-async def places(request: Request, q: Annotated[str, Query(max_length=60)] = "") -> Response:
+async def places(
+    request: Request,
+    place_query: Annotated[str, Query(max_length=60)] = "",
+    chosen: Annotated[int, Query(ge=0, le=MAX_PLACE_INDEX)] = 0,
+) -> Response:
     """Place suggestions for the search box (an htmx fragment).
 
     Args:
         request: The incoming request.
-        q: What the person has typed.
+        place_query: What the person has typed (the search box's own field name).
+        chosen: Which suggestion to tick, so a form shown again keeps the visitor's pick.
 
     Returns:
         Up to five places to choose from, or a short message.
     """
-    query = q.strip()
+    query = place_query.strip()
     results, failed = [], False
     if len(query) >= 2:  # noqa: PLR2004 - two letters before searching
         try:
             results = await place_finder(request).search(query)
         except PlaceSearchError:
             failed = True
-    context = {"query": query, "results": results, "failed": failed}
+    context = {"query": query, "results": results, "failed": failed, "chosen": chosen}
     return templates.TemplateResponse(request, "partials/places.html", context)
 
 

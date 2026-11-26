@@ -208,13 +208,24 @@ def test_the_ask_fallback_repeats_the_measured_air(live: respx.MockRouter) -> No
 
 def test_place_suggestions(live: respx.MockRouter) -> None:
     client = make_client()
-    assert client.get("/places?q=a").text.strip() == ""
-    assert 'name="place_index" value="0" checked' in client.get("/places?q=Andheri").text
+    assert client.get("/places?place_query=a").text.strip() == ""
+    assert 'name="place_index" value="0" checked' in client.get("/places?place_query=Andheri").text
     live.get(GEOCODING_URL).respond(json={"results": []})
-    assert "No place in India matches" in client.get("/places?q=Zzz").text
+    assert "No place in India matches" in client.get("/places?place_query=Zzz").text
     live.get(GEOCODING_URL).respond(500)
-    assert "Place search is not answering" in client.get("/places?q=Powai").text
-    assert 'value="0" checked' in client.get("/places?q=Andheri").text  # cached earlier
+    assert "Place search is not answering" in client.get("/places?place_query=Powai").text
+    assert 'value="0" checked' in client.get("/places?place_query=Andheri").text  # cached earlier
+    second = client.get("/places?place_query=Andheri&chosen=1").text
+    assert 'value="1" checked' in second and 'value="0" checked' not in second
+
+
+def test_a_form_shown_again_keeps_the_place_picked(live: respx.MockRouter) -> None:
+    client = make_client()
+    page = client.post(
+        "/household", data={"csrf": token(client), "place_query": "Andheri", "place_index": "2"}
+    )
+    assert 'hx-trigger="load"' in page.text
+    assert "&#34;chosen&#34;: &#34;2&#34;" in page.text or '"chosen": "2"' in page.text
 
 
 def household_form(csrf: str, **extra: str) -> dict[str, str]:

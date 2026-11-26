@@ -142,6 +142,21 @@ def test_console_is_clean_in_every_state(new_page: NewPage) -> None:
     assert problems == []
 
 
+def test_typing_a_place_offers_matches_and_the_pick_is_kept(new_page: NewPage) -> None:
+    page = new_page()
+    open_form(page)
+    page.get_by_label("Town, city or locality").press_sequentially("Andheri", delay=20)
+    choices = page.get_by_role("group", name="Which Andheri?")
+    expect(choices.get_by_role("radio")).to_have_count(5)
+    choices.get_by_label("Andheri, Sirmaur, Himachal Pradesh").first.check()
+    page.get_by_role("button", name="See today's plan").click()  # no people yet: an error
+    expect(page.locator(".errors")).to_be_visible()
+    expect(page.get_by_label("Andheri, Sirmaur, Himachal Pradesh").first).to_be_checked()
+    page.get_by_label("Name").first.fill("Asha")
+    page.get_by_role("button", name="See today's plan").click()
+    expect(page.locator(".bar-place")).to_contain_text("Andheri, Sirmaur, Himachal Pradesh")
+
+
 def test_use_my_location_names_the_place_found(new_page: NewPage) -> None:
     page = new_page(
         geolocation={"latitude": 28.6139, "longitude": 77.2090}, permissions=["geolocation"]

@@ -4,7 +4,7 @@
 <fieldset class="place-choices">
   <legend>Which {{ query }}?</legend>
   {% for place in results %}
-  <label class="choice"><input type="radio" name="place_index" value="{{ loop.index0 }}"{% if loop.first %} checked{% endif %}> {{ place.label }}</label>
+  <label class="choice"><input type="radio" name="place_index" value="{{ loop.index0 }}"{% if loop.index0 == chosen %} checked{% endif %}> {{ place.label }}</label>
   {% endfor %}
 </fieldset>
 {% elif query|length >= 2 %}
