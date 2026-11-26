@@ -143,7 +143,49 @@ def test_an_ai_plan_is_drawn_as_steps_with_its_provenance(live: respx.MockRouter
                 "slot": "evening",
                 "member": "Aarav",
                 "action": "Play indoors.",
-                "why": "Very Poor air.",
+                "why": "हवा बहुत खराब है।",
+                "fact_ids": ["routine_1"],
+            },
+            {
+                "slot": "morning",
+                "member": "Dadi",
+                "action": "Walk indoors.",
+                "why": "दमा है।",
+                "fact_ids": ["routine_2"],
+            },
+            {
+                "slot": "morning",
+                "member": "Asha",
+                "action": "Try the bus.",
+                "why": "कम CO₂।",
+                "fact_ids": ["swap_1_1"],
+            },
+            {
+                "slot": "evening",
+                "member": "Everyone",
+                "action": "Keep windows shut.",
+                "why": "सबसे खराब समय।",
+                "fact_ids": ["windows"],
+            },
+        ],
+    }
+    client = make_client(Replies(plan))
+    load_sample(client)
+    fragment = client.get("/today/plan?lang=hi").text
+    assert "Standard advice" not in fragment
+    assert fragment.index("Play indoors.") < fragment.index("Earlier today (2)")
+    assert "step-next" in fragment and "fake:model" in fragment and "plan-v5" in fragment
+    assert "Nothing more is planned" not in fragment
+
+
+def test_a_hindi_plan_written_in_english_is_sent_back(live: respx.MockRouter) -> None:
+    english = {
+        "items": [
+            {
+                "slot": "evening",
+                "member": "Aarav",
+                "action": "Play indoors.",
+                "why": "Very Poor.",
                 "fact_ids": ["routine_1"],
             },
             {
@@ -160,22 +202,13 @@ def test_an_ai_plan_is_drawn_as_steps_with_its_provenance(live: respx.MockRouter
                 "why": "Less CO₂.",
                 "fact_ids": ["swap_1_1"],
             },
-            {
-                "slot": "evening",
-                "member": "Everyone",
-                "action": "Keep windows shut.",
-                "why": "The worst time.",
-                "fact_ids": ["windows"],
-            },
         ],
     }
-    client = make_client(Replies(plan))
+    client = make_client(Replies(english, english))
     load_sample(client)
     fragment = client.get("/today/plan?lang=hi").text
-    assert "Standard advice" not in fragment
-    assert fragment.index("Play indoors.") < fragment.index("Earlier today (2)")
-    assert "step-next" in fragment and "fake:model" in fragment and "plan-v4" in fragment
-    assert "Nothing more is planned" not in fragment
+    assert "Standard advice (not AI-generated)" in fragment
+    assert "write in Hindi, in Devanagari script" in fragment
     assert "Hindi (Devanagari script)" not in fragment  # the payload is not echoed raw
 
 

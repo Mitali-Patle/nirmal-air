@@ -50,13 +50,13 @@
 .step-slot::before { content: ""; display: inline-block; width: 3px; height: 3px; border-radius: 50%; background: var(--muted); vertical-align: 0.25em; margin: 0 0.55em; }
 .step-text { font-size: 1.0625rem; font-weight: 600; line-height: 1.3; }
 .step-why { color: var(--muted); font-size: 0.9375rem; line-height: 1.45; margin-top: 2px; max-width: 62ch; }
-.step-fig { font: 500 0.875rem/1.4 var(--mono); white-space: nowrap; text-align: right; }
+.step-fig { font: 600 0.9375rem/1.4 var(--sans); white-space: nowrap; text-align: right; }
 
 /* The next step: the same row, set large. */
 .step-next { padding: var(--space-3) 0 var(--space-4); }
 .step-next .dot { width: 15px; height: 15px; margin-left: 3px; background: var(--accent); box-shadow: 0 0 0 5px var(--accent-tint); }
 .step-next.step-home .dot { background: var(--home); box-shadow: 0 0 0 5px color-mix(in srgb, var(--home) 16%, var(--panel)); }
-.step-next .step-text { font-family: var(--serif); font-weight: 500; font-size: clamp(1.5rem, 4.6vw, 2rem); line-height: 1.12; letter-spacing: -0.015em; margin-bottom: 2px; }
+.step-next .step-text { font-family: var(--display); font-weight: 650; font-stretch: var(--display-stretch); font-size: clamp(1.5rem, 4.6vw, 2rem); line-height: 1.12; letter-spacing: -0.015em; margin-bottom: 2px; }
 .step-next .step-why { font-size: 1rem; color: var(--ink); }
 .step-next .step-fig { font-size: 1.0625rem; }
 
@@ -98,7 +98,7 @@
 /* The next 24 hours as one line of hours, starting now. */
 .track { position: relative; padding-top: 24px; }
 .now-pin {
-  position: absolute; left: 0; top: 0; font: 500 0.6875rem/1.6 var(--mono);
+  position: absolute; left: 0; top: 0; font: 500 0.6875rem/1.6 var(--sans);
   background: var(--ink); color: var(--panel); padding: 0 6px; border-radius: 4px;
 }
 .now-pin::after { content: ""; position: absolute; left: 6px; top: 100%; border: 4px solid transparent; border-top-color: var(--ink); }
@@ -108,7 +108,7 @@
 .hr.lv-dirtier { background: color-mix(in srgb, var(--warn) 32%, var(--panel)); }
 .hr.is-clean { background: var(--accent); }
 .hr.is-worst { background: repeating-linear-gradient(135deg, var(--warn) 0 3px, color-mix(in srgb, var(--warn) 40%, var(--panel)) 3px 6px); }
-.ticks { display: grid; grid-template-columns: repeat(24, 1fr); margin-top: var(--space-2); font: 400 0.6875rem/1 var(--mono); color: var(--muted); }
+.ticks { display: grid; grid-template-columns: repeat(24, 1fr); margin-top: var(--space-2); font: 400 0.6875rem/1 var(--sans); color: var(--muted); }
 .ticks span { white-space: nowrap; }
 .route-legend { list-style: none; padding: 0; margin-top: var(--space-4); display: grid; gap: var(--space-2); font-size: 0.9375rem; }
 .route-legend li { display: flex; align-items: baseline; gap: var(--space-2); }
@@ -123,7 +123,7 @@
 .ask-row input { margin-top: 0; flex: 1 1 12rem; width: auto; background: var(--ground); }
 #answer:not(:empty) { margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--line); }
 .answer-q { color: var(--muted); font-size: 0.875rem; }
-.answer-text { font-family: var(--serif); font-size: 1.25rem; line-height: 1.3; margin-top: var(--space-1); }
+.answer-text { font-family: var(--display); font-weight: 600; font-stretch: var(--display-stretch); font-size: 1.3125rem; line-height: 1.3; margin-top: var(--space-1); }
 .answer-facts { list-style: none; padding: 0; margin-top: var(--space-3); display: grid; gap: var(--space-2); font-size: 0.875rem; }
 .answer .how { margin-top: var(--space-3); padding: 0; border: 0; background: none; }
 
@@ -135,7 +135,7 @@
   padding: var(--space-3) 0; border-bottom: 1px solid var(--line);
 }
 .fact-text { font-size: 1rem; max-width: 62ch; }
-.fact-fig { font: 500 0.9375rem/1.4 var(--mono); white-space: nowrap; }
+.fact-fig { font: 600 1rem/1.4 var(--sans); white-space: nowrap; }
 /* One line per fact; the full sentence opens under it. */
 .fact-more > summary { cursor: pointer; list-style: none; }
 .fact-more > summary::-webkit-details-marker { display: none; }
@@ -151,7 +151,7 @@
 .step-row button { white-space: nowrap; }
 .totals { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2) var(--space-5); margin-top: var(--space-4); }
 .total { font-size: 1rem; }
-.total-n { font-family: var(--serif); font-weight: 500; font-size: 1.75rem; margin-right: var(--space-1); }
+.total-n { font-family: var(--display); font-weight: 650; font-stretch: var(--display-stretch); font-size: 1.75rem; margin-right: var(--space-1); }
 .totals .muted { flex-basis: 100%; font-size: 0.8125rem; }
 .logged { margin-top: var(--space-3); font-size: 0.875rem; }
 .logged summary { font-weight: 500; }
@@ -166,7 +166,7 @@
 .how-list { display: grid; gap: var(--space-1); margin-top: var(--space-3); }
 .how-list div { display: flex; gap: var(--space-2); }
 .how-list dt { font-weight: 600; min-width: 7.5em; }
-.how-list dd { font-family: var(--mono); font-size: 0.8125rem; }
+.how-list dd { font-family: var(--sans); font-size: 0.8125rem; }
 .how-note { color: var(--muted); }
 .how-attempts, .how-facts { padding-left: 1.2em; display: grid; gap: var(--space-1); }
 .how-facts code { margin-right: var(--space-1); color: var(--muted); }

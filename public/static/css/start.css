@@ -48,7 +48,7 @@
 .sample:hover .chev { transform: translateX(3px); color: var(--accent); }
 .sample > span:not(.chev) { grid-column: 1; }
 .sample-title { font-weight: 600; font-size: 1.0625rem; }
-.sample-place { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+.sample-place { font-size: 0.8125rem; color: var(--muted); margin-top: 2px; }
 .sample-text { color: var(--muted); font-size: 0.9375rem; line-height: 1.45; margin-top: var(--space-2); max-width: 60ch; }
 .chev { grid-column: 2; grid-row: 1 / span 3; width: 18px; height: 18px; color: var(--muted); transition: transform 200ms var(--ease-out), color 200ms var(--ease-out); }
 .chev path { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
@@ -66,7 +66,7 @@
 .own-form[open] > summary { margin-bottom: var(--space-5); }
 .household { display: grid; gap: var(--space-5); }
 .group { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--space-4) var(--space-4) var(--space-3); }
-.group > legend { float: left; width: 100%; margin-bottom: var(--space-3); font-family: var(--serif); font-weight: 500; font-size: 1.1875rem; }
+.group > legend { float: left; width: 100%; margin-bottom: var(--space-3); font-family: var(--display); font-weight: 650; font-stretch: var(--display-stretch); font-size: 1.25rem; }
 .group > legend + * { clear: left; }
 .row { display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); padding: var(--space-3) 0; border-top: 1px solid var(--line); }
 .row:first-of-type { border-top: 0; }

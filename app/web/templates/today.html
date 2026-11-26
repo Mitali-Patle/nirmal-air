@@ -20,7 +20,7 @@
       {% if air %}
       <span class="aqi-n">AQI {{ air.aqi.value }}</span>
       <span class="band"><i class="swatch swatch-{{ air.aqi.category.name|lower }}" aria-hidden="true"></i>{{ air.aqi.category.label }}</span>
-      <span class="src mono">Measured {{ air.reading.measured_at|clock }} at {{ air.nearby.station.label }}, {{ air.nearby.distance_km|km }} away<span aria-hidden="true"> · </span><span class="visually-hidden">. </span>CPCB via data.gov.in</span>
+      <span class="src meta">Measured {{ air.reading.measured_at|clock }} at {{ air.nearby.station.label }}, {{ air.nearby.distance_km|km }} away<span aria-hidden="true"> · </span><span class="visually-hidden">. </span>CPCB via data.gov.in</span>
       {% else %}
       <span class="src">No CPCB station near {{ today.place }} has reported in the last {{ max_reading_age_hours }} hours.</span>
       {% endif %}

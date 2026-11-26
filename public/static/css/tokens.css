@@ -1,46 +1,34 @@
-/* Design tokens: paper and ink. Light phases are warm paper, dusk and night warm near-black,
+/* Design tokens: paper and ink. Light phases are warm paper, dusk deep indigo and night midnight blue,
    set on <html data-phase> from the place's sunrise and sunset and dulled toward smog by the
    measured AQI band (data-haze 0 to 5). One green carries actions and people's steps; a
    slate blue marks steps about the home. tests/test_contrast.py checks every phase and haze
    level against WCAG AA, so edit values there too. */
 
+/* Anek, by the Indian foundry Ek Type: a humanist sans (the most legible kind on small
+   screens) with matching Latin and Devanagari, so the Hindi plan is set as carefully as the
+   English one. One variable file per script; headings use its narrower widths. */
 @font-face {
-  font-family: "Newsreader"; font-style: normal; font-weight: 500; font-display: swap;
-  src: url("../fonts/newsreader-500-latin.woff2") format("woff2");
+  font-family: "Anek Latin"; font-style: normal; font-weight: 100 800; font-stretch: 75% 125%; font-display: swap;
+  src: url("../fonts/anek-latin.woff2") format("woff2");
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 @font-face {
-  font-family: "Newsreader"; font-style: normal; font-weight: 500; font-display: swap;
-  src: url("../fonts/newsreader-500-latin-ext.woff2") format("woff2");
+  font-family: "Anek Latin"; font-style: normal; font-weight: 100 800; font-stretch: 75% 125%; font-display: swap;
+  src: url("../fonts/anek-latin-ext.woff2") format("woff2");
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 @font-face {
-  font-family: "Hanken Grotesk"; font-style: normal; font-weight: 100 900; font-display: swap;
-  src: url("../fonts/hanken-grotesk-latin.woff2") format("woff2");
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-@font-face {
-  font-family: "Hanken Grotesk"; font-style: normal; font-weight: 100 900; font-display: swap;
-  src: url("../fonts/hanken-grotesk-latin-ext.woff2") format("woff2");
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-@font-face {
-  font-family: "JetBrains Mono"; font-style: normal; font-weight: 100 800; font-display: swap;
-  src: url("../fonts/jetbrains-mono-latin.woff2") format("woff2");
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-@font-face {
-  font-family: "JetBrains Mono"; font-style: normal; font-weight: 100 800; font-display: swap;
-  src: url("../fonts/jetbrains-mono-latin-ext.woff2") format("woff2");
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  font-family: "Anek Devanagari"; font-style: normal; font-weight: 400 700; font-display: swap;
+  src: url("../fonts/anek-devanagari.woff2") format("woff2");
+  unicode-range: U+0900-097F, U+1CD0-1CF4, U+1CF7-1CF9, U+200C-200D, U+20A8, U+20B9, U+20F0, U+25CC, U+A830-A839, U+A8E0-A8FF;
 }
 
 :root {
-  /* Headings in a book serif, text in a plain sans, measurements in mono. Devanagari falls
-     back to the system's Noto faces for the Hindi plan. */
-  --serif: "Newsreader", "Noto Serif Devanagari", Georgia, serif;
-  --sans: "Hanken Grotesk", "Noto Sans", "Noto Sans Devanagari", system-ui, sans-serif;
-  --mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", monospace;
+  /* One family: Anek for everything, figures in its tabular numerals. Headings are set
+     narrower and bolder (--display-stretch); Devanagari falls to Anek Devanagari. */
+  --sans: "Anek Latin", "Anek Devanagari", "Noto Sans", system-ui, sans-serif;
+  --display: var(--sans);
+  --display-stretch: 86%;
 
   /* CPCB AQI band colours: only ever a small swatch beside the band's name. */
   --band-good: #00A650;
@@ -101,23 +89,23 @@ html[data-phase="evening"] {
   color-scheme: light;
 }
 html[data-phase="dusk"] {
-  --sky: #1C1A20; --smog: #3A3631; --bar-sky: #222027;
-  --ink: #EEEAF0; --muted: #B4AEBA; --panel: #25232A; --line: #3A3741;
-  --accent: #8DC59B; --on-accent: #10201A; --home: #A3BADB; --warn: #E3B35C;
+  --sky: #1A1832; --smog: #36323F; --bar-sky: #15132B;
+  --ink: #EEEAF2; --muted: #B6B0CC; --panel: #221F3D; --line: #363256;
+  --accent: #8DC59B; --on-accent: #10201A; --home: #AFC3E8; --warn: #E3B35C;
   color-scheme: dark;
 }
 html[data-phase="night"] {
-  --sky: #161513; --smog: #34302A; --bar-sky: #1C1B18;
-  --ink: #EDE9E0; --muted: #ABA597; --panel: #1E1D1A; --line: #34322D;
-  --accent: #8DC59B; --on-accent: #10201A; --home: #9DB6D6; --warn: #E3B35C;
+  --sky: #0E1730; --smog: #2C3140; --bar-sky: #0B1328;
+  --ink: #EDEFF5; --muted: #A9B2C8; --panel: #15213C; --line: #263354;
+  --accent: #8DC59B; --on-accent: #10201A; --home: #AFC6EC; --warn: #E3B35C;
   color-scheme: dark;
 }
 /* "Follow the sky" still respects a phone set to dark mode. */
 @media (prefers-color-scheme: dark) {
   html[data-theme="auto"] {
-    --sky: #161513; --smog: #34302A; --bar-sky: #1C1B18;
-    --ink: #EDE9E0; --muted: #ABA597; --panel: #1E1D1A; --line: #34322D;
-    --accent: #8DC59B; --on-accent: #10201A; --home: #9DB6D6; --warn: #E3B35C;
+    --sky: #0E1730; --smog: #2C3140; --bar-sky: #0B1328;
+    --ink: #EDEFF5; --muted: #A9B2C8; --panel: #15213C; --line: #263354;
+    --accent: #8DC59B; --on-accent: #10201A; --home: #AFC6EC; --warn: #E3B35C;
     color-scheme: dark;
   }
 }

@@ -175,7 +175,7 @@ def test_a_day_with_no_steps_left_says_so() -> None:
     board = plan_board(plan, [], datetime(2026, 11, 25, 22, tzinfo=IST))
     provenance = Provenance(
         task="plan",
-        prompt_version="plan-v4",
+        prompt_version="plan-v5",
         provider="fake:model",
         cached=False,
         latency_ms=1,

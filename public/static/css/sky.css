@@ -7,10 +7,10 @@
 html[data-phase="morning"] { --sky-high: #B4D2E8; --cloud: #FFFFFF; --sun: #FFE27A; --glow: rgba(255, 226, 122, 0.55); }
 html[data-phase="afternoon"] { --sky-high: #C4D6E0; --cloud: #FFFDF5; --sun: #FFD860; --glow: rgba(255, 216, 96, 0.5); }
 html[data-phase="evening"] { --sky-high: #E8AE7E; --cloud: #F7D3AE; --sun: #F27B35; --glow: rgba(242, 123, 53, 0.55); }
-html[data-phase="dusk"] { --sky-high: #4A3B6B; --cloud: #6D5A8A; --sun: #F27B35; --glow: rgba(242, 123, 53, 0.4); }
-html[data-phase="night"] { --sky-high: #1F2C4A; --cloud: #3B414B; --sun: #FFE27A; --glow: rgba(255, 226, 122, 0.4); }
+html[data-phase="dusk"] { --sky-high: #3E3670; --cloud: #6D5A8A; --sun: #F27B35; --glow: rgba(242, 123, 53, 0.4); }
+html[data-phase="night"] { --sky-high: #1F3263; --cloud: #3B414B; --sun: #FFE27A; --glow: rgba(255, 226, 122, 0.4); }
 @media (prefers-color-scheme: dark) {
-  html[data-theme="auto"] { --sky-high: #1F2C4A; --cloud: #3B414B; }
+  html[data-theme="auto"] { --sky-high: #1F3263; --cloud: #3B414B; }
 }
 html[data-haze="1"] { --haze-veil: 0.06; }
 html[data-haze="2"] { --haze-veil: 0.1; }
@@ -58,3 +58,20 @@ html[data-phase="dusk"] .moon, html[data-phase="night"] .moon { fill: #E9E6D8; }
 @keyframes float { to { transform: translateX(26px); } }
 @keyframes twinkle { to { opacity: 0.35; } }
 @keyframes fall { from { transform: translateY(-24px); } to { transform: translateY(36px); } }
+
+/* After dusk the whole page is night sky: a faint field of fixed stars behind the content,
+   thinner when smog hides them. Stars are 1-1.6px and dim, so text over them stays legible;
+   panels cover them entirely. */
+html[data-phase="night"] body::before, html[data-phase="dusk"] body::before {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background-image:
+    radial-gradient(1.4px 1.4px at 23px 41px, rgb(255 255 255 / 0.85), transparent),
+    radial-gradient(1px 1px at 151px 97px, rgb(255 255 255 / 0.7), transparent),
+    radial-gradient(1.2px 1.2px at 88px 173px, rgb(255 255 248 / 0.75), transparent),
+    radial-gradient(1px 1px at 211px 19px, rgb(255 255 255 / 0.6), transparent),
+    radial-gradient(1.6px 1.6px at 302px 236px, rgb(255 250 235 / 0.8), transparent),
+    radial-gradient(1px 1px at 377px 121px, rgb(255 255 255 / 0.55), transparent);
+  background-size: 260px 210px, 330px 290px, 410px 350px, 470px 300px, 560px 470px, 640px 390px;
+  opacity: calc(0.85 - 2 * var(--haze-veil, 0));
+}
+html[data-phase="dusk"] body::before { opacity: calc(0.45 - var(--haze-veil, 0)); }
