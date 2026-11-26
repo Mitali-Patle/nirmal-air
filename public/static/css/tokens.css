@@ -110,6 +110,16 @@ html[data-phase="night"] {
   }
 }
 
+/* Pages without a household's sky (the start page, errors) wear the brand: deep forest
+   green with a gold accent, in every light or dark setting. Once a household is open, Today
+   takes the colours of the place's sky. Defined after the dark-mode block so it always wins. */
+html[data-phase="brand"] {
+  --sky: #173A2A; --smog: #173A2A; --bar-sky: #133224;
+  --ink: #F2EFE6; --muted: #BFD0C3; --panel: #1E4633; --line: #2E5A44;
+  --accent: #E9C46A; --on-accent: #1B1A12; --home: #B9D0E8; --warn: #E9C46A;
+  color-scheme: dark;
+}
+
 :root {
   --ground: color-mix(in srgb, var(--smog) var(--haze), var(--sky));
   --bar: color-mix(in srgb, var(--smog) var(--haze), var(--bar-sky));

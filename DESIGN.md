@@ -42,6 +42,14 @@ colors:
   night-panel: "#15213C"
   night-line: "#263354"
   night-sky-high: "#1F3263"
+  brand-sky: "#173A2A"
+  brand-bar-sky: "#133224"
+  brand-ink: "#F2EFE6"
+  brand-muted: "#BFD0C3"
+  brand-panel: "#1E4633"
+  brand-line: "#2E5A44"
+  brand-accent: "#E9C46A"
+  brand-on-accent: "#1B1A12"
   accent: "#2D5A3A"
   accent-evening: "#2B5637"
   accent-dark: "#8DC59B"
@@ -206,6 +214,9 @@ It refuses the AQI dashboard (gauge, giant number, pollutant tiles), the bright 
 ## Colors
 
 Five phase palettes, one green, one slate blue, and CPCB colour kept to a swatch.
+
+### Brand (start and error pages)
+Pages without a household's sky wear the brand: **Forest** ground (`brand-sky`) and bar, pale ink, and **Marigold** (`brand-accent`) for actions, in every light or dark setting (`html[data-phase="brand"]`, defined after the dark-mode block). Opening a household hands the page to the place's sky, so the change of colour marks the step from the product to the family's own day. `tests/test_contrast.py` checks it like the five sky phases.
 
 ### Primary
 - **Ledger Green** (`accent`; `accent-evening` at evening, `accent-dark` at dusk and night): every action (buttons, the link button, selection, focus ring, caret, form accent) and every person's step (rail dot, the name under the step). Its 14% mix into the panel (`--accent-tint`) rings the next-step dot and backs the sample-household tag. Text on it is `on-accent` (`on-accent-dark` after dusk).

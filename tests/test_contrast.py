@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 TOKENS = (Path(__file__).parent.parent / "public/static/css/tokens.css").read_text()
-PHASES = ("morning", "afternoon", "evening", "dusk", "night")
+PHASES = ("morning", "afternoon", "evening", "dusk", "night", "brand")
 AA_TEXT = 4.5
 COLOUR_RULE = r"--([\w-]+): (#[0-9A-Fa-f]{6})"
 
