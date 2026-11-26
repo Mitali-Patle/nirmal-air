@@ -7,7 +7,8 @@
   <meta name="description" content="Today's measured air, turned into a plan for your family: what to do, when, and why.">
   <meta name="htmx-config" content='{"includeIndicatorStyles": false, "allowEval": false, "selfRequestsOnly": true, "responseHandling": [{"code": "204", "swap": false}, {"code": "[23]..", "swap": true}, {"code": "4..", "swap": true, "error": true}, {"code": "5..", "swap": false, "error": true}]}'>
   <link rel="icon" href="/static/img/favicon.svg" type="image/svg+xml">
-  <link rel="preload" href="/static/fonts/overpass-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/static/fonts/hanken-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/static/fonts/newsreader-500-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{{ 'css/tokens.css'|asset }}">
   <link rel="stylesheet" href="{{ 'css/base.css'|asset }}">
   {% block styles %}{% endblock %}
@@ -16,13 +17,13 @@
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
-  {% block sky %}{% endblock %}
   <header class="bar">
     <div class="bar-in">
-      <a class="brand" href="/">NirmalAir</a>
-      {% block bar %}{% endblock %}
+      <a class="brand" href="/">Nirmal<span>Air</span></a>
+      {% block bar %}<p class="live"><i class="live-dot" aria-hidden="true"></i>Live CPCB data</p>{% endblock %}
     </div>
   </header>
+  {% block sky %}{% endblock %}
   <main id="main" tabindex="-1">
     {% block main %}{% endblock %}
   </main>

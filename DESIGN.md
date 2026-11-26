@@ -1,460 +1,324 @@
 ---
 name: NirmalAir
-description: Today's measured air, set out as road signs for each person at home, on a ground painted by the local sky.
+description: Today's measured air as one quiet day rail on paper, for each person at home.
 colors:
-  sign-green: "#0A6B3D"
-  sign-green-deep: "#08542F"
-  sign-blue: "#1D4F91"
-  sign-blue-deep: "#173F74"
-  sign-yellow: "#F2C230"
-  sign-legend: "#FFFFFF"
-  on-yellow: "#1B2220"
+  morning-sky: "#F2F1EC"
+  morning-bar-sky: "#FAFAF6"
+  morning-smog: "#B5AC9B"
+  morning-ink: "#1C1E1C"
+  morning-muted: "#55544D"
+  morning-panel: "#FBFBF8"
+  morning-line: "#DAD8CF"
+  morning-sky-high: "#B4D2E8"
+  afternoon-sky: "#F3F0E8"
+  afternoon-bar-sky: "#FAF8F2"
+  afternoon-smog: "#B6AB97"
+  afternoon-ink: "#1D1E1B"
+  afternoon-muted: "#57534A"
+  afternoon-panel: "#FBFAF6"
+  afternoon-line: "#DDD7CB"
+  afternoon-sky-high: "#C4D6E0"
+  evening-sky: "#F1E8DA"
+  evening-bar-sky: "#F8F2E8"
+  evening-smog: "#B3A58F"
+  evening-ink: "#1F1C17"
+  evening-muted: "#574F43"
+  evening-panel: "#FBF7F0"
+  evening-line: "#DCCFBB"
+  evening-sky-high: "#E8AE7E"
+  dusk-sky: "#1C1A20"
+  dusk-bar-sky: "#222027"
+  dusk-smog: "#3A3631"
+  dusk-ink: "#EEEAF0"
+  dusk-muted: "#B4AEBA"
+  dusk-panel: "#25232A"
+  dusk-line: "#3A3741"
+  dusk-sky-high: "#3B3052"
+  night-sky: "#161513"
+  night-bar-sky: "#1C1B18"
+  night-smog: "#34302A"
+  night-ink: "#EDE9E0"
+  night-muted: "#ABA597"
+  night-panel: "#1E1D1A"
+  night-line: "#34322D"
+  night-sky-high: "#0D0F15"
+  accent: "#2D5A3A"
+  accent-evening: "#2B5637"
+  accent-dark: "#8DC59B"
+  on-accent: "#FFFFFF"
+  on-accent-dark: "#10201A"
+  home: "#34506F"
+  home-evening: "#344E6C"
+  home-dusk: "#A3BADB"
+  home-night: "#9DB6D6"
+  warn: "#8A5A00"
+  warn-evening: "#864F00"
+  warn-dark: "#E3B35C"
   band-good: "#00A650"
   band-satisfactory: "#8FC93A"
   band-moderate: "#F5D90A"
   band-poor: "#F28C1C"
   band-very-poor: "#E02424"
   band-severe: "#8E1616"
-  kind-measured-bg: "#DDEFE4"
-  kind-measured-fg: "#0A5130"
-  kind-forecast-bg: "#DEE8F5"
-  kind-forecast-fg: "#173F74"
-  kind-estimate-bg: "#F5E8C8"
-  kind-estimate-fg: "#5C4100"
-  kind-guidance-bg: "#E6E9E6"
-  kind-guidance-fg: "#2E3A34"
-  kind-household-bg: "#ECE4F3"
-  kind-household-fg: "#46306A"
-  route-dirtier: "#7A4A2A"
-  route-worst: "#6E2E22"
-  morning-sky: "#F3F6F4"
-  morning-bar-sky: "#FFFFFF"
-  morning-smog: "#B8AD99"
-  morning-ink: "#1B2220"
-  morning-muted: "#3E4944"
-  morning-panel: "#FFFFFF"
-  morning-line: "#CDD5D0"
-  afternoon-sky: "#F7F0D4"
-  afternoon-bar-sky: "#FFFBEA"
-  afternoon-smog: "#B5A991"
-  afternoon-ink: "#1F2220"
-  afternoon-muted: "#403F36"
-  afternoon-panel: "#FFFDF6"
-  afternoon-line: "#DED3B2"
-  evening-sky: "#EBD6A8"
-  evening-bar-sky: "#F5E6C3"
-  evening-smog: "#A79A84"
-  evening-ink: "#221E16"
-  evening-muted: "#3E3829"
-  evening-panel: "#FBF5E8"
-  evening-line: "#D6C296"
-  dusk-sky: "#1E3354"
-  dusk-bar-sky: "#172A47"
-  dusk-smog: "#3E3B38"
-  dusk-ink: "#EEF1F5"
-  dusk-muted: "#BAC5D2"
-  dusk-panel: "#24395C"
-  dusk-line: "#3D5579"
-  night-sky: "#15181A"
-  night-bar-sky: "#101314"
-  night-smog: "#302D2A"
-  night-ink: "#ECEFEC"
-  night-muted: "#B4BCB7"
-  night-panel: "#1F2427"
-  night-line: "#383F43"
+  kind-measured: "#3E9A5A"
+  kind-forecast: "#5B7FA8"
+  kind-estimate: "#C08A2E"
+  kind-guidance: "#8A8478"
+  kind-household: "#8C6FAE"
 typography:
   display:
-    fontFamily: "Overpass, Noto Sans, Noto Sans Devanagari, system-ui, sans-serif"
-    fontSize: "clamp(1.75rem, 5vw, 2.75rem)"
-    fontWeight: 800
-    lineHeight: 1.08
+    fontFamily: "Newsreader, Noto Serif Devanagari, Georgia, serif"
+    fontSize: "clamp(2.125rem, 6vw, 3.25rem)"
+    fontWeight: 500
+    lineHeight: 1.06
     letterSpacing: "-0.025em"
-  sign-next:
-    fontFamily: "Overpass, Noto Sans, Noto Sans Devanagari, system-ui, sans-serif"
-    fontSize: "clamp(1.75rem, 6.5vw, 2.375rem)"
-    fontWeight: 800
-    lineHeight: 1.04
+  headline:
+    fontFamily: "Newsreader, Noto Serif Devanagari, Georgia, serif"
+    fontSize: "clamp(1.75rem, 5vw, 2.5rem)"
+    fontWeight: 500
+    lineHeight: 1.08
     letterSpacing: "-0.02em"
-  section-title:
-    fontFamily: "Overpass, Noto Sans, Noto Sans Devanagari, system-ui, sans-serif"
-    fontSize: "1.375rem"
-    fontWeight: 800
-    lineHeight: 1.15
-    letterSpacing: "-0.01em"
-  aqi-figure:
-    fontFamily: "Overpass, Noto Sans, Noto Sans Devanagari, system-ui, sans-serif"
-    fontSize: "1.375rem"
-    fontWeight: 800
-    lineHeight: 1
-    letterSpacing: "-0.01em"
-    fontFeature: "tnum"
+  title-next:
+    fontFamily: "Newsreader, Noto Serif Devanagari, Georgia, serif"
+    fontSize: "clamp(1.5rem, 4.6vw, 2rem)"
+    fontWeight: 500
+    lineHeight: 1.12
+    letterSpacing: "-0.015em"
   title:
-    fontFamily: "Overpass, Noto Sans, Noto Sans Devanagari, system-ui, sans-serif"
-    fontSize: "1.25rem"
-    fontWeight: 800
-    lineHeight: 1.15
-  sign-title:
-    fontFamily: "Overpass, Noto Sans, Noto Sans Devanagari, system-ui, sans-serif"
-    fontSize: "1.1875rem"
-    fontWeight: 800
-    lineHeight: 1.15
-  figure:
-    fontFamily: "Overpass, Noto Sans, Noto Sans Devanagari, system-ui, sans-serif"
-    fontSize: "1.0625rem"
-    fontWeight: 800
-    fontFeature: "tnum"
-  lead:
-    fontFamily: "Overpass, Noto Sans, Noto Sans Devanagari, system-ui, sans-serif"
-    fontSize: "1rem"
-    fontWeight: 600
-    lineHeight: 1.5
+    fontFamily: "Newsreader, Noto Serif Devanagari, Georgia, serif"
+    fontSize: "1.375rem"
+    fontWeight: 500
+    lineHeight: 1.2
+    letterSpacing: "-0.015em"
   body:
-    fontFamily: "Overpass, Noto Sans, Noto Sans Devanagari, system-ui, sans-serif"
-    fontSize: "1rem"
+    fontFamily: "Hanken Grotesk, Noto Sans, Noto Sans Devanagari, system-ui, sans-serif"
+    fontSize: "16px"
     fontWeight: 400
-    lineHeight: 1.5
+    lineHeight: 1.55
     fontFeature: "tnum"
-  body-small:
-    fontFamily: "Overpass, Noto Sans, Noto Sans Devanagari, system-ui, sans-serif"
-    fontSize: "0.9375rem"
-    fontWeight: 400
-    lineHeight: 1.4
-  label:
-    fontFamily: "Overpass, Noto Sans, Noto Sans Devanagari, system-ui, sans-serif"
-    fontSize: "0.875rem"
+  step:
+    fontFamily: "Hanken Grotesk, Noto Sans, Noto Sans Devanagari, system-ui, sans-serif"
+    fontSize: "1.0625rem"
     fontWeight: 600
-  caption:
-    fontFamily: "Overpass, Noto Sans, Noto Sans Devanagari, system-ui, sans-serif"
-    fontSize: "0.8125rem"
-    fontWeight: 400
-  chip:
-    fontFamily: "Overpass, Noto Sans, Noto Sans Devanagari, system-ui, sans-serif"
-    fontSize: "0.75rem"
-    fontWeight: 700
-    lineHeight: 1.5
-  mono:
-    fontFamily: "ui-monospace, Cascadia Mono, Roboto Mono, monospace"
-    fontSize: "0.8125rem"
+    lineHeight: 1.3
+  label:
+    fontFamily: "Hanken Grotesk, Noto Sans, Noto Sans Devanagari, system-ui, sans-serif"
+    fontSize: "0.6875rem"
+    fontWeight: 500
+    lineHeight: 1
+    letterSpacing: "0.01em"
+  figure:
+    fontFamily: "JetBrains Mono, ui-monospace, Cascadia Mono, monospace"
+    fontSize: "0.875rem"
+    fontWeight: 500
+    lineHeight: 1.4
 rounded:
-  board: "12px"
-  board-inner: "8px"
-  control: "8px"
-  track: "7px"
-  chip: "4px"
+  hour: "2px"
   swatch: "3px"
+  pin: "4px"
+  control: "10px"
+  panel: "14px"
+  pill: "999px"
 spacing:
-  space-1: "4px"
-  space-2: "8px"
-  space-3: "12px"
-  space-4: "16px"
-  space-5: "24px"
-  space-6: "32px"
-  space-7: "48px"
+  "1": "4px"
+  "2": "8px"
+  "3": "12px"
+  "4": "16px"
+  "5": "24px"
+  "6": "32px"
+  "7": "48px"
 components:
-  sign-step:
-    backgroundColor: "{colors.sign-green}"
-    textColor: "{colors.sign-legend}"
-    typography: "{typography.sign-title}"
-    rounded: "{rounded.board}"
-    padding: "5px"
-  sign-next:
-    backgroundColor: "{colors.sign-green}"
-    textColor: "{colors.sign-legend}"
-    typography: "{typography.sign-next}"
-    rounded: "{rounded.board}"
-    padding: "5px"
-  sign-home:
-    backgroundColor: "{colors.sign-blue}"
-    textColor: "{colors.sign-legend}"
-    typography: "{typography.sign-title}"
-    rounded: "{rounded.board}"
-    padding: "5px"
-  sign-plate-open:
-    backgroundColor: "{colors.sign-legend}"
-    textColor: "{colors.on-yellow}"
-    typography: "{typography.body-small}"
-    rounded: "{rounded.board-inner}"
-  sample-household:
-    backgroundColor: "{colors.sign-blue}"
-    textColor: "{colors.sign-legend}"
-    typography: "{typography.title}"
-    rounded: "{rounded.board}"
-    padding: "5px"
-  sample-household-hover:
-    backgroundColor: "{colors.sign-blue-deep}"
-  sample-tag:
-    backgroundColor: "{colors.sign-yellow}"
-    textColor: "{colors.on-yellow}"
-    typography: "{typography.caption}"
-    rounded: "{rounded.chip}"
-    padding: "1px 8px"
-  standard-advice-label:
-    backgroundColor: "{colors.sign-yellow}"
-    textColor: "{colors.on-yellow}"
-    typography: "{typography.body-small}"
-    rounded: "{rounded.control}"
-    padding: "8px 12px"
   button-primary:
-    backgroundColor: "{colors.sign-green}"
-    textColor: "{colors.sign-legend}"
+    backgroundColor: "{colors.accent}"
+    textColor: "{colors.on-accent}"
     rounded: "{rounded.control}"
     padding: "10px 18px"
     height: "44px"
-  button-primary-hover:
-    backgroundColor: "{colors.sign-green-deep}"
   button-quiet:
     backgroundColor: "transparent"
-    textColor: "{colors.morning-ink}"
+    textColor: "{colors.afternoon-ink}"
     rounded: "{rounded.control}"
     padding: "10px 18px"
     height: "44px"
   button-pressed:
-    backgroundColor: "{colors.morning-ink}"
-    textColor: "{colors.morning-sky}"
+    backgroundColor: "{colors.afternoon-ink}"
+    textColor: "{colors.afternoon-sky}"
     rounded: "{rounded.control}"
-  input:
-    backgroundColor: "{colors.morning-panel}"
-    textColor: "{colors.morning-ink}"
+  input-text:
+    backgroundColor: "{colors.afternoon-panel}"
+    textColor: "{colors.afternoon-ink}"
     rounded: "{rounded.control}"
     padding: "10px 12px"
     height: "44px"
-  panel:
-    backgroundColor: "{colors.morning-panel}"
-    textColor: "{colors.morning-ink}"
-    rounded: "{rounded.board}"
-    padding: "16px"
-  distance-plate-row:
-    textColor: "{colors.morning-ink}"
-    typography: "{typography.body}"
-    padding: "12px 0"
-  chip-measured:
-    backgroundColor: "{colors.kind-measured-bg}"
-    textColor: "{colors.kind-measured-fg}"
-    typography: "{typography.chip}"
-    rounded: "{rounded.chip}"
-    padding: "0 6px"
-  chip-forecast:
-    backgroundColor: "{colors.kind-forecast-bg}"
-    textColor: "{colors.kind-forecast-fg}"
-    typography: "{typography.chip}"
-    rounded: "{rounded.chip}"
-    padding: "0 6px"
-  chip-estimate:
-    backgroundColor: "{colors.kind-estimate-bg}"
-    textColor: "{colors.kind-estimate-fg}"
-    typography: "{typography.chip}"
-    rounded: "{rounded.chip}"
-    padding: "0 6px"
-  chip-guidance:
-    backgroundColor: "{colors.kind-guidance-bg}"
-    textColor: "{colors.kind-guidance-fg}"
-    typography: "{typography.chip}"
-    rounded: "{rounded.chip}"
-    padding: "0 6px"
-  chip-household:
-    backgroundColor: "{colors.kind-household-bg}"
-    textColor: "{colors.kind-household-fg}"
-    typography: "{typography.chip}"
-    rounded: "{rounded.chip}"
-    padding: "0 6px"
-  now-pin:
-    backgroundColor: "{colors.morning-ink}"
-    textColor: "{colors.morning-panel}"
-    typography: "{typography.chip}"
-    rounded: "{rounded.chip}"
-    padding: "0 6px"
+  panel-side:
+    backgroundColor: "{colors.afternoon-panel}"
+    rounded: "{rounded.panel}"
+    padding: "16px 24px 24px"
+  kind-label:
+    backgroundColor: "{colors.afternoon-panel}"
+    textColor: "{colors.afternoon-muted}"
+    typography: "{typography.label}"
+    rounded: "{rounded.pill}"
+    padding: "4px 8px 4px 7px"
+  live-pill:
+    textColor: "{colors.afternoon-muted}"
+    rounded: "{rounded.pill}"
+    padding: "7px 12px 7px 10px"
   band-swatch:
     rounded: "{rounded.swatch}"
-    size: "13px"
-  route-track:
-    rounded: "{rounded.track}"
-    height: "14px"
-  hour-cleanest:
-    backgroundColor: "{colors.sign-green}"
-    height: "14px"
+    size: "11px"
+  now-pin:
+    backgroundColor: "{colors.afternoon-ink}"
+    textColor: "{colors.afternoon-panel}"
+    rounded: "{rounded.pin}"
+    padding: "0 6px"
 ---
 
 # Design System: NirmalAir
 
 ## Overview
 
-**Creative North Star: "Road Signs Under Today's Sky"**
+**Creative North Star: "The Day on Paper"**
 
-NirmalAir sets out a household's day as a short run of Indian road signs, one per decision: who it is for, what to do, and the figure that step changes, right-aligned like a distance. The signs sit on a ground that is the actual sky at the household's place: one of five phases computed from sunrise and sunset, dulled toward smog by the measured CPCB AQI band. Air quality changes the ground; it never changes the signs.
+The household's day is one quiet timeline on paper. Each person's step is a dot on a hairline rail; the next step is set large in a book serif; every other step is a calm row with its figure at the right edge. Light phases are warm paper with near-black ink, dusk and night are warm near-black with paper-coloured ink, and the page follows the local sky: `<html data-phase>` comes from the place's sunrise and sunset, and `data-haze` (0 to 5) from the measured AQI band dulls the paper toward smog. A user can pin light or dark; "Follow the sky" in dark mode uses the night palette.
 
-The world is calm and plain. The measured air sits in the top bar as a single air line. Enamel boards carry the decisions. Home and travel estimates are distance plates set straight on the ground: a heavy rule, rows, figures on the right. The side column (the 24-hour route line, what the air means, Ask, how the plan was generated) sits in quiet bordered panels in the sky's own tones. Every number is labelled with the kind of number it is. There is no gauge, no giant AQI number, no pollutant tiles, no red warning styling, and no decorative gradient, glass or emoji. All styling lives in four stylesheets because the CSP forbids inline styles and scripts.
+It refuses the AQI dashboard (gauge, giant number, pollutant tiles), the bright card-stack wellness app, and the road-sign boards this system replaced. The air's severity is said in words, never shouted in colour.
 
 **Key Characteristics:**
-- Signs keep fixed road-sign colours in every phase and haze level: green for steps people take, blue for the home, yellow for "standard advice, not AI-generated" and the sample-household tag.
-- The page ground and top bar follow the local sky and are hazed by the measured AQI band.
-- One typeface (Overpass), heavy legends, tabular figures.
-- Every number is labelled measured, forecast, estimate, CPCB guidance or your household.
-- WCAG AA is enforced in tests for every phase and haze combination.
+- Paper and ink, five time-of-day phases, six haze levels, all AA-tested.
+- One deep green for actions and people; a slate blue only for the home.
+- Newsreader for what matters, Hanken Grotesk for text, JetBrains Mono only for measurements.
+- Hairlines and tone instead of shadows; 10px and 14px corners.
+- A softened sky band under the top bar on Today, drawn from real sun, cloud and rain.
 
 ## Colors
 
-Fixed enamel sign colours over a moving sky ground; band and fact-kind colours appear only at chip, swatch and route-line size.
+Warm paper and ink in five phases, one green, one slate blue, and CPCB colour kept to a swatch.
 
 ### Primary
-- **Enamel Green** (sign-green): the board for every step a person takes, the primary button, the start page's main link, the cleanest hours on the route line and its key, text selection, and the form accent colour. Its deeper shade (sign-green-deep) is the hover state.
-- **Enamel Blue** (sign-blue): the board for steps about the home (purifier, windows) and the sample-household buttons on the start page. Hover deepens to sign-blue-deep.
-- **Sign White** (sign-legend): every legend, the inner border on green and blue boards, and the open supplementary plate under a sign.
+- **Ledger Green** (`accent`; `accent-evening` at evening, `accent-dark` at dusk and night): every action (buttons, the primary link button, selection, focus ring, caret, form accent) and every person's step (rail dot, the name under the step). Its 14% mix into the panel (`--accent-tint`) rings the next-step dot and backs the sample-household tag.
 
 ### Secondary
-- **Road-works Yellow** (sign-yellow): the label on any plan or answer that came from fixed rules rather than an AI model, the sample-household tag in the top bar, the skip link, and the focus ring.
-- **Sign Black** (on-yellow): the fixed dark legend on yellow, and the text on the open white plate. It does not follow the phase, so yellow and white surfaces read the same at night.
+- **Slate Home Blue** (`home` and its phase variants): only steps about the home, on the dot and the step's "who" line.
 
 ### Tertiary
-- **CPCB band colours** (band-good through band-severe): CPCB's official AQI band colours, used only as a 13px swatch beside the band name.
-- **Fact-kind chips** (kind-*-bg / kind-*-fg): five pale tinted pairs, one per kind of fact: Measured (green), Forecast (blue), Estimate (ochre), CPCB guidance (grey-green), Your household (violet). They keep the same light values in dark phases.
-- **Route browns** (route-dirtier, route-worst): hours dirtier than usual on the route line (a 38% mix into the panel) and the hatched worst window.
+- **Calm Amber** (`warn` and variants): the standard-advice label and form errors, always as a 14% tint (`--warn-tint`) with an amber-edged border, and the hatched worst hour on the 24-hour strip. Text on it stays ink.
 
-### Neutral (the sky ground, per phase)
-Each phase defines sky, bar-sky (the top bar, a step lighter), smog, ink, muted, panel and line. The phase is set server-side on `<html data-phase>`: morning (sunrise to 11 am, near-white), afternoon (pale yellow), evening (last two hours before sunset, muted gold), dusk (sunset to 9 pm, deep blue) and night (asphalt). The visitor's "Light" choice swaps dusk and night for morning; "Dark" always uses night; "Follow the sky" also uses the night values when the phone is set to dark mode.
+### Neutral
+- **Phase Paper** (`<phase>-sky`): the page ground. The rendered ground is `--ground`, smog mixed into it at the haze percentage (0, 4, 7, 10, 14, 18%).
+- **Bar Paper** (`<phase>-bar-sky`): the top bar, hazed the same way (`--bar`).
+- **Panel Paper** (`<phase>-panel`): side panels, form groups, fact labels, the numbers behind a step.
+- **Ink / Muted Ink** (`<phase>-ink`, `<phase>-muted`): text and secondary text.
+- **Hairline** (`<phase>-line`): every divider, border and the rail itself.
+- **Smog** (`<phase>-smog`): never painted directly; only mixed into the paper and laid over the sky as the haze veil.
+- **High Sky** (`<phase>-sky-high`): the top of the sky band, mixed 62% into the ground.
 
-The haze: `data-haze` 0 to 5 is the measured band's position on CPCB's scale (0 when nothing was measured), giving 0, 8, 15, 22, 30 or 38% of the phase's smog colour mixed into sky and bar-sky (`color-mix(in srgb, …)`). Panels are not hazed.
+### Band and kind colours
+- **CPCB bands** (`band-*`): the official AQI band colours, used only as the band swatch.
+- **Fact kinds** (`kind-*`): a 6px dot inside each fact label (measured, forecast, estimate, guidance, household); the word is the label. `kind-measured` is also the live dot in the top bar.
 
 ### Named Rules
-**The Fixed Signs Rule.** Sign colours never change with phase, haze or theme. Only the ground moves.
+**The Swatch-Only Rule.** A CPCB band colour appears only as an 11px swatch beside the band's name. Never as a fill, a text colour, a border or a background.
 
-**The Swatch-Only Rule.** CPCB band colours appear only as the small swatch beside the band's name, never as a board, background, border or text colour. The band name is always written out, so colour is never the only signal.
+**The One Green Rule.** Green carries every action and every person's step; blue marks only the home. No third accent.
 
-**The Tested Ground Rule.** `tests/test_contrast.py` reads `tokens.css` and requires 4.5:1 for ink and muted text on sky and bar-sky at all six haze levels in all five phases, for ink and muted on panels, for the legend on all four boards, and for every chip pair. Change a colour and the test together.
+**The Every-Phase Contrast Rule.** `tests/test_contrast.py` checks ink, muted, accent and home against sky and bar-sky at all six haze levels in all five phases, and against panel; on-accent on accent; and that the dark-mode block equals the night palette. Any new text colour or ground goes into that test before it ships.
 
 ## Typography
 
-**Display Font:** Overpass (variable, 100 to 900, self-hosted latin and latin-ext WOFF2), with Noto Sans, Noto Sans Devanagari and system-ui
-**Label/Mono Font:** ui-monospace, only for fact IDs and the raw model reply in "How this was generated"
+**Display Font:** Newsreader 500 (with Noto Serif Devanagari, Georgia)
+**Body Font:** Hanken Grotesk variable (with Noto Sans, Noto Sans Devanagari, system-ui)
+**Label/Mono Font:** JetBrains Mono variable (with ui-monospace)
 
-**Character:** Overpass is a highway-sign sans; set at 800 it reads like a sign legend, and at 400 it is plain, friendly body text. Figures are tabular across the whole page.
+**Character:** A book serif sets what a parent reads first; a plain grotesk carries everything else; mono marks a number as a measurement. All three are self-hosted woff2 with latin and latin-ext subsets; Devanagari falls back to the system's Noto faces for the Hindi plan. Numerals are tabular throughout.
 
 ### Hierarchy
-- **Display** (800, clamp 1.75 to 2.75rem, 1.08): the start page's one-line promise, max 22ch.
-- **Sign next** (800, clamp 1.75 to 2.375rem, 1.04): the action on the large next-step board, with the drawn arrow at its right edge.
-- **Section title** (800, 1.375rem): section headings on the Today page, each followed by its kind chip where one applies. The plan's own heading is visually hidden.
-- **AQI figure** (800, 1.375rem, 1): "AQI 283" in the top bar. Deliberately modest.
-- **Title** (800, 1.25rem, 1.15): sample-household names and section headings on the start page.
-- **Sign title** (800, 1.1875rem, 1.15): the action on each smaller board.
-- **Figure** (800, 1.0625rem, no wrap): the right-edge figure on a smaller sign; 1.125rem in distance plates; 1.375rem on the next-step board.
-- **Lead** (600, 16px, muted, max 62ch): the loading line above the boards while the plan is written.
-- **Body** (400, 16px, 1.5): running text; distance-plate rows cap at 62ch.
-- **Body small** (400, 0.9375rem, 1.4): the reason on a sign or plate, notes, the route legend, the "Later today" group heading (at 800, muted).
-- **Label** (600, 0.875rem): form labels and the plate's summary line.
-- **Caption** (0.8125rem): the who and when line on a smaller sign (600, slightly translucent; 0.9375rem on the next-step board), the air source line, the sample tag (700), the sky note and footnotes.
-- **Chip** (700, 0.75rem): fact-kind chips and the Now pin (800).
+- **Display** (`display`): the start page headline, 16ch max.
+- **Headline** (`headline`): the place name on Today.
+- **Title, next step** (`title-next`): the next step on the rail, the one large step of the day.
+- **Title** (`title`): section headings (1.25rem in the side column); the weekly totals use the serif at 1.75rem and Ask answers at 1.25rem.
+- **Step** (`step`): every other step's action. Why-lines are 0.9375rem muted, 62ch max.
+- **Body** (`body`): 16px/1.55; intro copy at 1.0625rem, 54ch max.
+- **Label** (`label`): fact labels; group heads ("Next", "Later today") are 0.8125rem 500 muted sans.
+- **Figure** (`figure`): step figures right-aligned; fact figures 0.9375rem; station line, times and the live pill 0.75 to 0.8125rem.
 
 ### Named Rules
-**The One Face Rule.** Overpass carries everything; hierarchy comes from weight (800 against 400) and size, not from a second family.
+**The Mono-Is-Measurement Rule.** JetBrains Mono only for measured or computed values and their sources: station and distance, times, µg/m³, kg, hour ticks, model and prompt identifiers. Never for prose or headings.
 
-**The Distance Figure Rule.** A figure sits at the right edge of its sign or plate row, bold, unwrapped and tabular, the way a road sign gives distances.
+**The Serif-For-What-Matters Rule.** Newsreader only at 500 and only for headings, the place, the next step, an answer and the weekly totals. Body text is never serif.
 
 ## Layout
 
-The top bar runs the full width (content max 1160px, 12px 16px padding): brand and place on the first row, the measured air line on its own row below on every width. On phones the source text takes a further row; from 960px it sits inline after the band.
+A centred page up to 1440px with 24px side padding, a 4/8/12/16/24/32/48px spacing scale, and hairline-separated rows rather than cards.
 
-Phones get one column inside a 16px gutter, sections 32px apart, in reading order: plan, side column (route, what this air means, Ask, how this was generated), At home, Getting around. From 960px the Today page is a 7:5 grid (max width 1160px, 32px gaps, 32px top padding). The left column holds the plan, At home and Getting around. The right column is one aside that is sticky 16px from the top, capped at the viewport height minus 32px, and scrolls on its own (`overscroll-behavior: contain`); its panels are 16px apart. "How this was generated" arrives in the aside's slot with the plan, by an htmx out-of-band swap.
-
-The start page is a single 880px column with 48px between sections. Spacing follows a 4px base (space-1 to space-7: 4, 8, 12, 16, 24, 32, 48). Touch targets are at least 44px for buttons and fields, 36px for the theme toggles and place choices.
+- **Today, phone:** one column: place and air line, the plan rail, the side panels, home, trips, the week.
+- **Today, from 960px:** a 7:5 grid with 48px column gap. The plan, home, trips and week stay in the left 7 columns at every desktop width; the right 5 columns (24-hour strip, what the air means, Ask, how the plan was made) are sticky and scroll on their own.
+- **Start, from 1100px:** a 5:7 grid; the intro and how-it-works rail stay sticky on the left, samples and the household form on the right.
+- **Sky band:** 64px tall on phones, `clamp(96px, 6.8vw, 132px)` from 960px; a narrower drawing below 720px so the sun near sunrise or sunset is not cropped.
+- Measures: 46 to 72ch for running text; rows let the figure sit at the right edge.
 
 ## Elevation & Depth
 
-Flat. There are no drop shadows. Depth comes from contrast between the saturated boards and the pale or dark sky, from panels separated by a 1px line border, and from the 2px ink rule on distance plates. The only box-shadow is the focus ring's 5px ink halo around a 3px yellow outline.
-
-Motion is small: buttons change colour over 160ms on `cubic-bezier(0.16, 1, 0.3, 1)` and press down 1px; placeholder boards fade between 45% and 25% opacity while the plan loads. Reduced-motion settings remove both.
+Flat. Depth is tone and hairline: panel paper on page paper with a 1px line. The only box-shadows are flat rings, never offsets: the live dot's 3px halo and the next-step dot's 5px tint ring.
 
 ### Named Rules
-**The Flat Enamel Rule.** Boards, plates and panels sit flat on the ground. Prominence comes from colour and size, never from lift.
+**The Paper-on-Paper Rule.** No drop shadows, glass or blur. A surface lifts by being panel paper with a hairline edge.
 
 ## Shapes
 
-Gently rounded rectangles throughout. A sign is a 12px-radius board with 5px of board colour around a 2px white inner border at 8px radius (3px border on the next-step board), so the white line follows the outer corner. The open plate, controls, notes and the yellow label use 8px; chips, the sample tag and the Now pin 4px; the band swatch 3px with a thin ink-tinted edge; the route line is one continuous 7px-radius track. Distance plates have no corners: a 2px ink rule on top and 1px line dividers. The drawn shapes are the arrow on the next-step board (round caps, stroke 3.5) and the Now pin's small downward pointer; the favicon is the same green board and arrow.
+Gently rounded: 10px on controls, inputs, notes and the numbers behind a step; 14px on side panels and form groups; full pills for fact labels, the live status and the sample tag. Small marks stay small: 3px swatch corners, 2px hour cells, 4px on the now-pin and focus ring. Circles are the rail's language: 13px outlined dots, the 15px filled next dot, 21px numbered rings on the start page. Chevrons are drawn (an SVG stroke, or a rotated 1.5px border corner on disclosures), never glyphs.
 
 ## Components
 
-### Sign boards
-The signature component: one board per step.
-- **Smaller sign:** who and when (caption), then one row with the action on the left and the figure on the right. Nothing else on the board.
-- **Next step:** the first sign is larger, with a 3px inner border, the action at sign-next size with a drawn arrow at its right edge, then a thin white rule and a row with the reason on the left and the figure (1.375rem) on the right. The reason stays on this board.
-- **Step (green) / Home (blue):** fixed colours, white legend.
-- **Supplementary plate:** a disclosure inside the board's outer frame, under the bordered legend. Closed, it is an underlined white summary line on the board colour ("Why, and the numbers" on smaller signs, "The numbers behind this" on the next step). Open, it becomes a white 8px plate with Sign Black text: the reason (smaller signs only), then each fact with its kind chip.
-- **Grouping:** the next step, then "Later today", then a collapsed "Earlier today".
-- **Loading:** empty green and blue placeholder boards at reduced opacity, hidden from screen readers; a status line announces when the plan is ready.
-
-### Air line (top bar)
-"AQI" and the number, then the band swatch and band name in bold, then "Measured [time] at [station], [distance] away · CPCB via data.gov.in" in muted caption. With no recent station reading, only the muted sentence saying so. The air line takes the bar's haze; it has no panel.
-
-### Distance plates (At home, Getting around)
-Estimates set like a distance plate, directly on the ground: the section title carries one Estimate chip, then a 2px ink rule, then rows divided by 1px lines, each with the text on the left (body) and the figure on the right (800, 1.125rem, no wrap), 12px vertical padding. A muted caption footnote may follow.
-
-### Route line
-The next 24 hours as one continuous track, 14px tall with 7px rounded ends and no gaps, starting at the current hour; a "Now" pin (ink chip with panel-coloured text and a small pointer) sits above its left end. Neutral hours are a 14% ink tint of the panel; cleaner hours a 30% green mix; dirtier hours a 38% route-dirtier mix; the cleanest window solid Enamel Green; the worst window a 135° route-worst hatch. Hour ticks run below in muted chip-size text. The track is hidden from screen readers; a text legend with matching keys states the cleanest and worst windows. The panel heading carries a Forecast chip.
-
-### What this air means
-A side panel headed with a CPCB guidance chip: the band name and CPCB's health statement, then notes for a last-known reading, a distant station or no station, then a muted caption naming the sky phase and haze the page shows.
-
 ### Buttons
-- **Shape:** gently rounded (8px), at least 44px tall.
-- **Primary:** Enamel Green with white text, bold; hover deepens to sign-green-deep, active presses 1px.
-- **Quiet:** transparent with a line border; hover darkens the border to muted.
-- **Pressed toggle:** ink fill with ground-coloured text (the theme switch).
-- **Sample household:** a whole blue board as a button: name, place and summary inside the white inner border.
+- **Shape:** gently rounded (10px), 44px minimum height.
+- **Primary:** Ledger Green with on-accent text, 600 weight, 10px 18px; the start page's link button is the same at 12px 20px. One primary per view.
+- **Hover / Focus:** hover mixes 14% ink into the green; active nudges down 1px; focus is a 2px green outline at 3px offset. Transitions 160ms on the house ease (`cubic-bezier(0.16, 1, 0.3, 1)`).
+- **Quiet:** transparent with a hairline border; hover shows panel paper and a muted border. Pressed (`aria-pressed="true"`) inverts to ink on paper, used for "I did this" and the colour choice.
 
-### Chips
-- **Style:** pale tinted fill, dark text of the same hue, 4px radius, 700 at 0.75rem, no border.
-- **Use:** before each fact in plates and answers, or once in a section heading when every number in that section is the same kind (Forecast, CPCB guidance, Estimate).
-
-### Tags
-- **Sample household:** a yellow 4px tag with Sign Black text after the place in the top bar, "Sample household: [name]", shown only for a sample.
-- **Standard-advice label:** a yellow 8px strip with Sign Black text above any plan or answer that came from fixed rules: "Standard advice (not AI-generated)".
+### Chips (fact labels)
+- **Style:** panel paper pill with a hairline border, muted 11px label, and a 6px kind dot before the word. Sits beside headings and before each fact.
 
 ### Cards / Containers
-- **Corner Style:** 12px, matching the boards.
-- **Background:** the phase's panel colour with a 1px line border, 16px padding. Used for the side-column panels and the start page's form groups.
-- **Shadow Strategy:** none (see Elevation & Depth).
-- **Notes:** smaller 8px-radius bordered panels for caveats (station far away, last reading, forecast unavailable).
-
-### How this was generated
-A disclosure panel in the side column: who wrote the plan, prompt version and time as a definition list, then h3 subheads (0.875rem) for attempts, the facts sent to the model (fact IDs in mono), the question and the raw model reply in an 8px ink-tinted box that scrolls past 18rem. Inside an answer it appears without its panel border.
+- **Side panels:** panel paper, 14px corners, hairline border, 16px 24px 24px padding. How-the-plan-was-made is a quiet disclosure row, not a card.
+- **Form groups:** the same paper and corner, with a serif legend.
+- **Notes:** panel paper, 10px corners, 8px 12px.
 
 ### Inputs / Fields
-- **Style:** panel fill, 1.5px line border, 8px radius, 10px 12px padding, 44px tall; placeholder in muted.
-- **Hover:** border darkens to muted.
-- **Focus:** the shared focus ring, 3px yellow outline with a 5px ink halo.
-- **Error:** a 2px ink-bordered panel listing the problems above the form, announced as an alert.
+- **Style:** panel paper, hairline border, 10px corners, 10px 12px, 44px high; the Ask input sits on the page paper inside its panel.
+- **Hover:** border darkens to muted. **Focus:** the global green outline. **Error:** the amber-tint error block above the form.
 
 ### Navigation
-The top bar in bar-sky (hazed like the ground) with a 1px line under it: NirmalAir at 800 on the left; on Today, the place, a "Change" link and the sample tag, then the air line. The footer carries data sources, links to edit the household or switch the plan's language, and the colours choice (Follow the sky, Light, Dark).
+- **Top bar:** bar paper with a hairline under it. The serif wordmark "Nirmal" in ink with "Air" in green, and a mono live pill (hairline border, measured-green dot): "AQI n" in ink and the measured time on Today, "Live CPCB data" on start.
+- **Footer:** hairline above, muted 13px source line, ink links.
+
+### Day Rail (signature)
+Each step is a three-column row: a 20px rail column, the text, and a right-edge mono figure. The 1px hairline runs between dot centres with no loose ends. Person dots are outlined green, home dots outlined blue, on the page paper. The next step fills its dot, adds the tint ring and sets the action in `title-next`. "The numbers behind this" opens a panel-paper list of labelled facts. While the plan is written, the rail's shape pulses gently (opacity to 0.45).
+
+### Air Line
+The place's AQI in 1.125rem 600 beside the band name and its swatch, then the mono station line. It is never larger than the place name.
+
+### 24-Hour Strip
+24 cells, 16px high, 2px apart and 2px rounded: neutral ink at 12%, cleaner hours green at 32%, dirtier amber at 32%, the cleanest hour solid green, the worst hour an amber hatch. An ink "Now" pin sits over the first hour; mono ticks below; a legend names the cleanest and worst hours in words.
+
+### Sky Band
+Under the top bar on Today only, aria-hidden and carrying no text. Its top stop mixes the phase's high sky 62% into the paper; its lower 55% fades into the paper so it has no edge. Sun or moon sit on the real path for the place, and stars, clouds and rain come from real data, all positioned by `app/domain/scene.py`. Smog lays a veil over it (opacity 0.06 to 0.25 by haze) and hides stars. Motion plays once on arrival (the body rises over 1.6s, clouds drift in over 1.8s), then only clouds float, stars twinkle and rain falls.
 
 ## Do's and Don'ts
 
 ### Do:
-- **Do** put every plan step on a board: green for what a person does, blue for the home, white legend inside a 2px white inner border.
-- **Do** keep smaller signs to who, the action and the figure; put the reason and the facts in the supplementary plate. Only the next-step board shows its reason.
-- **Do** name who each sign is for and when, and put its figure at the right edge (The Distance Figure Rule).
-- **Do** label every number with its kind: a chip on each fact, or one chip in the section heading when the whole section is one kind.
-- **Do** show the measured air in the top bar: the AQI number, the 13px band swatch with the band's written name, then measured time, station, distance and source.
-- **Do** set estimate lists as distance plates on the ground: 2px ink rule, 1px row dividers, figures right-aligned.
-- **Do** mark any plan or answer not written by an AI model with the yellow standard-advice label, and a sample household with the yellow sample tag.
-- **Do** set phase and haze only through `data-phase` and `data-haze` on `<html>`, and update `tests/test_contrast.py` with any colour change.
-- **Do** keep every style in the stylesheets and every colour in `tokens.css`; the CSP blocks inline styles.
+- **Do** set every colour on `<html data-phase data-haze>` and add any new text colour or ground to `tests/test_contrast.py` (The Every-Phase Contrast Rule).
+- **Do** say the band in words with its 11px swatch beside it (The Swatch-Only Rule).
+- **Do** give each step a named person, a why-line and, when there is one, a mono figure at the right edge.
+- **Do** label every fact with its kind (measured, forecast, estimate, guidance, household).
+- **Do** stop all transitions and animations under `prefers-reduced-motion: reduce`, including the sky.
+- **Do** keep sun, moon, stars, clouds and rain driven by `app/domain/scene.py`, never placed by hand.
 
 ### Don't:
-- **Don't** use CPCB band colours for boards, backgrounds, borders or text (The Swatch-Only Rule).
-- **Don't** recolour signs by phase, haze or theme; bad air dulls the ground, never the signs (The Fixed Signs Rule).
-- **Don't** use red warning styling, alarm wording or smoke imagery for bad air.
-- **Don't** build an AQI dashboard: no gauge, no giant AQI number, no pollutant tiles.
-- **Don't** use decorative gradients, glass, drop shadows, emoji or icon fonts. The hatched worst-hours fill is a data encoding with a text legend, not decoration.
-- **Don't** add a second typeface for display or body.
-
-## Sky band
-
-A decorative strip (72px on phones, 104px from 960px) above the top bar on the Today page,
-drawn in SVG from `app/domain/scene.py`. It carries no text and is `aria-hidden`.
-
-- **Sun:** on its real arc for the place, from sunrise at the left to sunset at the right; warm orange in the evening.
-- **Moon and stars:** a crescent moon at dusk and night, and up to 24 stars, fewer as the AQI haze rises.
-- **Weather:** clouds from the real cloud cover (none, one, two or three each side), grey clouds and falling rain when it rains, and no sun or moon under full overcast.
-- **Smog:** a smog veil over everything, in step with `data-haze`.
-- **Blend:** the band's sky colour comes from the phase (`--sky-high`) and fades into the top bar, so there is no edge.
-- **Motion:** clouds drift in from both sides and the sun or moon rises once on arrival; then clouds float and rain falls. Reduced motion stops all of it.
-- **Phone layout:** phones get a narrower drawing, so the sun is not cropped near sunrise or sunset.
+- **Don't** add a gauge, a dial or a giant AQI number; the place name stays the largest text on Today.
+- **Don't** use alarm styling: no red, no warning icons, no flashing. Amber appears only as a tint, a border or the worst-hour hatch.
+- **Don't** fill, tint or colour text with a CPCB band colour.
+- **Don't** add drop shadows, glass, blur or decorative gradients; the sky band and the worst-hour hatch are the only gradients.
+- **Don't** bring back boards or sign plates; steps are rows on the rail and facts are rows between hairlines.
+- **Don't** use mono for prose or the serif for body text.
+- **Don't** put text in the sky band.

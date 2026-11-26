@@ -1,130 +1,146 @@
-/* The Today page. The top bar carries the measured air; the plan's road signs lead the page;
-   a side column holds the 24-hour route, what the air means, Ask, and how the plan was made.
-   One column on phones; from 960px the side column sits right and stays in view. */
+/* The Today page. The place and its measured air head the page; the plan is the day as one
+   rail of steps (green dots for what people do, blue for the home), with each step's figure at
+   the right edge; a side column holds the next 24 hours, what the air means, Ask, and how the
+   plan was made. One column on phones; from 960px the side column sits right and stays in view. */
 
-/* Measured air, in the top bar on every width. */
-.bar-air {
-  flex-basis: 100%; display: flex; flex-wrap: wrap; align-items: baseline;
-  gap: var(--space-1) var(--space-3); padding-top: var(--space-1);
+.today {
+  max-width: var(--page-max); margin: 0 auto; padding: var(--space-2) var(--space-5) 0;
+  display: flex; flex-direction: column; gap: var(--space-6);
 }
-.aqi-n { font-size: 1.375rem; font-weight: 800; line-height: 1; letter-spacing: -0.01em; }
-.band { display: inline-flex; align-items: center; gap: 7px; font-weight: 700; }
-.swatch { width: 13px; height: 13px; border-radius: 3px; border: 1px solid color-mix(in srgb, var(--ink) 35%, transparent); }
+.side { display: flex; flex-direction: column; gap: var(--space-4); }
+.today h2 { margin-bottom: var(--space-3); display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); }
+
+/* The place, and its measured air. */
+.today-head { display: grid; gap: var(--space-2); }
+.place-line { font-size: clamp(1.75rem, 5vw, 2.5rem); line-height: 1.08; letter-spacing: -0.02em; }
+.place-links { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); font-size: 0.875rem; color: var(--muted); }
+.place-links a { color: var(--ink); }
+.sample-tag { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 0.8125rem; background: var(--accent-tint); color: var(--ink); }
+.air-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-3); margin-top: var(--space-2); }
+.aqi-n { font-weight: 600; font-size: 1.125rem; }
+.band { display: inline-flex; align-items: center; gap: 7px; font-size: 1.0625rem; }
+.swatch { width: 11px; height: 11px; border-radius: 3px; border: 1px solid color-mix(in srgb, var(--ink) 30%, transparent); }
 .swatch-good { background: var(--band-good); }
 .swatch-satisfactory { background: var(--band-satisfactory); }
 .swatch-moderate { background: var(--band-moderate); }
 .swatch-poor { background: var(--band-poor); }
 .swatch-very_poor { background: var(--band-very_poor); }
 .swatch-severe { background: var(--band-severe); }
-.bar-air .src { color: var(--muted); font-size: 0.8125rem; flex-basis: 100%; }
-.sample-tag {
-  display: inline-block; white-space: nowrap; padding: 1px 8px; border-radius: 4px; font-size: 0.8125rem; font-weight: 700;
-  background: var(--sign-yellow); color: var(--on-yellow);
+.air-line .src { flex-basis: 100%; color: var(--muted); }
+
+/* The plan: the day as a rail. Each step draws its own stretch of the line, so a group reads
+   as one continuous rail. */
+.plan-head { color: var(--muted); margin-bottom: var(--space-3); }
+.group-head { font: 500 0.8125rem/1 var(--sans); color: var(--muted); margin: var(--space-5) 0 var(--space-1) 36px; }
+.group-head:first-of-type { margin-top: 0; }
+.steps { display: grid; }
+.step { position: relative; display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; column-gap: var(--space-4); align-items: center; padding: var(--space-3) 0; }
+.step::before { content: ""; position: absolute; left: 9.5px; top: 0; bottom: 0; width: 1px; background: var(--line); }
+.steps > .step:first-child::before { top: 50%; }
+.steps > .step:last-child::before { bottom: 50%; }
+.steps > .step:only-child::before { display: none; }
+.dot {
+  position: relative; width: 13px; height: 13px; margin-left: 4px; border-radius: 50%;
+  border: 1.5px solid var(--accent); background: var(--ground);
 }
+.step-home .dot { border-color: var(--home); }
+.step-who { font-size: 0.8125rem; font-weight: 600; color: var(--accent); margin-top: 2px; }
+.step-home .step-who { color: var(--home); }
+.step-slot { font-weight: 400; color: var(--muted); }
+.step-slot::before { content: ""; display: inline-block; width: 3px; height: 3px; border-radius: 50%; background: var(--muted); vertical-align: 0.25em; margin: 0 0.55em; }
+.step-text { font-size: 1.0625rem; font-weight: 600; line-height: 1.3; }
+.step-why { color: var(--muted); font-size: 0.9375rem; line-height: 1.45; margin-top: 2px; max-width: 62ch; }
+.step-fig { font: 500 0.875rem/1.4 var(--mono); white-space: nowrap; text-align: right; }
 
-.today {
-  max-width: var(--page-max); margin: 0 auto; padding: var(--space-4);
-  display: flex; flex-direction: column; gap: var(--space-6);
+/* The next step: the same row, set large. */
+.step-next { padding: var(--space-3) 0 var(--space-4); }
+.step-next .dot { width: 15px; height: 15px; margin-left: 3px; background: var(--accent); box-shadow: 0 0 0 5px var(--accent-tint); }
+.step-next.step-home .dot { background: var(--home); box-shadow: 0 0 0 5px color-mix(in srgb, var(--home) 16%, var(--panel)); }
+.step-next .step-text { font-family: var(--serif); font-weight: 500; font-size: clamp(1.5rem, 4.6vw, 2rem); line-height: 1.12; letter-spacing: -0.015em; margin-bottom: 2px; }
+.step-next .step-why { font-size: 1rem; color: var(--ink); }
+.step-next .step-fig { font-size: 1.0625rem; }
+
+/* The numbers behind a step, one tap away. */
+.plate { font-size: 0.875rem; margin-top: var(--space-1); }
+/* Every disclosure opens with the same drawn chevron, turned down when open. */
+.plate summary, .earlier > summary, .how summary, .logged summary { list-style: none; display: flex; align-items: center; gap: var(--space-2); width: fit-content; cursor: pointer; }
+.plate summary::-webkit-details-marker, .earlier > summary::-webkit-details-marker, .how summary::-webkit-details-marker, .logged summary::-webkit-details-marker { display: none; }
+.plate summary::before, .earlier > summary::before, .how summary::before, .logged summary::before {
+  content: ""; flex: none; width: 6px; height: 6px; margin: 0 3px 0 1px;
+  border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor;
+  transform: rotate(-45deg); transition: transform 200ms var(--ease-out);
 }
-.side { display: flex; flex-direction: column; gap: var(--space-4); }
-.today h2 { font-size: 1.375rem; margin-bottom: var(--space-3); display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.plate[open] summary::before, .earlier[open] > summary::before, .how[open] summary::before, .logged[open] summary::before { transform: rotate(45deg); }
+.plate summary { color: var(--muted); text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; }
+.plate summary:hover { color: var(--ink); }
+.plate[open] summary { margin-bottom: var(--space-2); }
+.plate ul { list-style: none; padding: var(--space-3); display: grid; gap: var(--space-2); background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-control); }
 
-/* The plan: a run of road signs. */
-.plan-head { font-weight: 600; color: var(--muted); margin-bottom: var(--space-3); max-width: 62ch; }
-.group-head { font-size: 0.9375rem; color: var(--muted); margin: var(--space-4) 0 var(--space-2); }
-.signs { display: grid; gap: var(--space-2); }
+/* While the plan is written: the rail's shape, breathing. */
+.step-wait .wait-line { height: 12px; width: 55%; border-radius: 6px; background: var(--line); margin: 6px 0; }
+.step-wait .wait-line.wide { height: 22px; width: 80%; }
+.step-wait { animation: settle 1.4s var(--ease-out) infinite alternate; }
+@keyframes settle { to { opacity: 0.45; } }
 
-.sign { border-radius: var(--radius); padding: 5px; color: var(--sign-legend); background: var(--sign-green); }
-.sign-home { background: var(--sign-blue); }
-.sign-in { border: 2px solid var(--sign-legend); border-radius: 8px; padding: var(--space-2) var(--space-3) var(--space-3); }
-.sign-who { font-weight: 600; font-size: 0.8125rem; opacity: 0.92; }
-/* A drawn dot between parts of a line: Overpass's own middle dot sits off-centre. */
-.sep { display: inline-block; width: 4px; height: 4px; border-radius: 50%; background: currentColor; vertical-align: 0.2em; margin: 0 0.5em; }
-.sign-row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-4); }
-.sign-text { font-size: 1.1875rem; font-weight: 800; line-height: 1.15; }
-.sign-fig { font-weight: 800; font-size: 1.0625rem; white-space: nowrap; text-align: right; }
-
-.sign-big .sign-in { border-width: 3px; padding: var(--space-3) var(--space-4); }
-.sign-big .sign-who { font-size: 0.9375rem; }
-.sign-big .sign-text {
-  font-size: clamp(1.75rem, 6.5vw, 2.375rem); line-height: 1.04; letter-spacing: -0.02em;
-  margin: 2px 0 var(--space-3); display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
-}
-.sign-arrow { flex: none; width: 0.9em; height: 0.9em; fill: none; stroke: currentColor; stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; }
-.sign-big .sign-row { border-top: 1.5px solid color-mix(in srgb, var(--sign-legend) 55%, transparent); padding-top: var(--space-2); }
-.sign-why { font-size: 0.9375rem; line-height: 1.4; max-width: 62ch; }
-.sign-big .sign-fig { font-size: 1.375rem; }
-
-/* The supplementary plate under each sign: why, and the facts behind the figure. */
-.plate { font-size: 0.875rem; }
-.plate summary { cursor: pointer; padding: var(--space-1) var(--space-3) 2px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
-.plate[open] { background: var(--sign-legend); color: var(--on-yellow); border-radius: 8px; margin-top: 5px; padding-bottom: var(--space-3); }
-.plate[open] summary { padding-top: var(--space-2); }
-.plate-why, .plate ul { padding: var(--space-2) var(--space-3) 0; }
-.plate-why { font-size: 0.9375rem; }
-.plate ul { list-style: none; display: grid; gap: var(--space-2); }
-
-.sign-wait { opacity: 0.45; min-height: 56px; animation: settle 1.4s var(--ease-out) infinite alternate; }
-.sign-wait.sign-big { min-height: 150px; }
-.sign-wait + .sign-wait { margin-top: var(--space-2); }
-@keyframes settle { to { opacity: 0.25; } }
-
-/* Standard advice looks like a temporary road-works sign: yellow, never alarming. */
+/* Standard advice is labelled plainly: amber, never alarming. */
 .std-label {
-  background: var(--sign-yellow); color: var(--on-yellow); border-radius: 8px; font-weight: 600;
-  padding: var(--space-2) var(--space-3); margin-bottom: var(--space-3); font-size: 0.9375rem;
+  background: var(--warn-tint); border: 1px solid color-mix(in srgb, var(--warn) 45%, var(--line)); border-radius: var(--radius-control);
+  padding: var(--space-3) var(--space-4); margin-bottom: var(--space-4); font-size: 0.9375rem;
 }
-.earlier { margin-top: var(--space-4); }
-.earlier > summary { cursor: pointer; font-weight: 700; color: var(--muted); margin-bottom: var(--space-2); }
+.earlier { margin-top: var(--space-5); }
+.earlier > summary { font-weight: 500; color: var(--muted); margin-bottom: var(--space-2); }
 
-/* Side panels. */
-.route, .meaning, .ask, .how { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--space-4); }
+/* Side panels: paper on paper, hairline edged. */
+.route, .meaning, .ask { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--space-4) var(--space-5) var(--space-5); }
+.side h2 { font-size: 1.25rem; }
 .meaning p + p { margin-top: var(--space-2); }
 
-/* The next 24 hours as one route line, starting now. */
+/* The next 24 hours as one line of hours, starting now. */
 .track { position: relative; padding-top: 24px; }
 .now-pin {
-  position: absolute; left: 0; top: 0; font-size: 0.75rem; font-weight: 800; line-height: 1.5;
+  position: absolute; left: 0; top: 0; font: 500 0.6875rem/1.6 var(--mono);
   background: var(--ink); color: var(--panel); padding: 0 6px; border-radius: 4px;
 }
-.now-pin::after { content: ""; position: absolute; left: 6px; top: 100%; border: 5px solid transparent; border-top-color: var(--ink); }
-.strip { display: grid; grid-template-columns: repeat(24, 1fr); height: 14px; border-radius: 7px; overflow: hidden; }
-.hr { background: color-mix(in srgb, var(--ink) 14%, var(--panel)); }
-.hr.lv-cleaner { background: color-mix(in srgb, var(--sign-green) 30%, var(--panel)); }
-.hr.lv-dirtier { background: color-mix(in srgb, var(--route-dirtier) 38%, var(--panel)); }
-.hr.is-clean { background: var(--sign-green); }
-.hr.is-worst { background: repeating-linear-gradient(135deg, var(--route-worst) 0 3px, color-mix(in srgb, var(--route-worst) 35%, var(--panel)) 3px 6px); }
-.ticks { display: grid; grid-template-columns: repeat(24, 1fr); margin-top: var(--space-1); font-size: 0.75rem; color: var(--muted); }
+.now-pin::after { content: ""; position: absolute; left: 6px; top: 100%; border: 4px solid transparent; border-top-color: var(--ink); }
+.strip { display: grid; grid-template-columns: repeat(24, 1fr); gap: 2px; height: 16px; }
+.hr { background: color-mix(in srgb, var(--ink) 12%, var(--panel)); border-radius: 2px; }
+.hr.lv-cleaner { background: color-mix(in srgb, var(--accent) 32%, var(--panel)); }
+.hr.lv-dirtier { background: color-mix(in srgb, var(--warn) 32%, var(--panel)); }
+.hr.is-clean { background: var(--accent); }
+.hr.is-worst { background: repeating-linear-gradient(135deg, var(--warn) 0 3px, color-mix(in srgb, var(--warn) 40%, var(--panel)) 3px 6px); }
+.ticks { display: grid; grid-template-columns: repeat(24, 1fr); margin-top: var(--space-2); font: 400 0.6875rem/1 var(--mono); color: var(--muted); }
 .ticks span { white-space: nowrap; }
-.route-legend { list-style: none; padding: 0; margin-top: var(--space-3); display: grid; gap: var(--space-2); font-size: 0.9375rem; }
+.route-legend { list-style: none; padding: 0; margin-top: var(--space-4); display: grid; gap: var(--space-2); font-size: 0.9375rem; }
 .route-legend li { display: flex; align-items: baseline; gap: var(--space-2); }
-.key { flex: none; width: 18px; height: 10px; border-radius: 3px; }
-.key-clean { background: var(--sign-green); }
-.key-worst { background: repeating-linear-gradient(135deg, var(--route-worst) 0 3px, color-mix(in srgb, var(--route-worst) 35%, var(--panel)) 3px 6px); }
+.key { flex: none; width: 16px; height: 10px; border-radius: 2px; }
+.key-clean { background: var(--accent); }
+.key-worst { background: repeating-linear-gradient(135deg, var(--warn) 0 3px, color-mix(in srgb, var(--warn) 40%, var(--panel)) 3px 6px); }
 .sky-note { margin-top: var(--space-3); font-size: 0.8125rem; color: var(--muted); }
 
 /* Ask. */
 .ask label { display: block; }
 .ask-row { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-1); }
-.ask-row input { margin-top: 0; flex: 1 1 12rem; width: auto; }
-#answer:not(:empty) { margin-top: var(--space-4); }
+.ask-row input { margin-top: 0; flex: 1 1 12rem; width: auto; background: var(--ground); }
+#answer:not(:empty) { margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--line); }
 .answer-q { color: var(--muted); font-size: 0.875rem; }
-.answer-text { font-size: 1.0625rem; font-weight: 600; margin-top: var(--space-1); }
+.answer-text { font-family: var(--serif); font-size: 1.25rem; line-height: 1.3; margin-top: var(--space-1); }
 .answer-facts { list-style: none; padding: 0; margin-top: var(--space-3); display: grid; gap: var(--space-2); font-size: 0.875rem; }
-.answer .how { margin-top: var(--space-3); padding: 0; border: 0; }
+.answer .how { margin-top: var(--space-3); padding: 0; border: 0; background: none; }
 
-/* Estimates at home and on the road: distance plates, figures on the right. */
-.facts { list-style: none; padding: 0; display: grid; border-top: 2px solid var(--ink); }
+/* Estimates at home and on the road: rows between hairlines, figures on the right. */
+.plates h2 { font-size: 1.375rem; }
+.facts { list-style: none; padding: 0; display: grid; border-top: 1px solid var(--line); }
 .fact-row {
   display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-4);
   padding: var(--space-3) 0; border-bottom: 1px solid var(--line);
 }
 .fact-text { font-size: 1rem; max-width: 62ch; }
-.fact-fig { font-weight: 800; font-size: 1.125rem; white-space: nowrap; }
+.fact-fig { font: 500 0.9375rem/1.4 var(--mono); white-space: nowrap; }
 /* One line per fact; the full sentence opens under it. */
 .fact-more > summary { cursor: pointer; list-style: none; }
 .fact-more > summary::-webkit-details-marker { display: none; }
-.fact-more > summary .fact-text { text-decoration: underline dotted; text-decoration-thickness: 1.5px; text-underline-offset: 5px; }
+.fact-more > summary .fact-text { text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 4px; }
+.fact-more > summary:hover .fact-text { text-decoration-color: var(--muted); }
 .fact-more[open] > summary { border-bottom: 0; }
 .fact-full { padding: 0 0 var(--space-3); border-bottom: 1px solid var(--line); color: var(--muted); font-size: 0.9375rem; max-width: 62ch; }
 .plates > .muted { font-size: 0.8125rem; margin-top: var(--space-2); }
@@ -135,34 +151,38 @@
 .step-row button { white-space: nowrap; }
 .totals { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2) var(--space-5); margin-top: var(--space-4); }
 .total { font-size: 1rem; }
-.total-n { font-weight: 800; font-size: 1.5rem; margin-right: var(--space-1); }
+.total-n { font-family: var(--serif); font-weight: 500; font-size: 1.75rem; margin-right: var(--space-1); }
 .totals .muted { flex-basis: 100%; font-size: 0.8125rem; }
 .logged { margin-top: var(--space-3); font-size: 0.875rem; }
-.logged summary { cursor: pointer; font-weight: 700; }
+.logged summary { font-weight: 500; }
 .logged ul { margin-top: var(--space-2); padding-left: 1.2em; display: grid; gap: var(--space-1); }
 
 /* How this was generated. */
 .how { font-size: 0.875rem; }
-.how summary { cursor: pointer; font-weight: 700; }
+.how summary { font-weight: 600; }
+/* In the side column, how the plan was made is a quiet row, not a card of its own. */
+#how-slot > .how { padding: 0 var(--space-2); }
 .how h3 { font-size: 0.875rem; margin: var(--space-4) 0 var(--space-2); }
 .how-list { display: grid; gap: var(--space-1); margin-top: var(--space-3); }
 .how-list div { display: flex; gap: var(--space-2); }
-.how-list dt { font-weight: 700; min-width: 7.5em; }
+.how-list dt { font-weight: 600; min-width: 7.5em; }
+.how-list dd { font-family: var(--mono); font-size: 0.8125rem; }
 .how-note { color: var(--muted); }
 .how-attempts, .how-facts { padding-left: 1.2em; display: grid; gap: var(--space-1); }
-.how-facts code { margin-right: var(--space-1); }
+.how-facts code { margin-right: var(--space-1); color: var(--muted); }
 .problem { color: var(--muted); }
-.how-reply { white-space: pre-wrap; word-break: break-word; background: color-mix(in srgb, var(--ink) 6%, var(--panel)); padding: var(--space-3); border-radius: 8px; max-height: 18rem; overflow: auto; }
+.how-reply { white-space: pre-wrap; word-break: break-word; background: var(--ground); border: 1px solid var(--line); padding: var(--space-3); border-radius: var(--radius-control); max-height: 18rem; overflow: auto; }
 
 @media (min-width: 960px) {
-  .bar-air .src { flex-basis: auto; }
   .today {
-    display: grid; padding: var(--space-6) var(--space-5); column-gap: var(--space-6); row-gap: var(--space-6);
+    display: grid; padding: var(--space-4) var(--space-5) 0; column-gap: var(--space-7); row-gap: var(--space-6);
     grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-    grid-template-areas: "plan side" "home side" "trips side" "week side";
-    grid-template-rows: auto auto auto 1fr;
+    grid-template-areas: "head head" "plan side" "home side" "trips side" "week side";
+    grid-template-rows: auto auto auto auto 1fr;
     align-items: start;
   }
+  .today-head { grid-area: head; }
+  .air-line .src { flex-basis: auto; }
   .plan { grid-area: plan; }
   .home { grid-area: home; }
   .trips { grid-area: trips; }
@@ -170,15 +190,5 @@
   .side {
     grid-area: side; position: sticky; top: var(--space-4);
     max-height: calc(100vh - 2 * var(--space-4)); overflow-y: auto; overscroll-behavior: contain;
-  }
-}
-
-/* Wide screens: three columns, so the page fills the width instead of leaving empty sides.
-   The plan's signs, then home, travel and the week, then the side column that stays in view. */
-@media (min-width: 1360px) {
-  .today {
-    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 0.9fr);
-    grid-template-areas: "plan home side" "plan trips side" "plan week side";
-    grid-template-rows: auto auto 1fr;
   }
 }

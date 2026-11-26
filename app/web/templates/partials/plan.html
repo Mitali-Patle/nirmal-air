@@ -1,18 +1,19 @@
-{% from "macros.html" import sign, how %}
+{% from "macros.html" import step, how %}
 <section class="plan" id="plan" aria-labelledby="plan-h"{% if lang == "hi" %} lang="hi"{% endif %}>
 <h2 class="visually-hidden" id="plan-h">Today's plan</h2>
 {% if provenance.fallback %}
 <p class="std-label">Standard advice (not AI-generated). The AI could not be used just now, so these steps come from fixed rules on CPCB's bands.{% if lang == "hi" %} Standard advice is in English only.{% endif %}</p>
 {% endif %}
-{% if board.next %}{{ sign(board.next, big=true) }}{% endif %}
+{% if not board.next %}<p class="plan-head">Nothing more is planned for today; today's earlier steps are below.</p>{% endif %}
+{% if board.next %}<h3 class="group-head">Next</h3><div class="steps">{{ step(board.next, big=true) }}</div>{% endif %}
 {% if board.later %}
 <h3 class="group-head">Later today</h3>
-<div class="signs">{% for s in board.later %}{{ sign(s) }}{% endfor %}</div>
+<div class="steps">{% for s in board.later %}{{ step(s) }}{% endfor %}</div>
 {% endif %}
 {% if board.earlier %}
 <details class="earlier">
   <summary>Earlier today ({{ board.earlier|length }})</summary>
-  <div class="signs">{% for s in board.earlier %}{{ sign(s) }}{% endfor %}</div>
+  <div class="steps">{% for s in board.earlier %}{{ step(s) }}{% endfor %}</div>
 </details>
 {% endif %}
 </section>

@@ -12,7 +12,8 @@ from datetime import datetime
 from app.domain.sky import Phase, SunTimes
 
 WIDTH, HEIGHT = 1200, 120
-HORIZON_Y, ARC_HEIGHT = 112, 84
+# The arc stays in the lower part of the drawing: the band crops its top on wide screens.
+HORIZON_Y, ARC_HEIGHT = 112, 52
 MAX_STARS = 24
 MAX_HAZE = 5
 # Cloud cover thresholds (percent) for one, two and three clouds on each side.
@@ -67,7 +68,7 @@ def sun_position(now: datetime, sun: SunTimes) -> Body | None:
     >>> from app.domain.readings import IST
     >>> rise, noon, dusk = (datetime(2026, 11, 25, h, tzinfo=IST) for h in (7, 12, 17))
     >>> sun_position(noon, SunTimes(rise, dusk))
-    Body(kind='sun', x=600, y=28)
+    Body(kind='sun', x=600, y=60)
     """
     if not sun.sunrise <= now < sun.sunset:
         return None
@@ -101,13 +102,14 @@ def scene(
 
 
 def _body(now: datetime, sun: SunTimes, *, dark: bool) -> Body:
-    """The moon after dark, else the sun on its arc.
+    """The sun on its arc while it is up and the page is light, else the moon.
 
-    A light theme chosen before sunrise still shows a sun, high on the right.
+    A light theme chosen at night still shows the moon: a sun at 8 pm would be untrue.
     """
+    moon = Body("moon", 1040, HORIZON_Y - ARC_HEIGHT)
     if dark:
-        return Body("moon", 1040, 34)
-    return sun_position(now, sun) or Body("sun", 1040, 40)
+        return moon
+    return sun_position(now, sun) or moon
 
 
 def _clouds(cover: int, *, raining: bool) -> tuple[Cloud, ...]:

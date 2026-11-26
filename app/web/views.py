@@ -1,4 +1,4 @@
-"""Turns the day's data into the plan's signs and the 24-hour strip.
+"""Turns the day's data into the plan's steps and the 24-hour strip.
 
 The page's sky lives in `sky_view` and the "This week" section in `week_view`.
 """
@@ -22,8 +22,8 @@ from app.domain.timing import DayTiming, Level, levels
 
 SLOT_ORDER = (Slot.MORNING, Slot.AFTERNOON, Slot.EVENING)
 TICK_EVERY_HOURS = 6
-# Steps about the home (`HOME_FACT_IDS`) are blue signs; steps people take are green.
-# A sign shows the figure of what its step changes before the day's background numbers.
+# Steps about the home (`HOME_FACT_IDS`) get blue dots; steps people take get green ones.
+# A step shows the figure of what it changes before the day's background numbers.
 FIGURE_PREFERENCE = (
     SWAP_PREFIX,
     ROUTINE_PREFIX,
@@ -35,8 +35,8 @@ FIGURE_PREFERENCE = (
 
 
 @dataclass(frozen=True)
-class Sign:
-    """One step of the plan, drawn as a road sign."""
+class PlanStep:
+    """One step of the plan, drawn as a dot on the day's rail."""
 
     member: str
     action: str
@@ -48,12 +48,12 @@ class Sign:
 
 
 @dataclass(frozen=True)
-class SignBoard:
+class PlanBoard:
     """The plan in reading order: the next step, the rest of today, and what has passed."""
 
-    next: Sign | None
-    later: tuple[Sign, ...]
-    earlier: tuple[Sign, ...]
+    next: PlanStep | None
+    later: tuple[PlanStep, ...]
+    earlier: tuple[PlanStep, ...]
 
 
 @dataclass(frozen=True)
@@ -76,7 +76,7 @@ def slot_of(now: datetime) -> Slot:
     return Slot.of_hour(now.astimezone(IST).hour)
 
 
-def sign_board(plan: Plan, facts: Sequence[Fact], now: datetime) -> SignBoard:
+def plan_board(plan: Plan, facts: Sequence[Fact], now: datetime) -> PlanBoard:
     """Order the plan's steps: the first one still ahead leads, past ones go last.
 
     Args:
@@ -85,31 +85,31 @@ def sign_board(plan: Plan, facts: Sequence[Fact], now: datetime) -> SignBoard:
         now: The current time.
 
     Returns:
-        The signs in reading order.
+        The steps in reading order.
     """
     by_id = {fact.id: fact for fact in facts}
     current = SLOT_ORDER.index(slot_of(now))
-    signs = sorted(
-        (_sign(item, by_id) for item in plan.items),
-        key=lambda sign: SLOT_ORDER.index(sign.slot),
+    steps = sorted(
+        (_step(item, by_id) for item in plan.items),
+        key=lambda step: SLOT_ORDER.index(step.slot),
     )
-    ahead = [sign for sign in signs if SLOT_ORDER.index(sign.slot) >= current]
-    passed = tuple(sign for sign in signs if SLOT_ORDER.index(sign.slot) < current)
+    ahead = [step for step in steps if SLOT_ORDER.index(step.slot) >= current]
+    passed = tuple(step for step in steps if SLOT_ORDER.index(step.slot) < current)
     if not ahead:
-        return SignBoard(None, (), passed)
-    return SignBoard(ahead[0], tuple(ahead[1:]), passed)
+        return PlanBoard(None, (), passed)
+    return PlanBoard(ahead[0], tuple(ahead[1:]), passed)
 
 
-def _sign(item: PlanItem, by_id: dict[str, Fact]) -> Sign:
+def _step(item: PlanItem, by_id: dict[str, Fact]) -> PlanStep:
     cited = tuple(by_id[fact_id] for fact_id in item.fact_ids if fact_id in by_id)
     with_figures = sorted((fact for fact in cited if fact.figure), key=_figure_rank)
     figure = with_figures[0].figure if with_figures else None
     home = any(fact.id in HOME_FACT_IDS for fact in cited) if cited else item.member == EVERYONE
-    return Sign(item.member, item.action, item.why, figure, home, item.slot, cited)
+    return PlanStep(item.member, item.action, item.why, figure, home, item.slot, cited)
 
 
 def _figure_rank(fact: Fact) -> int:
-    """Which cited figure a sign shows: what the step changes before background numbers."""
+    """Which cited figure a step shows: what the step changes before background numbers."""
     for rank, prefix in enumerate(FIGURE_PREFERENCE):
         if fact.id.startswith(prefix):
             return rank

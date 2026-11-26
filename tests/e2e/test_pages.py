@@ -107,10 +107,10 @@ def test_no_horizontal_scrolling_at_320px(new_page: NewPage, state: str) -> None
     assert page.evaluate("document.documentElement.scrollWidth - window.innerWidth") <= 0
 
 
-def test_the_plan_loads_as_signs_with_its_provenance(new_page: NewPage) -> None:
+def test_the_plan_loads_as_steps_with_its_provenance(new_page: NewPage) -> None:
     page = new_page()
     open_today(page)
-    expect(page.locator(".sign-big")).to_have_count(1)
+    expect(page.locator(".step-next")).to_have_count(1)
     expect(page.get_by_text("Standard advice (not AI-generated)")).to_be_visible()
     expect(page.locator("#plan-status")).to_have_text("Today's plan is ready.")
     expect(page.get_by_text("Sample household: Delhi family")).to_be_visible()
@@ -154,7 +154,7 @@ def test_typing_a_place_offers_matches_and_the_pick_is_kept(new_page: NewPage) -
     expect(page.get_by_label("Andheri, Sirmaur, Himachal Pradesh").first).to_be_checked()
     page.get_by_label("Name").first.fill("Asha")
     page.get_by_role("button", name="See today's plan").click()
-    expect(page.locator(".bar-place")).to_contain_text("Andheri, Sirmaur, Himachal Pradesh")
+    expect(page.locator(".place-line")).to_contain_text("Andheri, Sirmaur, Himachal Pradesh")
 
 
 def test_use_my_location_names_the_place_found(new_page: NewPage) -> None:

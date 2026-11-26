@@ -4,30 +4,39 @@
 {% block styles %}<link rel="stylesheet" href="{{ 'css/today.css'|asset }}"><link rel="stylesheet" href="{{ 'css/sky.css'|asset }}">{% endblock %}
 {% block sky %}{% include "partials/sky.html" %}{% endblock %}
 {% block bar %}
-<p class="bar-place">{{ today.place }}<a href="/">Change</a>{% if sample %} <span class="sample-tag">Sample household: {{ sample }}</span>{% endif %}</p>
-<p class="bar-air">
-  {% if air %}
-  <span class="aqi-n">AQI {{ air.aqi.value }}</span>
-  <span class="band"><i class="swatch swatch-{{ air.aqi.category.name|lower }}" aria-hidden="true"></i>{{ air.aqi.category.label }}</span>
-  <span class="src">Measured {{ air.reading.measured_at|clock }} at {{ air.nearby.station.label }}, {{ air.nearby.distance_km|km }} away<span class="sep" aria-hidden="true"></span><span class="visually-hidden">. </span>CPCB via data.gov.in</span>
-  {% else %}
-  <span class="src">No CPCB station near {{ today.place }} has reported in the last {{ max_reading_age_hours }} hours.</span>
-  {% endif %}
-</p>
+{% if air %}
+<p class="live"><i class="live-dot" aria-hidden="true"></i><b>AQI {{ air.aqi.value }}</b> {{ air.reading.measured_at|clock }}</p>
+{% else %}
+<p class="live"><i class="live-dot" aria-hidden="true"></i>No recent reading</p>
+{% endif %}
 {% endblock %}
 
 {% block main %}
-<h1 class="visually-hidden">Today's plan for your household in {{ today.place }}</h1>
 <div class="today">
+  <header class="today-head">
+    <h1 class="place-line"><span class="visually-hidden">Today's plan for your household in </span>{{ today.place }}</h1>
+    <p class="place-links"><a href="/">Change place or household</a>{% if sample %}<span class="sample-tag">Sample household: {{ sample }}</span>{% endif %}</p>
+    <p class="air-line">
+      {% if air %}
+      <span class="aqi-n">AQI {{ air.aqi.value }}</span>
+      <span class="band"><i class="swatch swatch-{{ air.aqi.category.name|lower }}" aria-hidden="true"></i>{{ air.aqi.category.label }}</span>
+      <span class="src mono">Measured {{ air.reading.measured_at|clock }} at {{ air.nearby.station.label }}, {{ air.nearby.distance_km|km }} away<span aria-hidden="true"> · </span><span class="visually-hidden">. </span>CPCB via data.gov.in</span>
+      {% else %}
+      <span class="src">No CPCB station near {{ today.place }} has reported in the last {{ max_reading_age_hours }} hours.</span>
+      {% endif %}
+    </p>
+  </header>
 
   <p id="plan-status" class="visually-hidden" role="status"></p>
   <section class="plan" id="plan" aria-labelledby="plan-h"
            hx-get="/today/plan?lang={{ lang }}" hx-trigger="load" hx-swap="outerHTML">
     <h2 class="visually-hidden" id="plan-h">Today's plan</h2>
     <p class="plan-head">Writing today's plan…</p>
-    <div class="sign sign-step sign-big sign-wait" aria-hidden="true"><div class="sign-in"><p class="sign-who">&nbsp;</p><p class="sign-text">&nbsp;</p><p class="sign-why">&nbsp;</p></div></div>
-    <div class="sign sign-home sign-wait" aria-hidden="true"><div class="sign-in"><p class="sign-text">&nbsp;</p></div></div>
-    <div class="sign sign-step sign-wait" aria-hidden="true"><div class="sign-in"><p class="sign-text">&nbsp;</p></div></div>
+    <div class="steps" aria-hidden="true">
+      <div class="step step-next step-wait"><span class="dot"></span><div class="step-body"><p class="wait-line wide"></p><p class="wait-line"></p></div></div>
+      <div class="step step-wait"><span class="dot"></span><div class="step-body"><p class="wait-line"></p></div></div>
+      <div class="step step-home step-wait"><span class="dot"></span><div class="step-body"><p class="wait-line"></p></div></div>
+    </div>
     <noscript><p class="note">The plan needs JavaScript to load. The air, timing and estimates on this page work without it.</p></noscript>
   </section>
 

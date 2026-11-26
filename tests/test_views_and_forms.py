@@ -6,6 +6,7 @@ import respx
 
 from app.advice.facts import Fact, Kind
 from app.advice.plan import Plan, PlanItem, Slot
+from app.ai.task import Provenance
 from app.air.forecast import FORECAST_URL
 from app.air.weather import WEATHER_URL, Weather
 from app.cache import TtlCache
@@ -15,7 +16,8 @@ from app.services.today import PlaceChoice, TodayService
 from app.web.cookie import pack
 from app.web.household_form import parse_household
 from app.web.session import ThemeChoice, load_household, theme_choice
-from app.web.views import sign_board, slot_of
+from app.web.templating import templates
+from app.web.views import plan_board, slot_of
 from tests.builders import FAMILY
 
 
@@ -29,7 +31,7 @@ def test_late_evening_plans_have_no_next_step_only_earlier_ones() -> None:
             PlanItem(slot=Slot.MORNING, member="Asha", action="Walk.", why="Fine.", fact_ids=["x"])
         ],
     )
-    board = sign_board(plan, [], datetime(2026, 11, 25, 22, tzinfo=IST))
+    board = plan_board(plan, [], datetime(2026, 11, 25, 22, tzinfo=IST))
     assert (board.next, board.later, len(board.earlier)) == (None, (), 1)
     assert slot_of(datetime(2026, 11, 25, 19, tzinfo=IST)) is Slot.EVENING
     assert slot_of(datetime(2026, 11, 25, 8, tzinfo=IST)) is Slot.MORNING
@@ -111,7 +113,7 @@ def test_signs_show_what_the_step_changes_first() -> None:
             ),
         ],
     )
-    board = sign_board(plan, facts, datetime(2026, 11, 25, 18, tzinfo=IST))
+    board = plan_board(plan, facts, datetime(2026, 11, 25, 18, tzinfo=IST))
     assert board.next is not None
     assert [board.next.figure, *(sign.figure for sign in board.later)] == [
         "Saves 15 kg CO₂/wk",
@@ -162,6 +164,27 @@ def test_signs_about_the_home_are_blue_whoever_they_are_for() -> None:
             ),
         ],
     )
-    board = sign_board(plan, facts, datetime(2026, 11, 25, 18, tzinfo=IST))
+    board = plan_board(plan, facts, datetime(2026, 11, 25, 18, tzinfo=IST))
     assert board.next is not None
     assert [board.next.home, *(sign.home for sign in board.later)] == [True, False, True]
+
+
+def test_a_day_with_no_steps_left_says_so() -> None:
+    item = PlanItem(slot=Slot.MORNING, member="Asha", action="Walk.", why="Fine.", fact_ids=["x"])
+    plan = Plan(items=[item])
+    board = plan_board(plan, [], datetime(2026, 11, 25, 22, tzinfo=IST))
+    provenance = Provenance(
+        task="plan",
+        prompt_version="plan-v4",
+        provider="fake:model",
+        cached=False,
+        latency_ms=1,
+        attempts=(),
+        request={"facts": []},
+        reply=None,
+    )
+    page = templates.get_template("partials/plan.html").render(
+        board=board, provenance=provenance, lang="en"
+    )
+    assert "Nothing more is planned for today" in page
+    assert "Earlier today (1)" in page

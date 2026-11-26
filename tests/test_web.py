@@ -136,7 +136,7 @@ def test_the_plan_falls_back_to_labelled_standard_advice(live: respx.MockRouter)
     assert 'hx-swap-oob="true"' in fragment
 
 
-def test_an_ai_plan_is_drawn_as_signs_with_its_provenance(live: respx.MockRouter) -> None:
+def test_an_ai_plan_is_drawn_as_steps_with_its_provenance(live: respx.MockRouter) -> None:
     plan = {
         "items": [
             {
@@ -174,7 +174,8 @@ def test_an_ai_plan_is_drawn_as_signs_with_its_provenance(live: respx.MockRouter
     fragment = client.get("/today/plan?lang=hi").text
     assert "Standard advice" not in fragment
     assert fragment.index("Play indoors.") < fragment.index("Earlier today (2)")
-    assert "sign-big" in fragment and "fake:model" in fragment and "plan-v4" in fragment
+    assert "step-next" in fragment and "fake:model" in fragment and "plan-v4" in fragment
+    assert "Nothing more is planned" not in fragment
     assert "Hindi (Devanagari script)" not in fragment  # the payload is not echoed raw
 
 
@@ -384,7 +385,7 @@ def test_an_eight_person_joint_family_with_loose_name_typing_is_saved(
     assert page.count("I did this") >= 4  # trips and routines moved indoors
     fragment = client.get("/today/plan").text
     assert "Standard advice" in fragment
-    assert fragment.count('class="sign ') <= 12
+    assert fragment.count('class="step ') <= 12
 
 
 def test_names_that_match_nobody_are_named_and_extra_rows_reopen() -> None:

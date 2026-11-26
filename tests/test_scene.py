@@ -30,7 +30,7 @@ def test_the_sun_rises_left_and_sets_right_and_is_gone_at_night() -> None:
 def test_night_has_a_moon_and_smog_hides_stars() -> None:
     clear = scene(at(23), SUN, Phase.NIGHT, 0, None)
     smoggy = scene(at(23), SUN, Phase.NIGHT, 5, None)
-    assert clear.body == Body("moon", 1040, 34)
+    assert clear.body == Body("moon", 1040, 60)
     assert len(clear.stars) == MAX_STARS > len(smoggy.stars) > 0
     assert scene(at(12), SUN, Phase.AFTERNOON, 0, None).stars == ()
 
@@ -53,9 +53,9 @@ def test_clouds_and_rain_follow_the_weather(
     assert {cloud.side for cloud in drawn.clouds} <= {"left", "right"}
 
 
-def test_a_light_theme_before_sunrise_still_shows_a_sun() -> None:
+def test_a_light_theme_before_sunrise_shows_the_moon_not_a_sun() -> None:
     drawn = scene(at(5), SUN, Phase.MORNING, 0, None)
-    assert drawn.body == Body("sun", 1040, 40)
+    assert drawn.body == Body("moon", 1040, 60)
 
 
 @respx.mock

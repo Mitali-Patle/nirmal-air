@@ -53,7 +53,9 @@ code, and the AI was left to explain it.
   - the data sources (CPCB first, the forecast only for timing, OpenAQ held in reserve);
   - no database;
   - the name;
-  - the road-sign direction, from the dice-rolled options;
+  - the look: first a road-sign direction from the dice-rolled options, then, after seeing it
+    on my phone, a calmer "paper and ink" redesign from my own reference images and my choice
+    of heading font;
   - the idea that the page colour follows the time of day and is dulled by the measured AQI;
   - every approval before code.
 - **Done by AI under review:**

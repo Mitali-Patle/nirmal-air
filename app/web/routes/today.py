@@ -17,7 +17,7 @@ from app.web.deps import ask_ai, saved_day
 from app.web.session import THEME_LABELS, load_log, sample_title, theme_choice
 from app.web.sky_view import scene_for, sky_for
 from app.web.templating import templates
-from app.web.views import sign_board, strip
+from app.web.views import plan_board, strip
 from app.web.week_view import week_view
 
 router = APIRouter()
@@ -44,7 +44,7 @@ async def today(request: Request, lang: Lang = "en") -> Response:
 
 @router.get("/today/plan", response_class=HTMLResponse)
 async def plan(request: Request, lang: Lang = "en") -> Response:
-    """Today's plan as signs, with how it was generated (an htmx fragment).
+    """Today's plan as steps on the day's rail, with how it was generated (an htmx fragment).
 
     Args:
         request: The incoming request.
@@ -59,7 +59,7 @@ async def plan(request: Request, lang: Lang = "en") -> Response:
     plan_context = _plan_context(saved.day, lang)
     result = await ask_ai(request, PLAN_TASK, plan_context)
     context = {
-        "board": sign_board(result.value, plan_context.facts, saved.day.today.now),
+        "board": plan_board(result.value, plan_context.facts, saved.day.today.now),
         "provenance": result.provenance,
         "lang": lang,
     }

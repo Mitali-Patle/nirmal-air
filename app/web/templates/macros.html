@@ -1,29 +1,20 @@
-{% macro sign(s, big=false) -%}
-<article class="sign {{ 'sign-home' if s.home else 'sign-step' }}{{ ' sign-big' if big else '' }}">
-  <div class="sign-in">
-    <p class="sign-who">{{ s.member }}<span class="sep" aria-hidden="true"></span><span class="visually-hidden">, </span>{{ s.slot.value|capitalize }}</p>
-    {% if big %}
-    <h3 class="sign-text">{{ s.action }}<svg class="sign-arrow" viewBox="0 0 30 30" aria-hidden="true" focusable="false"><path d="M4 15h19M16 7l8 8-8 8"/></svg></h3>
-    <div class="sign-row">
-      <p class="sign-why">{{ s.why }}</p>
-      {% if s.figure %}<p class="sign-fig">{{ s.figure }}</p>{% endif %}
-    </div>
-    {% else %}
-    <div class="sign-row">
-      <h3 class="sign-text">{{ s.action }}</h3>
-      {% if s.figure %}<p class="sign-fig">{{ s.figure }}</p>{% endif %}
-    </div>
+{% macro step(s, big=false) -%}
+<article class="step {{ 'step-home' if s.home else 'step-person' }}{{ ' step-next' if big else '' }}">
+  <span class="dot" aria-hidden="true"></span>
+  <div class="step-body">
+    <h3 class="step-text">{{ s.action }}</h3>
+    <p class="step-who">{{ s.member }}<span class="visually-hidden">, </span><span class="step-slot">{{ s.slot.value|capitalize }}</span></p>
+    <p class="step-why">{{ s.why }}</p>
+    {% if s.facts %}
+    <details class="plate">
+      <summary>The numbers behind this</summary>
+      <ul>
+        {% for fact in s.facts %}<li><span class="kind kind-{{ fact.kind.name|lower }}">{{ fact.kind.label }}</span> {{ fact.text }}</li>{% endfor %}
+      </ul>
+    </details>
     {% endif %}
   </div>
-  <details class="plate">
-    <summary>{{ "The numbers behind this" if big else "Why, and the numbers" }}</summary>
-    {% if not big %}<p class="plate-why">{{ s.why }}</p>{% endif %}
-    {% if s.facts %}
-    <ul>
-      {% for fact in s.facts %}<li><span class="kind kind-{{ fact.kind.name|lower }}">{{ fact.kind.label }}</span> {{ fact.text }}</li>{% endfor %}
-    </ul>
-    {% endif %}
-  </details>
+  {% if s.figure %}<p class="step-fig">{{ s.figure }}</p>{% endif %}
 </article>
 {%- endmacro %}
 

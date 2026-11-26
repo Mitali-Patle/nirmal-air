@@ -46,7 +46,11 @@ def phase_tokens(phase: str) -> dict[str, tuple[int, int, int]]:
 
 
 HAZES = [0.0] + [float(v) / 100 for v in re.findall(r'data-haze="\d"\] \{ --haze: (\d+)%', TOKENS)]
-ROOT = {name: hex_rgb(value) for name, value in re.findall(COLOUR_RULE, TOKENS)}
+
+
+# Text colours that sit straight on the paper: body text, secondary text, people's steps and
+# actions (accent), and steps about the home.
+ON_GROUND = ("ink", "muted", "accent", "home")
 
 
 @pytest.mark.parametrize("phase", PHASES)
@@ -55,31 +59,30 @@ def test_text_is_readable_on_the_sky_at_every_haze(phase: str, haze: float) -> N
     tokens = phase_tokens(phase)
     for ground in ("sky", "bar-sky"):
         background = mix(tokens["smog"], tokens[ground], haze)
-        for text in ("ink", "muted"):
+        for text in ON_GROUND:
             assert contrast(tokens[text], background) >= AA_TEXT, (phase, haze, ground, text)
 
 
 @pytest.mark.parametrize("phase", PHASES)
 def test_text_is_readable_on_panels(phase: str) -> None:
     tokens = phase_tokens(phase)
-    for text in ("ink", "muted"):
+    for text in ON_GROUND:
         assert contrast(tokens[text], tokens["panel"]) >= AA_TEXT, (phase, text)
 
 
-@pytest.mark.parametrize("board", ["sign-green", "sign-green-deep", "sign-blue", "sign-blue-deep"])
-def test_sign_legends_are_readable(board: str) -> None:
-    assert contrast(ROOT["sign-legend"], ROOT[board]) >= AA_TEXT
-
-
-@pytest.mark.parametrize("kind", ["measured", "forecast", "estimate", "guidance", "household"])
-def test_fact_chips_are_readable(kind: str) -> None:
-    assert contrast(ROOT[f"kind-{kind}-fg"], ROOT[f"kind-{kind}-bg"]) >= AA_TEXT
+@pytest.mark.parametrize("phase", PHASES)
+def test_button_text_is_readable_on_the_accent(phase: str) -> None:
+    tokens = phase_tokens(phase)
+    assert contrast(tokens["on-accent"], tokens["accent"]) >= AA_TEXT
 
 
 def test_all_six_haze_levels_are_defined() -> None:
     assert len(HAZES) == 6
 
 
-@pytest.mark.parametrize("ground", ["sign-yellow", "sign-legend"])
-def test_dark_text_on_the_yellow_sign_and_white_plate_is_readable(ground: str) -> None:
-    assert contrast(ROOT["on-yellow"], ROOT[ground]) >= AA_TEXT
+def test_dark_mode_follows_the_night_palette() -> None:
+    dark = re.search(r'html\[data-theme="auto"\] \{(.*?)\}', TOKENS, re.S)
+    assert dark is not None
+    assert dict(re.findall(COLOUR_RULE, dark.group(1))) == {
+        name: f"#{''.join(f'{c:02X}' for c in rgb)}" for name, rgb in phase_tokens("night").items()
+    }
