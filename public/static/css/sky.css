@@ -7,10 +7,10 @@
 html[data-phase="morning"] { --sky-high: #B4D2E8; --cloud: #FFFFFF; --sun: #FFE27A; --glow: rgba(255, 226, 122, 0.55); }
 html[data-phase="afternoon"] { --sky-high: #C4D6E0; --cloud: #FFFDF5; --sun: #FFD860; --glow: rgba(255, 216, 96, 0.5); }
 html[data-phase="evening"] { --sky-high: #E8AE7E; --cloud: #F7D3AE; --sun: #F27B35; --glow: rgba(242, 123, 53, 0.55); }
-html[data-phase="dusk"] { --sky-high: #3B3052; --cloud: #6D5A8A; --sun: #F27B35; --glow: rgba(242, 123, 53, 0.4); }
-html[data-phase="night"] { --sky-high: #0D0F15; --cloud: #3B414B; --sun: #FFE27A; --glow: rgba(255, 226, 122, 0.4); }
+html[data-phase="dusk"] { --sky-high: #4A3B6B; --cloud: #6D5A8A; --sun: #F27B35; --glow: rgba(242, 123, 53, 0.4); }
+html[data-phase="night"] { --sky-high: #1F2C4A; --cloud: #3B414B; --sun: #FFE27A; --glow: rgba(255, 226, 122, 0.4); }
 @media (prefers-color-scheme: dark) {
-  html[data-theme="auto"] { --sky-high: #0D0F15; --cloud: #3B414B; }
+  html[data-theme="auto"] { --sky-high: #1F2C4A; --cloud: #3B414B; }
 }
 html[data-haze="1"] { --haze-veil: 0.06; }
 html[data-haze="2"] { --haze-veil: 0.1; }
@@ -28,7 +28,7 @@ html[data-haze="5"] { --haze-veil: 0.25; }
 @media (min-width: 960px) { .sky { height: clamp(96px, 6.8vw, 132px); } }
 
 /* Softer than the real sky: its colour is mixed into the page's paper. */
-.sky-top { stop-color: color-mix(in srgb, var(--sky-high) 62%, var(--ground)); }
+.sky-top { stop-color: color-mix(in srgb, var(--sky-high) 85%, var(--ground)); }
 .sky-bottom { stop-color: var(--ground); }
 .glow-in { stop-color: var(--glow); }
 .glow-out { stop-color: transparent; }

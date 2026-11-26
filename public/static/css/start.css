@@ -1,6 +1,6 @@
 /* The start page: what NirmalAir does, sample households, and the household form. */
 
-.start { max-width: var(--page-max); margin: 0 auto; padding: var(--space-6) var(--space-5) 0; display: grid; gap: var(--space-7); }
+.start { max-width: var(--page-max); margin: 0 auto; padding: var(--space-6) var(--gutter) 0; display: grid; gap: var(--space-7); }
 /* Wide screens: the intro on the left stays in view; samples and the form on the right. */
 @media (min-width: 1100px) {
   .start { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); grid-template-areas: "intro samples" "intro own"; grid-template-rows: auto 1fr; column-gap: calc(var(--space-7) * 1.5); align-items: start; padding-top: var(--space-7); }

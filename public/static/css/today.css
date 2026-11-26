@@ -4,7 +4,7 @@
    plan was made. One column on phones; from 960px the side column sits right and stays in view. */
 
 .today {
-  max-width: var(--page-max); margin: 0 auto; padding: var(--space-2) var(--space-5) 0;
+  max-width: var(--page-max); margin: 0 auto; padding: var(--space-2) var(--gutter) 0;
   display: flex; flex-direction: column; gap: var(--space-6);
 }
 .side { display: flex; flex-direction: column; gap: var(--space-4); }
@@ -12,7 +12,7 @@
 
 /* The place, and its measured air. */
 .today-head { display: grid; gap: var(--space-2); }
-.place-line { font-size: clamp(1.75rem, 5vw, 2.5rem); line-height: 1.08; letter-spacing: -0.02em; }
+.place-line { font-size: clamp(2rem, 1.2rem + 2.6vw, 3.25rem); line-height: 1.08; letter-spacing: -0.02em; }
 .place-links { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); font-size: 0.875rem; color: var(--muted); }
 .place-links a { color: var(--ink); }
 .sample-tag { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 0.8125rem; background: var(--accent-tint); color: var(--ink); }
@@ -175,7 +175,7 @@
 
 @media (min-width: 960px) {
   .today {
-    display: grid; padding: var(--space-4) var(--space-5) 0; column-gap: var(--space-7); row-gap: var(--space-6);
+    display: grid; padding: var(--space-4) var(--gutter) 0; column-gap: clamp(var(--space-7), 4vw, 96px); row-gap: var(--space-6);
     grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
     grid-template-areas: "head head" "plan side" "home side" "trips side" "week side";
     grid-template-rows: auto auto auto auto 1fr;

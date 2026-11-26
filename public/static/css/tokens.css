@@ -57,7 +57,9 @@
   --kind-guidance: #8A8478;
   --kind-household: #8C6FAE;
 
-  --page-max: 1440px;
+  /* Wide screens use their width: only the side margin, growing with the screen, frames it. */
+  --page-max: 2200px;
+  --gutter: clamp(var(--space-5), 3.2vw, 64px);
   --radius: 14px;
   --radius-control: 10px;
   --space-1: 4px;
