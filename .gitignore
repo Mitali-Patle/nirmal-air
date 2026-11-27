@@ -40,7 +40,7 @@ node_modules/
 *.jpg
 *.jpeg
 !docs/img/*.png
-screenshots/
+/screenshots/
 recordings/
 
 # Impeccable design working files (briefs, mocks, reviews)
