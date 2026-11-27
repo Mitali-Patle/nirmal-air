@@ -24,11 +24,13 @@ SLOT_ORDER = (Slot.MORNING, Slot.AFTERNOON, Slot.EVENING)
 TICK_EVERY_HOURS = 6
 # Steps about the home (`HOME_FACT_IDS`) get blue dots; steps people take get green ones.
 # A step shows the figure of what it changes before the day's background numbers. A step that
-# cites the cleanest time moves something into it, so that time is shown, not the old one.
+# cites the cleanest time moves something into it, so that time is shown, not the old one; a
+# step that cites the purifier shows the room with the purifier, not with the windows shut.
 FIGURE_PREFERENCE = (
     SWAP_PREFIX,
     FactId.CLEANEST,
     ROUTINE_PREFIX,
+    FactId.INDOOR_PURIFIER,  # also matches indoor_purifier_if, a purifier the home could add
     INDOOR_PREFIX,
     FactId.WINDOWS,
     FactId.WORST,

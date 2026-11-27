@@ -254,3 +254,19 @@ def test_a_saved_household_turns_back_into_the_form_it_came_from() -> None:
     form = form_from_household(household)
     assert form["c0_km"] == "12.5" and "c0_metro" not in form and form["m0_lung"] == "on"
     assert parse_household(form)[0] == household
+
+
+def test_a_purifier_step_shows_the_room_with_the_purifier() -> None:
+    facts = [
+        Fact("indoor_shut", Kind.ESTIMATE, "Shut: 42.", "42 µg/m³"),
+        Fact("indoor_purifier_if", Kind.ESTIMATE, "Purifier: 9.", "9 µg/m³"),
+    ]
+    item = PlanItem(
+        slot=Slot.EVENING,
+        member="Everyone",
+        action="Run a purifier.",
+        why="Cleaner room.",
+        fact_ids=["indoor_shut", "indoor_purifier_if"],
+    )
+    board = plan_board(Plan(items=[item]), facts, datetime(2026, 11, 25, 18, tzinfo=IST))
+    assert board.next is not None and board.next.figure == "9 µg/m³"
