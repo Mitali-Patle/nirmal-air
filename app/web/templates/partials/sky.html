@@ -1,4 +1,4 @@
-<div class="sky{{ ' sky-rain' if scene.rain else '' }}" aria-hidden="true">
+<div class="sky{{ ' sky-rain' if scene.rain else '' }}" id="sky" aria-hidden="true">
   {% for name, width, f in [("wide", 1200, 1), ("narrow", 600, 0.5)] %}
   <svg class="sky-{{ name }}" viewBox="0 0 {{ width }} 120" preserveAspectRatio="xMidYMax slice" focusable="false">
     <defs>

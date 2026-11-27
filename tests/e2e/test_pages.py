@@ -176,3 +176,16 @@ def test_a_refused_location_says_what_to_do(new_page: NewPage) -> None:
     page.get_by_role("button", name="Use my location").click()
     expect(page.locator("#locate-status")).to_contain_text("Location permission was not given")
     expect(page.get_by_role("button", name="Use my location")).to_be_enabled()
+
+
+def test_colours_change_without_reloading_the_page(new_page: NewPage) -> None:
+    page = new_page()
+    open_today(page)
+    page.evaluate("window.notReloaded = true")
+    page.get_by_role("button", name="Dark", exact=True).click()
+    expect(page.locator("html")).to_have_attribute("data-phase", "night")
+    expect(page.get_by_role("button", name="Dark", exact=True)).to_have_attribute(
+        "aria-pressed", "true"
+    )
+    expect(page.locator("#sky-note")).to_contain_text("You chose dark colours")
+    assert page.evaluate("window.notReloaded") is True

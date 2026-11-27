@@ -19,7 +19,7 @@ from app.web.household_form import (
     parse_household,
 )
 from app.web.place_choice import near_me, place_finder, place_from_form
-from app.web.session import ThemeChoice, load_household, save_household, save_theme
+from app.web.session import load_household, save_household
 from app.web.templating import templates
 
 # The place search returns at most this many results, numbered from 0.
@@ -131,28 +131,6 @@ async def save_profile(request: Request) -> Response:
         return _start_page(request, errors, form, status.HTTP_422_UNPROCESSABLE_CONTENT)
     save_household(request, place, household)
     return RedirectResponse("/today", status.HTTP_303_SEE_OTHER)
-
-
-@router.post("/theme", dependencies=[CsrfChecked])
-def set_theme(
-    request: Request,
-    theme: Annotated[ThemeChoice, Form()],
-    lang: Annotated[str, Form(pattern="^(en|hi)$")] = "en",
-) -> Response:
-    """Remember the visitor's theme choice.
-
-    Args:
-        request: The incoming request.
-        theme: Follow the sky, light or dark.
-        lang: The plan's language, kept across the change.
-
-    Returns:
-        A redirect back to Today, in the same language.
-    """
-    save_theme(request, theme)
-    return RedirectResponse(
-        "/today?lang=hi" if lang == "hi" else "/today", status.HTTP_303_SEE_OTHER
-    )
 
 
 def _start_page(

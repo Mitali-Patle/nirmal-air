@@ -32,11 +32,11 @@ class ThemeChoice(StrEnum):
     DARK = "dark"
 
 
-# The buttons in the page footer, in order.
+# The colour switch, left to right: dark, follow the sky, light.
 THEME_LABELS = {
+    ThemeChoice.DARK: "Dark",
     ThemeChoice.AUTO: "Follow the sky",
     ThemeChoice.LIGHT: "Light",
-    ThemeChoice.DARK: "Dark",
 }
 
 

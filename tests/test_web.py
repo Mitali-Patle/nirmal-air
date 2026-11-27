@@ -460,12 +460,12 @@ def test_today_draws_the_sky_from_the_weather(live: respx.MockRouter) -> None:
     client = make_client()
     load_sample(client)
     page = client.get("/today").text
-    assert '<div class="sky" aria-hidden="true">' in page
+    assert '<div class="sky" id="sky" aria-hidden="true">' in page
     assert page.count('class="cloud cloud-') == 2 * 4  # 64% cover: two each side, two drawings
     live.get(WEATHER_URL).respond(json={"current": {"cloud_cover": 95, "precipitation": 3}})
     rainy = make_client()
     load_sample(rainy)
-    assert '<div class="sky sky-rain" aria-hidden="true">' in rainy.get("/today").text
+    assert '<div class="sky sky-rain" id="sky" aria-hidden="true">' in rainy.get("/today").text
 
 
 def test_only_the_today_page_asks_for_the_weather(live: respx.MockRouter) -> None:
@@ -504,3 +504,24 @@ def test_changing_colours_keeps_the_plan_language(live: respx.MockRouter) -> Non
     assert response.headers["location"] == "/today?lang=hi"
     english = client.post("/theme", data=data | {"lang": "en"}, follow_redirects=False)
     assert english.headers["location"] == "/today"
+
+
+def test_colours_change_in_place_with_htmx(live: respx.MockRouter) -> None:
+    client = make_client()
+    load_sample(client)
+    data = {"csrf": token(client, "/today"), "theme": "dark"}
+    response = client.post("/theme", data=data, headers={"HX-Request": "true"})
+    assert response.status_code == 200
+    assert 'id="sky"' in response.text and 'id="sky-note" hx-swap-oob="true"' in response.text
+    change = json.loads(response.headers["HX-Trigger"])["theme-change"]
+    assert change == {"phase": "night", "haze": change["haze"], "theme": "dark"}
+    assert 'aria-pressed="true"' in client.get("/today").text.split('value="dark"')[1][:60]
+
+
+def test_colours_without_a_household_go_back_to_today(live: respx.MockRouter) -> None:
+    client = make_client()
+    data = {"csrf": token(client), "theme": "light"}
+    response = client.post(
+        "/theme", data=data, headers={"HX-Request": "true"}, follow_redirects=False
+    )
+    assert response.status_code == 303

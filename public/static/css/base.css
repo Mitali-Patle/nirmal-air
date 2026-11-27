@@ -101,19 +101,33 @@ button {
   transition: background-color 160ms var(--ease-out), border-color 160ms var(--ease-out), transform 160ms var(--ease-out);
 }
 button:hover { background: color-mix(in srgb, var(--accent) 86%, var(--ink)); }
-button:active { transform: translateY(1px); }
+/* Every press gives way a little and springs back. */
+button:active, .go:active { transform: scale(0.96); }
 button:disabled, button.htmx-request { opacity: 0.6; cursor: progress; }
 button.quiet { background: transparent; color: var(--ink); border-color: var(--line); }
 button.quiet:hover { border-color: var(--muted); background: var(--panel); }
 button[aria-pressed="true"] { background: var(--ink); color: var(--ground); border-color: var(--ink); }
 
-/* Colours: one three-way switch. */
-.theme fieldset { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); }
-.theme legend { font-size: 0.875rem; font-weight: 600; color: var(--muted); margin: 0; float: left; }
-.switch { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 3px; background: var(--panel); }
-.switch button { min-height: 36px; padding: 4px 14px; font-size: 0.875rem; font-weight: 500; background: transparent; color: var(--ink); border: 0; border-radius: 999px; }
-.switch button:hover { background: color-mix(in srgb, var(--ink) 8%, transparent); }
+/* Colours: a small three-way switch, dark / follow the sky / light. */
+.theme fieldset { display: inline-flex; }
+.switch { display: inline-flex; gap: 2px; border: 1px solid var(--line); border-radius: 999px; padding: 2px; background: var(--panel); }
+.switch button {
+  min-height: 0; width: 32px; height: 28px; padding: 0; display: grid; place-items: center;
+  background: transparent; color: var(--muted); border: 0; border-radius: 999px;
+}
+.switch button:hover { color: var(--ink); background: color-mix(in srgb, var(--ink) 8%, transparent); }
 .switch button[aria-pressed="true"] { background: var(--ink); color: var(--ground); }
+.switch svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.switch svg .fill { fill: currentColor; stroke: none; }
+
+/* A theme change cross-fades every colour instead of snapping (theme.js adds the class),
+   unless the visitor asks for less motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .theme-fade, .theme-fade *, .theme-fade *::before, .theme-fade *::after {
+    transition: background-color 500ms var(--ease-out), color 500ms var(--ease-out),
+      border-color 500ms var(--ease-out), fill 500ms var(--ease-out), stop-color 500ms var(--ease-out) !important;
+  }
+}
 
 @media (prefers-reduced-motion: reduce) {
   /* No transitions or animations at all: a tiny duration would still start a transition on

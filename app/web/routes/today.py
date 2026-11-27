@@ -1,5 +1,6 @@
 """The Today page, its plan (loaded by htmx so the air shows at once) and the Ask box."""
 
+import json
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Form, Query, Request, status
@@ -14,8 +15,15 @@ from app.advice.week_steps import step_options
 from app.services.today import Day, PlaceChoice
 from app.web.csrf import CsrfChecked
 from app.web.deps import ask_ai, saved_day
-from app.web.session import THEME_LABELS, load_log, sample_title, theme_choice
-from app.web.sky_view import scene_for, sky_for
+from app.web.session import (
+    THEME_LABELS,
+    ThemeChoice,
+    load_log,
+    sample_title,
+    save_theme,
+    theme_choice,
+)
+from app.web.sky_view import Sky, scene_for, sky_for
 from app.web.templating import templates
 from app.web.views import plan_board, strip
 from app.web.week_view import week_view
@@ -104,19 +112,60 @@ def _plan_context(day: Day, lang: str) -> PlanContext:
     return PlanContext(day.today, build_facts(day.today), language)
 
 
+@router.post("/theme", dependencies=[CsrfChecked])
+async def set_theme(
+    request: Request,
+    theme: Annotated[ThemeChoice, Form()],
+    lang: Annotated[str, Form(pattern="^(en|hi)$")] = "en",
+) -> Response:
+    """Remember the visitor's colours, and repaint the page without reloading it.
+
+    With htmx the reply is the new sky band (and its note), and an HX-Trigger event carries
+    the phase, haze and theme for theme.js to set on the page. Without JavaScript the form
+    posts normally and Today reloads in the same language.
+
+    Args:
+        request: The incoming request.
+        theme: Dark, follow the sky, or light.
+        lang: The plan's language, kept across a reload.
+
+    Returns:
+        The sky fragment, or a redirect back to Today.
+    """
+    save_theme(request, theme)
+    back = RedirectResponse(
+        "/today?lang=hi" if lang == "hi" else "/today", status.HTTP_303_SEE_OTHER
+    )
+    if not request.headers.get("hx-request"):
+        return back
+    saved = await saved_day(request, weather=True)
+    if saved is None:
+        return back
+    context = _sky_context(request, saved.place, saved.day)
+    response = templates.TemplateResponse(request, "partials/theme.html", context)
+    sky: Sky = context["sky"]
+    change = {"phase": sky.phase.value, "haze": sky.haze, "theme": sky.theme.value}
+    response.headers["HX-Trigger"] = json.dumps({"theme-change": change})
+    return response
+
+
+def _sky_context(request: Request, place: PlaceChoice, day: Day) -> dict[str, Any]:
+    """The sky band, its note and the page's colours for this visitor's theme."""
+    today = day.today
+    air = today.air
+    sky = sky_for(place, today.now, air.aqi.category if air else None, theme_choice(request))
+    return {"air": air, "sky": sky, "scene": scene_for(place, today.now, sky, day.weather)}
+
+
 def _context(request: Request, place: PlaceChoice, day: Day, lang: str) -> dict[str, Any]:
     today = day.today
     air = today.air
     facts = {fact.id: fact for fact in build_facts(today)}
-    sky = sky_for(place, today.now, air.aqi.category if air else None, theme_choice(request))
-    return {
+    return _sky_context(request, place, day) | {
         "today": today,
-        "air": air,
         "far": air is not None and air.nearby.distance_km > FAR_STATION_KM,
         "facts": facts,
         "strip": strip(day.hours, today.timing),
-        "sky": sky,
-        "scene": scene_for(place, today.now, sky, day.weather),
         "lang": lang,
         "sample": sample_title(request),
         "week": week_view(load_log(request), step_options(today), today.now.date()),
