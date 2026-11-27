@@ -21,7 +21,7 @@
     <h1 class="place-line"><span class="visually-hidden">Today's plan for your household in </span>{{ today.place }}</h1>
     {% if sample %}<p><span class="sample-tag">Sample household: {{ sample }}</span></p>{% endif %}
     <nav class="tools" aria-label="Place, language and sharing">
-      <p class="place-links"><a href="/">Change place or household</a>{% if lang == 'hi' %}<a href="/today">Plan in English</a>{% else %}<a href="/today?lang=hi" hreflang="hi" lang="hi">योजना हिंदी में</a>{% endif %}</p>
+      <p class="place-links"><a href="/?edit=1">Change place or household</a>{% if lang == 'hi' %}<a href="/today">Plan in English</a>{% else %}<a href="/today?lang=hi" hreflang="hi" lang="hi">योजना हिंदी में</a>{% endif %}</p>
       <p class="share-row"><button type="button" class="quiet share" id="share" hidden data-share-title="Today's air in {{ today.place }}" data-share-text="{{ share }}">Share today's air</button><span class="field-note" id="share-status" role="status"></span></p>
     </nav>
     <p class="air-line">

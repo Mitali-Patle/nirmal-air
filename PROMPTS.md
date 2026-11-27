@@ -15,7 +15,7 @@ How NirmalAir was built with AI, and how its own prompts changed after live test
 
 1. Code builds the **facts bundle**: one sentence per fact, each with an id and a kind
    (measured, forecast, estimate, CPCB guidance, your household).
-2. The **plan prompt** (`app/advice/plan.py`, version `plan-v6`) asks for strict JSON: 4 to 8
+2. The **plan prompt** (`app/advice/plan.py`, version `plan-v7`) asks for strict JSON: 4 to 8
    items (up to 12 for a large household), each with a slot, a member, an action under 12
    words, a reason under 16 words and the fact ids it cites.
 3. Code checks every item:
@@ -45,6 +45,7 @@ How NirmalAir was built with AI, and how its own prompts changed after live test
 | `gpt-oss-20b` passed the guard but said a car emits less CO₂ than a bus | Not added as a backup model |
 | Asked for Hindi, `gpt-oss-120b` sometimes answered in English | `plan-v5` / `ask-v2`: the rule names Devanagari, and **code now checks** it: a Hindi answer with no Devanagari goes back for repair, then to the next model |
 | An all-day step (keep the inhaler handy) was labelled Morning and hid under "Earlier today" | `plan-v6`: the request names the current part of the day (`now_slot`); steps that hold all day take it |
+| An independent review saw the plan skip a carpool swap, say "at 2 pm" for "2 pm to 5 pm", and tell a home with no purifier "do not use an air purifier" | `plan-v7`: **code now checks** that every commute's chosen swap is offered and that English steps quote the cleanest time whole (with "tomorrow" when it is); the prompt says to suggest a purifier from its fact, to combine errands into one outing, and covers pregnancy |
 
 The pattern: each time the AI made a judgement call wrong, the judgement moved into tested
 code, and the AI was left to explain it.

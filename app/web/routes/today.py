@@ -13,7 +13,7 @@ from app.advice.facts import FAR_STATION_KM
 from app.advice.plan import Language, PlanContext
 from app.advice.tasks import ASK_TASK, PLAN_TASK
 from app.advice.week_steps import step_options
-from app.domain.sky import MAX_HAZE, haze_level
+from app.domain.sky import haze_level
 from app.services.today import Day, PlaceChoice
 from app.web.csrf import CsrfChecked
 from app.web.deps import AppServices, PageLimited, ask_ai, saved_day
@@ -23,7 +23,9 @@ from app.web.session import (
     load_household,
     load_log,
     sample_title,
+    save_haze,
     save_theme,
+    saved_haze,
     theme_choice,
 )
 from app.web.share import share_text
@@ -54,6 +56,7 @@ async def today(request: Request, lang: Lang = "en") -> Response:
     if saved is None:
         return RedirectResponse("/", status.HTTP_303_SEE_OTHER)
     context = _context(request, saved.place, saved.day, lang)
+    save_haze(request, context["sky"].haze)
     return templates.TemplateResponse(request, "today.html", context)
 
 
@@ -125,13 +128,13 @@ async def set_theme(
     services: AppServices,
     theme: Annotated[ThemeChoice, Form()],
     lang: LangField = "en",
-    haze: Annotated[int, Form(ge=0, le=MAX_HAZE)] = 0,
 ) -> Response:
     """Remember the visitor's colours, and repaint the page without reloading it.
 
     With htmx the reply is the new sky band, its note and the colour form, and an HX-Trigger
     event carries the phase, haze and theme for theme.js to set on the page. Only the cached
-    weather is needed: the page sends its own haze level, so no air data is fetched again.
+    weather is needed: the haze level is the one the Today page was shown with (kept in the
+    session), so no air data is fetched again.
     Without JavaScript the form posts normally and Today reloads in the same language.
 
     Args:
@@ -139,7 +142,6 @@ async def set_theme(
         services: The app's services, for the clock and the weather.
         theme: Dark, follow the sky, or light.
         lang: The plan's language, kept across a reload.
-        haze: The page's haze level from the measured AQI band (decoration only).
 
     Returns:
         The sky fragment, or a redirect back to Today.
@@ -152,7 +154,7 @@ async def set_theme(
     if not request.headers.get("hx-request") or saved is None:
         return back
     place, now = saved[0], services.clock()
-    sky = sky_for(place, now, haze, theme)
+    sky = sky_for(place, now, saved_haze(request), theme)
     scene = scene_for(place, now, sky, await services.today.weather(place))
     context = {"sky": sky, "scene": scene, "theme_labels": THEME_LABELS, "lang": lang}
     response = templates.TemplateResponse(request, "partials/theme.html", context)

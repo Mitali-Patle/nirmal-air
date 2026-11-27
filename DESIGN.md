@@ -245,7 +245,7 @@ Pages without a household's sky wear the brand: **Forest** ground (`brand-sky`) 
 
 **The One Green Rule.** Green carries every action and every person's step; blue marks only the home. No third accent.
 
-**The Every-Phase Contrast Rule.** `tests/test_contrast.py` checks ink, muted, accent and home against sky and bar-sky at all six haze levels in all five phases, and against panel; on-accent on accent in every phase; and that the dark-mode block equals the night palette. Any new text colour or ground goes into that test before it ships.
+**The Every-Phase Contrast Rule.** `tests/test_contrast.py` checks ink, muted, accent and home against sky and bar-sky at all six haze levels in the five sky phases and the brand palette, and against panel; and on-accent on accent in every one. Any new text colour or ground goes into that test before it ships.
 
 ## Typography
 

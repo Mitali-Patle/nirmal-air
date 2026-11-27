@@ -2,7 +2,7 @@
 <article class="step {{ 'step-home' if s.home else 'step-person' }}{{ ' step-next' if big else '' }}">
   <span class="dot" aria-hidden="true"></span>
   <div class="step-body">
-    <h3 class="step-text">{{ s.action }}</h3>
+    <h4 class="step-text">{{ s.action }}</h4>
     <p class="step-who">{{ s.member }}<span class="visually-hidden">, </span><span class="step-slot">{{ s.slot.value|capitalize }}</span></p>
     <p class="step-why">{{ s.why }}</p>
     {% if s.facts %}
@@ -72,7 +72,6 @@
 <form class="theme" id="theme-form" method="post" action="/theme" hx-post="/theme" hx-target="#sky" hx-swap="outerHTML"{% if oob %} hx-swap-oob="true"{% endif %}>
   <input type="hidden" name="csrf" value="{{ csrf }}">
   <input type="hidden" name="lang" value="{{ lang }}">
-  <input type="hidden" name="haze" value="{{ sky.haze }}">
   <button type="submit" class="cycle" name="theme" value="{{ nxt.value }}" title="Colours: {{ theme_labels[sky.theme] }}">{{ theme_icon(sky.theme.value) }}<span class="visually-hidden">Colours: {{ theme_labels[sky.theme] }}. Change to {{ theme_labels[nxt] }}</span></button>
   <fieldset>
     <legend class="visually-hidden">Colours</legend>

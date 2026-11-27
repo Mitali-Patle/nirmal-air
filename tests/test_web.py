@@ -2,6 +2,7 @@ import json
 import re
 from collections.abc import Iterator
 from datetime import datetime
+from types import SimpleNamespace
 from typing import Any
 
 import httpx2
@@ -19,8 +20,11 @@ from app.air.weather import WEATHER_URL
 from app.config import Settings
 from app.domain.readings import IST
 from app.main import create_app
+from app.services.samples import SAMPLES
+from app.web.household_form import form_from_household
 from app.web.limits import Budget, ClientLimits
 from app.web.security import MAX_BODY_BYTES
+from app.web.session import saved_haze
 from tests.conftest import load_fixture
 
 EVENING = datetime(2026, 11, 23, 18, 30, tzinfo=IST)  # one hour after the recorded reading
@@ -176,7 +180,7 @@ def test_an_ai_plan_is_drawn_as_steps_with_its_provenance(live: respx.MockRouter
     fragment = client.get("/today/plan?lang=hi").text
     assert "Standard advice" not in fragment
     assert fragment.index("Play indoors.") < fragment.index("Earlier today (2)")
-    assert "step-next" in fragment and "fake:model" in fragment and "plan-v6" in fragment
+    assert "step-next" in fragment and "fake:model" in fragment and "plan-v7" in fragment
     assert "Nothing more is planned" not in fragment
 
 
@@ -531,14 +535,20 @@ def test_colours_without_a_household_go_back_to_today(live: respx.MockRouter) ->
     assert response.status_code == 303
 
 
-def test_the_colour_change_uses_the_pages_haze_and_checks_it(live: respx.MockRouter) -> None:
+def test_the_colour_change_keeps_the_haze_the_page_was_shown_with(
+    live: respx.MockRouter,
+) -> None:
     client = make_client()
     load_sample(client)
-    data = {"csrf": token(client, "/today"), "theme": "light", "haze": "4"}
+    data = {"csrf": token(client, "/today"), "theme": "light", "haze": "0"}  # "haze" is ignored
     response = client.post("/theme", data=data, headers={"HX-Request": "true"})
     assert "You chose light colours, dulled by today's Very Poor air." in response.text
-    too_hazy = client.post("/theme", data=data | {"haze": "9"}, headers={"HX-Request": "true"})
-    assert too_hazy.status_code == 422
+
+
+def test_a_tampered_haze_in_the_session_is_ignored() -> None:
+    assert saved_haze(SimpleNamespace(session={"haze": 9})) == 0  # type: ignore[arg-type]
+    assert saved_haze(SimpleNamespace(session={"haze": "4"})) == 0  # type: ignore[arg-type]
+    assert saved_haze(SimpleNamespace(session={"haze": 3})) == 3  # type: ignore[arg-type]
 
 
 def test_a_client_over_the_page_budget_gets_a_readable_429(live: respx.MockRouter) -> None:
@@ -582,3 +592,32 @@ def test_an_unknown_language_code_falls_back_to_english(live: respx.MockRouter) 
     for code in ("xx", "HI"):
         page = client.get(f"/today?lang={code}")
         assert page.status_code == 200 and 'href="/today?lang=hi"' in page.text
+
+
+def test_a_saved_household_can_be_edited_and_keeps_its_place(live: respx.MockRouter) -> None:
+    client = make_client()
+    load_sample(client)
+    page = client.get("/?edit=1").text
+    assert '<details class="own-form" open>' in page and "Edit your household" in page
+    assert 'value="Asha"' in page and "Saved place: ITO, New Delhi" in page
+    form = form_from_household(SAMPLES["delhi-family"].household) | {"home_sqft": "220"}
+    saved = client.post("/household", data=form | {"csrf": token(client)}, follow_redirects=False)
+    assert saved.status_code == 303
+    assert "ITO, New Delhi" in client.get("/today").text
+    assert 'name="home_sqft" type="number" min="50" max="1000" value="220"' in client.get("/").text
+
+
+def test_forgetting_the_household_clears_this_browser(live: respx.MockRouter) -> None:
+    client = make_client()
+    load_sample(client)
+    assert "Forget this household" in client.get("/").text
+    client.post("/forget", data={"csrf": token(client)})
+    assert client.get("/today", follow_redirects=False).status_code == 303
+    assert "Forget this household" not in client.get("/").text
+
+
+def test_a_trip_with_a_distance_but_nobody_named_is_an_error(live: respx.MockRouter) -> None:
+    client = make_client()
+    data = {"csrf": token(client), "place_query": "Andheri", "m0_name": "Asha", "c0_km": "10"}
+    response = client.post("/household", data=data)
+    assert response.status_code == 422 and "Trip 1: who makes this trip?" in response.text

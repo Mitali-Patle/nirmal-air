@@ -17,6 +17,7 @@ from app.web.household_form import (
     MEMBERS,
     ROUTINES,
     SECTIONS,
+    form_from_household,
     hidden_rows_in_use,
     parse_household,
 )
@@ -30,16 +31,34 @@ router = APIRouter(dependencies=[PageLimited])
 
 
 @router.get("/", response_class=HTMLResponse)
-def start(request: Request) -> Response:
+def start(request: Request, edit: bool = False) -> Response:
     """The start page.
+
+    Args:
+        request: The incoming request.
+        edit: Open the household form (from "Change place or household").
+
+    Returns:
+        Sample households, the household form (filled in with the saved household, if any),
+        and a link back to today if one is saved.
+    """
+    saved = load_household(request)
+    form = form_from_household(saved[1]) if saved else {}
+    return _start_page(request, [], form, open_form=edit)
+
+
+@router.post("/forget", dependencies=[CsrfChecked])
+def forget(request: Request) -> Response:
+    """Wipe the saved household, its week and the colour choice from this browser.
 
     Args:
         request: The incoming request.
 
     Returns:
-        Sample households, the household form, and a link back to today if one is saved.
+        A redirect to the start page.
     """
-    return _start_page(request, [], {})
+    request.session.clear()
+    return RedirectResponse("/", status.HTTP_303_SEE_OTHER)
 
 
 @router.post("/sample", dependencies=[CsrfChecked])
@@ -138,9 +157,15 @@ async def save_profile(request: Request) -> Response:
 
 
 def _start_page(
-    request: Request, errors: list[str], form: dict[str, str], code: int = status.HTTP_200_OK
+    request: Request,
+    errors: list[str],
+    form: dict[str, str],
+    code: int = status.HTTP_200_OK,
+    *,
+    open_form: bool = True,
 ) -> Response:
     context = {
+        "open_form": bool(errors) or open_form,
         "samples": SAMPLES,
         "saved": load_household(request),
         "errors": errors,

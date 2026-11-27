@@ -14,7 +14,7 @@ from app.domain.guidance import (
     routine_decision,
     window_rule,
 )
-from app.domain.household import Condition, CookingFuel, Household
+from app.domain.household import Activity, Condition, CookingFuel, Household
 
 WINDOW_ACTIONS = {
     WindowRule.OPEN: "Open the windows to air the house.",
@@ -73,6 +73,8 @@ def _routines(aqi: int | None, household: Household, facts: dict[str, Fact]) -> 
             has_forecast=FactId.CLEANEST in facts,
         )
         action = ACTIONS[decision].format(routine.activity.value)
+        if routine.activity is Activity.ERRANDS:
+            action += " Do them in one outing."
         reason = (
             facts[FactId.CLEANEST]
             if decision is Decision.CLEANEST_TIME
@@ -112,9 +114,20 @@ def _home(aqi: int | None, household: Household, facts: dict[str, Fact]) -> list
 def _conditions(aqi: int | None, household: Household, facts: dict[str, Fact]) -> list[PlanItem]:
     if aqi is None or aqi < CHANGE_FROM:
         return []
-    action = "Keep usual medicines handy; see a doctor if breathing gets worse."
     return [
-        _item(Slot.MORNING, member.name, action, facts[FactId.HEALTH])
+        _item(Slot.MORNING, member.name, _CONDITION_ACTIONS[condition], facts[FactId.HEALTH])
         for member in household.members
-        if member.conditions & {Condition.LUNG, Condition.HEART}
+        for condition in _first_condition(member.conditions)
     ]
+
+
+_CONDITION_ACTIONS = {
+    Condition.LUNG: "Keep usual medicines handy; see a doctor if breathing gets worse.",
+    Condition.HEART: "Keep usual medicines handy; see a doctor if breathing gets worse.",
+    Condition.PREGNANT: "Keep time outdoors short; see a doctor if breathing gets hard.",
+}
+
+
+def _first_condition(conditions: frozenset[Condition]) -> list[Condition]:
+    """The one condition a member's health step speaks to (lung or heart before pregnancy)."""
+    return [condition for condition in _CONDITION_ACTIONS if condition in conditions][:1]

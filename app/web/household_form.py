@@ -84,13 +84,71 @@ def parse_household(form: Mapping[str, str]) -> tuple[Household | None, list[str
     """
     data: dict[str, Any] = {section.name: section.values(form) for section in SECTIONS}
     data["home"] = _home(form)
-    unknown = _match_names(data)
+    unknown = _match_names(data) + _unnamed_trips(form)
     try:
-        return Household.model_validate(data), []
+        household = Household.model_validate(data)
     except ValidationError as error:
         problems = [_message(item) for item in error.errors()]
         # Our own sentence names the person; the model's general one adds nothing.
         return None, [problem for problem in problems if "must belong" not in problem] + unknown
+    return (None, unknown) if unknown else (household, [])
+
+
+def _unnamed_trips(form: Mapping[str, str]) -> list[str]:
+    """A trip with its distance filled but nobody named would otherwise vanish silently."""
+    return [
+        f"{COMMUTES.label} {row + 1}: who makes this trip?"
+        for row in range(COMMUTES.rows)
+        if not COMMUTES.filled(form, row) and form.get(COMMUTES.field(row, "km"), "").strip()
+    ]
+
+
+def form_from_household(household: Household) -> dict[str, str]:
+    """The form's fields for a saved household, so it can be edited instead of retyped.
+
+    The saved place is kept by the server (`place_keep`), not written into the form.
+
+    Args:
+        household: The saved household.
+
+    Returns:
+        Field names to values, as the form would send them.
+    """
+    form = {"place_keep": "1"}
+    for row, member in enumerate(household.members):
+        form |= {MEMBERS.field(row, "name"): member.name, MEMBERS.field(row, "role"): member.role}
+        form |= {
+            MEMBERS.field(row, name): "on"
+            for name, condition in CONDITION_FIELDS.items()
+            if condition in member.conditions
+        }
+    for row, routine in enumerate(household.routines):
+        form |= {
+            ROUTINES.field(row, "member"): routine.member,
+            ROUTINES.field(row, "activity"): routine.activity,
+            ROUTINES.field(row, "hour"): str(routine.hour),
+            ROUTINES.field(row, "minutes"): str(routine.minutes),
+        }
+    for row, trip in enumerate(household.commutes):
+        form |= {
+            COMMUTES.field(row, "member"): trip.member,
+            COMMUTES.field(row, "mode"): trip.mode,
+            COMMUTES.field(row, "km"): f"{trip.km_one_way:g}",
+            COMMUTES.field(row, "days"): str(trip.days_per_week),
+            COMMUTES.field(row, "hour"): str(trip.leaves_at_hour),
+            COMMUTES.field(row, "people"): str(trip.people_in_vehicle),
+        }
+        if trip.metro_possible:
+            form[COMMUTES.field(row, "metro")] = "on"
+    home = household.home
+    form |= {
+        "home_sqft": str(home.room_sqft),
+        "home_cadr": str(home.purifier_cadr_m3h),
+        "home_fuel": home.cooking_fuel,
+    }
+    form |= {"home_incense": "on"} if home.incense_or_coils else {}
+    form |= {"home_smoking": "on"} if home.smoking_indoors else {}
+    return form
 
 
 def hidden_rows_in_use(form: Mapping[str, str]) -> dict[str, bool]:

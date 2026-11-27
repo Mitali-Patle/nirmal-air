@@ -144,5 +144,6 @@ class PlaceFinder:
         if cached is not None:
             return cached.value
         found = await search_places(self._client, query)
-        self._cache.put(key, found)
+        if found:  # a miss is not kept: a typo corrected a moment later should be searched
+            self._cache.put(key, found)
         return found

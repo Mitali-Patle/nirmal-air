@@ -1,5 +1,5 @@
 {% from "macros.html" import how %}
-<div class="answer answer-{{ answer.kind.value }}"{% if lang == "hi" %} lang="hi"{% endif %}>
+<div class="answer answer-{{ answer.kind.value }}"{% if lang == "hi" and not provenance.fallback %} lang="hi"{% endif %}>
   <p class="answer-q">{{ question }}</p>
   <p class="answer-text">{{ answer.text }}</p>
   {% if provenance.fallback %}<p class="std-label">Standard answer (not AI-generated){% if lang == "hi" %}, in English only{% endif %}.</p>{% endif %}

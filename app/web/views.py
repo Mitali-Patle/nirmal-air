@@ -29,8 +29,8 @@ FIGURE_PREFERENCE = (
     SWAP_PREFIX,
     FactId.CLEANEST,
     ROUTINE_PREFIX,
-    FactId.WINDOWS,
     INDOOR_PREFIX,
+    FactId.WINDOWS,
     FactId.WORST,
 )
 
@@ -105,6 +105,8 @@ def _step(item: PlanItem, by_id: dict[str, Fact]) -> PlanStep:
     cited = tuple(by_id[fact_id] for fact_id in item.fact_ids if fact_id in by_id)
     with_figures = sorted((fact for fact in cited if fact.figure), key=_figure_rank)
     figure = with_figures[0].figure if with_figures else None
+    # A step whose facts are unknown (say, from an older cached plan) is a home step when it
+    # is for everyone.
     home = any(fact.id in HOME_FACT_IDS for fact in cited) if cited else item.member == EVERYONE
     return PlanStep(item.member, item.action, item.why, figure, home, item.slot, cited)
 

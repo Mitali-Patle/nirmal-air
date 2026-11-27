@@ -24,11 +24,11 @@ to their location and lifestyle, and explain the direct impact of each choice.
 
 | What the brief asks for | Where NirmalAir does it |
 |---|---|
-| Low-emission daily routines | A plan step for each person's routine, plus the cleanest and worst hours |
+| Low-emission daily routines | A plan step for each person's routine, plus the cleanest and worst hours; errands done in one outing, in the cleanest time |
 | Indoor air-quality steps | The windows rule, purifier and indoor-source steps, indoor PM2.5 estimates, and an honest answer on houseplants (they do not measurably clean a room's air) |
 | Sustainable alternatives | Commute swaps (bus, metro, cycle, walk, carpool) with CO₂ saved per week |
 | Location | The nearest CPCB station to any Indian place, and the sky colour of that place |
-| Lifestyle | Household members, sensitivities, routines, commutes and home |
+| Lifestyle | Household members, sensitivities (asthma, heart, pregnancy), routines, commutes and home; "Change place or household" reopens the saved household for editing |
 | Direct impact of each choice | A figure on every step, the facts behind it one tap away, and a "This week" log that adds up what the household actually did |
 | Families and communities | "Share today's air" sends a short summary (AQI, measured time and station, cleanest and worst hours) to a family, building, school or society group |
 
@@ -127,6 +127,7 @@ at 5 pm?", or an off-topic request such as "Write me a poem" to see it declined.
 
 - No accounts or cross-device sync; the household lives in one browser's cookie. The cookie
   is signed (it cannot be altered) but not encrypted: whoever holds the browser can decode it.
+  "Forget this household" on the start page clears it, for a shared device.
 - No indoor sensors: indoor values are estimates from outdoor air.
 - Tailpipe PM2.5 per trip is not estimated (no current Indian per-kilometre data for today's
   vehicles).
@@ -154,7 +155,7 @@ uv run uvicorn app.index:app --reload
 ```bash
 uv run ruff check . && uv run ruff format --check .
 uv run mypy app tests scripts                  # strict
-uv run pytest -W error --cov=app               # 351 tests, 95% branch-coverage gate (100% now)
+uv run pytest -W error --cov=app               # 360 tests, 95% branch-coverage gate (100% now)
 uv run pytest -W error -m e2e                  # 37 browser tests: axe (WCAG 2.2 AA), widths, keyboard
 ```
 

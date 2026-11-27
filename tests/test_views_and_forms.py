@@ -15,7 +15,7 @@ from app.domain.household import Mode
 from app.domain.readings import IST, HourlyPm25
 from app.services.today import PlaceChoice, TodayService
 from app.web.cookie import pack
-from app.web.household_form import parse_household
+from app.web.household_form import form_from_household, parse_household
 from app.web.session import ThemeChoice, load_household, theme_choice
 from app.web.share import share_text
 from app.web.templating import templates
@@ -87,7 +87,7 @@ async def test_without_a_data_key_there_is_no_measured_air(client: Any) -> None:
     assert (day.today.air, day.hours) == (None, ())
 
 
-def test_signs_show_what_the_step_changes_first() -> None:
+def test_steps_show_what_they_change_first() -> None:
     facts = [
         Fact("commute_1", Kind.ESTIMATE, "Trip.", "1.68 kg CO₂"),
         Fact("swap_1_1", Kind.ESTIMATE, "Swap.", "Saves 15 kg CO₂/wk"),
@@ -143,7 +143,7 @@ async def test_an_old_forecast_is_used_when_open_meteo_is_down(client: Any) -> N
     assert day.weather == Weather(90, raining=True)
 
 
-def test_signs_about_the_home_are_blue_whoever_they_are_for() -> None:
+def test_steps_about_the_home_are_blue_whoever_they_are_for() -> None:
     facts = [Fact("windows", Kind.GUIDANCE, "Windows."), Fact("routine_1", Kind.GUIDANCE, "Walk.")]
     plan = Plan(
         items=[
@@ -177,7 +177,7 @@ def test_a_day_with_no_steps_left_says_so() -> None:
     board = plan_board(plan, [], datetime(2026, 11, 25, 22, tzinfo=IST))
     provenance = Provenance(
         task="plan",
-        prompt_version="plan-v6",
+        prompt_version="plan-v7",
         provider="fake:model",
         cached=False,
         latency_ms=1,
@@ -235,3 +235,22 @@ def test_a_step_moved_to_the_cleanest_time_shows_that_time() -> None:
     )
     board = plan_board(Plan(items=[item]), facts, datetime(2026, 11, 25, 12, tzinfo=IST))
     assert board.next is not None and board.next.figure == "1 to 4 pm"
+
+
+def test_a_saved_household_turns_back_into_the_form_it_came_from() -> None:
+    household = parse_household(
+        {
+            "m0_name": "Ravi",
+            "m0_lung": "on",
+            "c0_member": "Ravi",
+            "c0_mode": "car",
+            "c0_km": "12.5",
+            "c0_days": "5",
+            "c0_hour": "9",
+            "home_smoking": "on",
+        }
+    )[0]
+    assert household is not None
+    form = form_from_household(household)
+    assert form["c0_km"] == "12.5" and "c0_metro" not in form and form["m0_lung"] == "on"
+    assert parse_household(form)[0] == household

@@ -13,6 +13,7 @@ from app.air.places import PlaceFinder
 from app.air.stations import nearest_stations
 from app.services.today import PlaceChoice
 from app.web.deps import get_services
+from app.web.session import load_household
 
 # India's bounding box, so a location outside it is refused before any lookup.
 LAT_RANGE = (6.0, 37.5)
@@ -36,6 +37,9 @@ async def place_from_form(request: Request, form: dict[str, str]) -> PlaceChoice
         return near_me(form["geo_lat"], form["geo_lon"])
     # No suggestion picked yet means the best match: typing "Lucknow" and saving just works.
     query, index = form.get("place_query", "").strip()[:60], form.get("place_index") or "0"
+    if not query and form.get("place_keep") == "1":
+        saved = load_household(request)  # the place saved in the session, never the form's
+        return saved[0] if saved else None
     if not query or not (index.isascii() and index.isdigit()):
         return None
     try:

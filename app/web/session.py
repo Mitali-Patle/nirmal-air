@@ -13,6 +13,7 @@ from fastapi import Request
 from pydantic import ValidationError
 
 from app.domain.household import Household
+from app.domain.sky import MAX_HAZE
 from app.domain.week import DayImpact, LogEntry
 from app.services.today import PlaceChoice
 from app.web.cookie import pack, unpack
@@ -20,6 +21,7 @@ from app.web.cookie import pack, unpack
 PLACE_KEY = "place"
 HOUSEHOLD_KEY = "household"
 THEME_KEY = "theme"
+HAZE_KEY = "haze"
 SAMPLE_KEY = "sample"
 LOG_KEY = "log"
 
@@ -90,6 +92,29 @@ def load_household(request: Request) -> tuple[PlaceChoice, Household] | None:
         return choice, Household.model_validate(household)
     except (KeyError, TypeError, ValueError, ValidationError):
         return None
+
+
+def save_haze(request: Request, haze: int) -> None:
+    """Remember how much today's measured air dulls the page, for a later colour change.
+
+    Args:
+        request: The incoming request.
+        haze: The haze level, 0 to 5, worked out from the measured AQI band.
+    """
+    request.session[HAZE_KEY] = haze
+
+
+def saved_haze(request: Request) -> int:
+    """The haze level the Today page was last shown with; 0 when unknown.
+
+    Args:
+        request: The incoming request.
+
+    Returns:
+        The haze level, 0 to 5.
+    """
+    haze = request.session.get(HAZE_KEY, 0)
+    return haze if isinstance(haze, int) and 0 <= haze <= MAX_HAZE else 0
 
 
 def save_theme(request: Request, theme: ThemeChoice) -> None:

@@ -66,7 +66,7 @@ ROUTINE_PREFIX = "routine_"
 COMMUTE_PREFIX = "commute_"
 SWAP_PREFIX = "swap_"
 INDOOR_PREFIX = "indoor_"
-# Facts about the home rather than about people, which the page draws as blue signs.
+# Facts about the home rather than about people, which the page marks with blue dots.
 HOME_FACT_IDS = frozenset(
     {
         FactId.WINDOWS,
@@ -108,8 +108,8 @@ def swap_id(commute: int, rank: int) -> str:
 class Fact:
     """One sentence of fact with an id the AI can cite.
 
-    `figure` is the fact's key number in a few characters ("6 am", "103 µg/m³"), shown on the
-    right edge of a plan sign the way a road sign shows a distance. `label` names the fact in a
+    `figure` is the fact's key number in a few characters ("6 am", "103 µg/m³"), shown at the
+    right edge of a plan step and of fact rows. `label` names the fact in a
     few words ("Windows shut") for one-line rows, with the full sentence one tap away.
     """
 

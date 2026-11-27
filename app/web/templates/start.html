@@ -15,7 +15,8 @@
   <section class="intro" aria-labelledby="intro-h">
     <h1 id="intro-h">Today's air, turned into a plan for each person at home.</h1>
     <p>NirmalAir reads the nearest CPCB station, then tells your family what to do, when, and what it changes. Every number is measured or worked out in code; the AI only explains.</p>
-    {% if saved %}<p><a class="go" href="/today">Continue to today in {{ saved[0].label }}</a></p>{% endif %}
+    {% if saved %}<p><a class="go" href="/today">Continue to today in {{ saved[0].label }}</a></p>
+    <form class="forget" method="post" action="/forget"><input type="hidden" name="csrf" value="{{ csrf_token }}"><button type="submit" class="quiet">Forget this household</button><span class="field-note">Clears it from this browser, for a shared device.</span></form>{% endif %}
     <h2 id="how-h">How it works</h2>
     <ol class="how-it-works" aria-labelledby="how-h">
       <li><span class="ring" aria-hidden="true">1</span><p><b>Measured air, where you are</b><span>The nearest CPCB station's reading, with its time and distance.</span></p></li>
@@ -47,8 +48,8 @@
   <section class="own" aria-labelledby="own-h">
     <h2 id="own-h">Or set up your own</h2>
     <p class="muted">Your people, routines, trips and home: about a minute. Saved only in this browser.</p>
-    <details class="own-form"{% if errors or form %} open{% endif %}>
-    <summary class="go">Set up your household</summary>
+    <details class="own-form"{% if open_form %} open{% endif %}>
+    <summary class="go">{{ "Edit your household" if saved else "Set up your household" }}</summary>
     {% if errors %}
     <div class="errors" role="alert">
       <p>Please fix these:</p>
@@ -66,10 +67,12 @@
                hx-get="/places" hx-trigger="input changed delay:400ms" hx-target="#place-choices" hx-sync="this:replace">
         {% set picked = form.get('place_index', '0') %}
         <div id="place-choices" aria-live="polite"{% if form.get('place_query') %} hx-get="/places" hx-trigger="load" hx-vals='{{ {"place_query": form.place_query, "chosen": picked if picked.isdigit() else "0"}|tojson }}'{% endif %}></div>
-        <input type="hidden" name="geo_lat" id="geo_lat" value="">
-        <input type="hidden" name="geo_lon" id="geo_lon" value="">
+        <input type="hidden" name="geo_lat" id="geo_lat" value="{{ form.get('geo_lat', '') }}">
+        <input type="hidden" name="geo_lon" id="geo_lon" value="{{ form.get('geo_lon', '') }}">
         <button type="button" class="quiet" id="locate" hidden>Use my location</button>
-        <p class="field-note" id="locate-status" role="status"></p>
+        <p class="field-note" id="locate-status" role="status">{% if form.get('geo_lat') %}Using your location.{% endif %}</p>
+        {% if saved and form.get('place_keep') %}<input type="hidden" name="place_keep" value="1">
+        <p class="field-note">Saved place: {{ saved[0].label }}. Type another place or use your location to change it.</p>{% endif %}
       </fieldset>
 
       <fieldset class="group">

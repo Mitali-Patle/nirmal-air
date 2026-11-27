@@ -9,7 +9,10 @@ Kept byte-identical to upstream; the pre-commit fixers skip this folder.
 - SHA-256: `d6fdc75f204e6bdefa99b69bf1e6d4ac69b8a364f77929f45c13476b4000f717`
 - Size: 52,182 bytes
 
-## Overpass (font)
+## Anek (font), by Ek Type
 
-- Variable font, latin and latin-ext WOFF2 subsets from Google Fonts, licence SIL OFL 1.1
-- Files: `../fonts/overpass-latin.woff2` (39,260 bytes), `../fonts/overpass-latin-ext.woff2` (46,148 bytes)
+- Variable fonts from Google Fonts, licence SIL OFL 1.1
+- Anek Latin (weight 100-800, width 75-125%): `../fonts/anek-latin.woff2` (103,760 bytes),
+  `../fonts/anek-latin-ext.woff2` (82,308 bytes)
+- Anek Devanagari (weight 400-700), for the Hindi plan only: `../fonts/anek-devanagari.woff2`
+  (257,652 bytes)

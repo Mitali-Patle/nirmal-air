@@ -1,5 +1,5 @@
 {% from "macros.html" import step, how %}
-<section class="plan" id="plan" aria-labelledby="plan-h"{% if lang == "hi" %} lang="hi"{% endif %}>
+<section class="plan" id="plan" aria-labelledby="plan-h"{% if lang == "hi" and not provenance.fallback %} lang="hi"{% endif %}>
 <h2 class="visually-hidden" id="plan-h">Today's plan</h2>
 {% if provenance.fallback %}
 <p class="std-label">Standard advice (not AI-generated). The AI could not be used just now, so these steps come from fixed rules on CPCB's bands.{% if lang == "hi" %} Standard advice is in English only.{% endif %}</p>

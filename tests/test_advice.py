@@ -10,14 +10,22 @@ from app.advice.ask import (
 )
 from app.advice.bundle import build_facts
 from app.advice.facts import FactId, Kind, Today
-from app.advice.plan import Language, Plan, PlanItem, Slot, check_plan, plan_payload
+from app.advice.plan import (
+    Language,
+    Plan,
+    PlanItem,
+    Slot,
+    _cleanest_time_issues,
+    check_plan,
+    plan_payload,
+)
 from app.advice.standard import standard_plan
 from app.ai.guard import FactGuard
 from app.ai.task import OutputRejectedError
 from app.domain.guidance import Decision, routine_decision
 from app.domain.household import Activity, Household
 from app.services.samples import SAMPLES
-from tests.builders import FAMILY, context, measured, timing, today
+from tests.builders import FAMILY, NOW, context, measured, timing, today
 
 
 def facts_of(day: Today | None = None) -> dict[str, str]:
@@ -256,3 +264,54 @@ def test_houseplants_are_never_offered_as_a_fix() -> None:
         FactGuard([plants.text]).problems("One plant cleans 0.023 m³ an hour; 10 to 1,000 per m².")
         == []
     )
+
+
+def test_a_plan_must_offer_each_commutes_chosen_swap() -> None:
+    without_swap = Plan(items=[entry for entry in good_plan().items if entry.member != "Asha"])
+    asha = item("Asha", "Drive as usual.", ["commute_1"])
+    with pytest.raises(OutputRejectedError) as rejected:
+        check_plan(
+            without_swap.model_copy(update={"items": [*without_swap.items, asha]}), context()
+        )
+    assert "offer swap_1_1 for its commute" in rejected.value.problems
+
+
+def test_english_steps_quote_the_cleanest_time_whole() -> None:
+    point = item("Everyone", "Air the house at 1 pm.", ["cleanest"])
+    whole = item("Everyone", "Air the house from 1 pm to 4 pm.", ["cleanest"])
+    checked = check_plan(
+        good_plan().model_copy(update={"items": [*good_plan().items, point, whole]}), context()
+    )
+    assert point not in checked.items and whole in checked.items
+    hindi = context(language=Language.HINDI)
+    hindi_point = item("Everyone", "दोपहर 1 pm पर हवा दें", ["cleanest"])
+    assert not _cleanest_time_issues(hindi_point, hindi)
+
+
+def test_a_cleanest_time_tomorrow_must_say_tomorrow() -> None:
+    day = today()
+    late = Today(day.place, NOW.replace(hour=21), day.air, timing(day=25), day.household)
+    step = item("Everyone", "Air the house from 1 pm to 4 pm.", ["cleanest"])
+    assert _cleanest_time_issues(step, context(late)) == ["say the cleanest time is tomorrow"]
+    tomorrow = item("Everyone", "Air the house from 1 pm to 4 pm tomorrow.", ["cleanest"])
+    assert _cleanest_time_issues(tomorrow, context(late)) == []
+
+
+def test_standard_advice_covers_pregnancy_and_combines_errands() -> None:
+    household = Household.model_validate(
+        {
+            "members": [
+                {"name": "Meera", "role": "adult", "conditions": ["pregnant"]},
+                {"name": "Ravi", "role": "adult"},
+            ],
+            "routines": [
+                {"member": "Ravi", "activity": "market and errands", "hour": 18, "minutes": 40}
+            ],
+        }
+    )
+    actions = {
+        entry.member: entry.action
+        for entry in standard_plan(context(today(household=household))).items
+    }
+    assert actions["Meera"] == "Keep time outdoors short; see a doctor if breathing gets hard."
+    assert actions["Ravi"].endswith("Do them in one outing.")
