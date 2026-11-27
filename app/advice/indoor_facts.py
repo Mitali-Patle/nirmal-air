@@ -1,7 +1,11 @@
 """Facts about the home: the main room, its habits, and the indoor PM2.5 estimates."""
 
 from app.advice.facts import Fact, FactId, Kind, number
-from app.domain.assumptions import TYPICAL_PURIFIER_CADR_M3H
+from app.domain.assumptions import (
+    PLANT_CADR_M3H,
+    PLANTS_PER_M2_TO_MATCH_AIR_EXCHANGE,
+    TYPICAL_PURIFIER_CADR_M3H,
+)
 from app.domain.household import Home
 from app.domain.indoor import cigarettes, indoor_estimates
 
@@ -46,6 +50,26 @@ def _purifier_if_fact(pm25: float, home: Home, approx: str) -> Fact:
     )
 
 
+def plants_fact() -> Fact:
+    """What houseplants do for a room's air: honestly, almost nothing.
+
+    Returns:
+        An estimate fact with its source, so the advice never suggests plants as a fix.
+    """
+    fewest, most = PLANTS_PER_M2_TO_MATCH_AIR_EXCHANGE
+    return Fact(
+        FactId.PLANTS,
+        Kind.ESTIMATE,
+        "Potted plants do not measurably clean a room's air: in 196 sealed-chamber tests the "
+        f"median plant cleaned {PLANT_CADR_M3H} m³ an hour, so matching a home's own air "
+        f"exchange would take {fewest} to {most:,} plants per m² of floor (Cummings and Waring, "
+        "2019, for indoor chemicals); leaves catch only a little PM2.5. Shut windows at the "
+        "worst times and a purifier do the work.",
+        f"{PLANT_CADR_M3H} m³/h",
+        "One houseplant cleans",
+    )
+
+
 def indoor_facts(pm25: float, home: Home, approx: str) -> list[Fact]:
     """Estimated PM2.5 in the main room with windows open, shut, and with a purifier.
 
@@ -55,7 +79,8 @@ def indoor_facts(pm25: float, home: Home, approx: str) -> list[Fact]:
         approx: "about", or "at least" beyond CPCB's scale.
 
     Returns:
-        Estimate facts, including what a typical purifier would do in a home without one.
+        Estimate facts, including what a typical purifier would do in a home without one, and
+        what houseplants would (almost nothing).
     """
     estimate = indoor_estimates(pm25, home)
     shut_pct = round((1 - estimate.windows_shut / pm25) * 100)
@@ -90,4 +115,5 @@ def indoor_facts(pm25: float, home: Home, approx: str) -> list[Fact]:
                 "Main room, purifier on",
             )
         )
+    facts.append(plants_fact())
     return facts

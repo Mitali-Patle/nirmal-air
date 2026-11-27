@@ -4,6 +4,8 @@ The place is a search result found again on the server, or the browser's locatio
 way the server writes its label.
 """
 
+import math
+
 from fastapi import Request
 
 from app.air.errors import PlaceSearchError
@@ -34,7 +36,7 @@ async def place_from_form(request: Request, form: dict[str, str]) -> PlaceChoice
         return near_me(form["geo_lat"], form["geo_lon"])
     # No suggestion picked yet means the best match: typing "Lucknow" and saving just works.
     query, index = form.get("place_query", "").strip()[:60], form.get("place_index") or "0"
-    if not query or not index.isdigit():
+    if not query or not (index.isascii() and index.isdigit()):
         return None
     try:
         results = await place_finder(request).search(query)
@@ -68,11 +70,33 @@ def near_me(lat_text: str, lon_text: str) -> PlaceChoice | None:
     Returns:
         The place, or None when the point is unreadable or outside India.
     """
-    try:
-        lat, lon = round(float(lat_text), 4), round(float(lon_text), 4)
-    except ValueError:
+    point = read_point(lat_text, lon_text)
+    if point is None:
         return None
+    lat, lon = point
     if not (LAT_RANGE[0] <= lat <= LAT_RANGE[1] and LON_RANGE[0] <= lon <= LON_RANGE[1]):
         return None
     city = nearest_stations(lat, lon, limit=1)[0].station.city
     return PlaceChoice(f"Your location, near {city}", lat, lon)
+
+
+def read_point(lat_text: str, lon_text: str) -> tuple[float, float] | None:
+    """A latitude and longitude as finite numbers, rounded to about 10 m.
+
+    Args:
+        lat_text: Latitude as sent by the browser.
+        lon_text: Longitude as sent by the browser.
+
+    Returns:
+        The point, or None when either value is not a finite number.
+
+    >>> read_point("28.61394", "77.2090"), read_point("abc", "77"), read_point("nan", "77")
+    ((28.6139, 77.209), None, None)
+    """
+    try:
+        lat, lon = float(lat_text), float(lon_text)
+    except ValueError:
+        return None
+    if not (math.isfinite(lat) and math.isfinite(lon)):
+        return None
+    return round(lat, 4), round(lon, 4)

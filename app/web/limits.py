@@ -1,17 +1,30 @@
-"""Rate limits for the routes that call AI models, so one client cannot spend the free quota.
+"""Rate limits, so one client cannot spend the free AI quota or hammer the data services.
 
-Counts live in memory per server instance, like the caches: enough to stop a loop or a
-script, without adding a shared store to every request.
+Two budgets: AI calls (tight, per client and per instance) and every page or lookup that
+reads an outside service (generous, per client). Counts live in memory per server instance,
+like the caches: enough to stop a loop or a script, without a shared store on every request.
 """
 
 import time
 from collections import OrderedDict, deque
 from collections.abc import Callable
+from dataclasses import dataclass
 
 from fastapi import Request
 
-PER_CLIENT = (20, 10 * 60)  # 20 AI requests per client in 10 minutes
-OVERALL = (60, 60)  # 60 AI requests per instance per minute
+
+@dataclass(frozen=True)
+class Budget:
+    """At most `limit` requests in any `window_s` seconds."""
+
+    limit: int
+    window_s: float
+
+
+AI_PER_CLIENT = Budget(20, 10 * 60)
+AI_OVERALL = Budget(60, 60)
+# Pages, place search, location and colour changes: a person clicking around stays far below.
+PAGE_PER_CLIENT = Budget(60, 60)
 MAX_CLIENTS = 2048
 PROXY_HEADERS = ("x-vercel-forwarded-for", "x-real-ip", "x-forwarded-for")
 
@@ -49,33 +62,44 @@ class RateLimiter:
         return allowed
 
 
-class AILimits:
-    """The per-client and overall limits together.
+class ClientLimits:
+    """A per-client budget, and optionally one for the whole instance.
 
     Args:
+        per_client: The budget for each client address.
+        overall: The budget for all clients together, if any.
         behind_proxy: True on Vercel, where the platform sets the client's address in a header
             it does not let clients override; elsewhere the socket peer is used.
         clock: Monotonic clock (tests pass a fake one).
     """
 
     def __init__(
-        self, *, behind_proxy: bool = False, clock: Callable[[], float] = time.monotonic
+        self,
+        per_client: Budget,
+        overall: Budget | None = None,
+        *,
+        behind_proxy: bool = False,
+        clock: Callable[[], float] = time.monotonic,
     ) -> None:
-        self._per_client = RateLimiter(*PER_CLIENT, clock=clock)
-        self._overall = RateLimiter(*OVERALL, clock=clock)
+        self._per_client = RateLimiter(per_client.limit, per_client.window_s, clock=clock)
+        self._overall = (
+            RateLimiter(overall.limit, overall.window_s, clock=clock) if overall else None
+        )
         self._behind_proxy = behind_proxy
 
     def allow(self, request: Request) -> bool:
-        """Whether this request may call a model now.
+        """Whether this request may go ahead now.
 
         Args:
             request: The incoming request.
 
         Returns:
-            True when both the client's and the overall limit allow it.
+            True when the client's budget (and the overall one, if set) allows it.
         """
         key = client_key(request, behind_proxy=self._behind_proxy)
-        return self._per_client.allow(key) and self._overall.allow("all")
+        if not self._per_client.allow(key):
+            return False
+        return self._overall is None or self._overall.allow("all")
 
 
 def client_key(request: Request, *, behind_proxy: bool) -> str:

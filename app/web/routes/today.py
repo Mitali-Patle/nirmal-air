@@ -5,6 +5,7 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Form, Query, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
+from pydantic import AfterValidator
 
 from app.advice.ask import AskContext, Question
 from app.advice.bundle import build_facts
@@ -15,7 +16,7 @@ from app.advice.week_steps import step_options
 from app.domain.sky import MAX_HAZE, haze_level
 from app.services.today import Day, PlaceChoice
 from app.web.csrf import CsrfChecked
-from app.web.deps import AppServices, ask_ai, saved_day
+from app.web.deps import AppServices, PageLimited, ask_ai, saved_day
 from app.web.session import (
     THEME_LABELS,
     ThemeChoice,
@@ -25,13 +26,17 @@ from app.web.session import (
     save_theme,
     theme_choice,
 )
+from app.web.share import share_text
 from app.web.sky_view import scene_for, sky_for
 from app.web.templating import templates
 from app.web.views import plan_board, strip
 from app.web.week_view import week_view
 
-router = APIRouter()
-Lang = Annotated[str, Query(pattern="^(en|hi)$")]
+router = APIRouter(dependencies=[PageLimited])
+# The plan's language as a page code: "hi" for Hindi; anything else falls back to English.
+_KnownCode = AfterValidator(lambda code: Language.from_code(code).code)
+Lang = Annotated[str, Query(max_length=8), _KnownCode]
+LangField = Annotated[str, Form(max_length=8), _KnownCode]
 
 
 @router.get("/today", response_class=HTMLResponse)
@@ -80,7 +85,7 @@ async def plan(request: Request, lang: Lang = "en") -> Response:
 async def ask(
     request: Request,
     question: Annotated[Question, Form()],
-    lang: Annotated[str, Form(pattern="^(en|hi)$")] = "en",
+    lang: LangField = "en",
 ) -> Response:
     """Answer a question about today from the facts (an htmx fragment).
 
@@ -110,7 +115,7 @@ async def ask(
 
 def _plan_context(day: Day, lang: str) -> PlanContext:
     """The day's facts in the visitor's language, as the AI tasks take them."""
-    language = Language.HINDI if lang == "hi" else Language.ENGLISH
+    language = Language.from_code(lang)
     return PlanContext(day.today, build_facts(day.today), language)
 
 
@@ -119,7 +124,7 @@ async def set_theme(
     request: Request,
     services: AppServices,
     theme: Annotated[ThemeChoice, Form()],
-    lang: Annotated[str, Form(pattern="^(en|hi)$")] = "en",
+    lang: LangField = "en",
     haze: Annotated[int, Form(ge=0, le=MAX_HAZE)] = 0,
 ) -> Response:
     """Remember the visitor's colours, and repaint the page without reloading it.
@@ -170,6 +175,7 @@ def _context(request: Request, place: PlaceChoice, day: Day, lang: str) -> dict[
         "today": today,
         "far": air is not None and air.nearby.distance_km > FAR_STATION_KM,
         "facts": facts,
+        "share": share_text(today, facts, str(request.base_url)),
         "strip": strip(day.hours, today.timing),
         "lang": lang,
         "sample": sample_title(request),

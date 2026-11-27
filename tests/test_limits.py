@@ -1,7 +1,16 @@
 from types import SimpleNamespace
 from typing import Any
 
-from app.web.limits import MAX_CLIENTS, AILimits, RateLimiter, client_key
+from app.web.limits import (
+    AI_OVERALL,
+    AI_PER_CLIENT,
+    MAX_CLIENTS,
+    PAGE_PER_CLIENT,
+    Budget,
+    ClientLimits,
+    RateLimiter,
+    client_key,
+)
 
 
 class Clock:
@@ -44,6 +53,19 @@ def test_forwarded_addresses_are_trusted_only_behind_vercels_proxy() -> None:
 
 
 def test_both_limits_apply() -> None:
-    limits = AILimits(clock=Clock())
+    limits = ClientLimits(AI_PER_CLIENT, AI_OVERALL, clock=Clock())
     allowed = [limits.allow(request(ip="9.9.9.9")) for _ in range(21)]
     assert allowed.count(True) == 20
+
+
+def test_the_overall_budget_stops_many_clients_together() -> None:
+    limits = ClientLimits(Budget(5, 60), Budget(3, 60), clock=Clock())
+    allowed = [limits.allow(request(ip=f"10.0.0.{index}")) for index in range(5)]
+    assert allowed == [True, True, True, False, False]
+
+
+def test_the_page_budget_has_no_overall_cap() -> None:
+    limits = ClientLimits(PAGE_PER_CLIENT, clock=Clock())
+    allowed = [limits.allow(request(ip="7.7.7.7")) for _ in range(PAGE_PER_CLIENT.limit + 1)]
+    assert allowed.count(True) == PAGE_PER_CLIENT.limit
+    assert limits.allow(request(ip="8.8.8.8"))

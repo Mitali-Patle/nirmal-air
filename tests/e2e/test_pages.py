@@ -24,6 +24,12 @@ def open_today(page: Page) -> None:
     expect(page.locator("#how-slot .how")).to_be_attached(timeout=15_000)
 
 
+def open_today_without_waiting(page: Page) -> None:
+    page.goto("/")
+    page.get_by_role("button", name="Delhi family").click()
+    page.wait_for_url("**/today")
+
+
 def _start(page: Page) -> None:
     page.goto("/")
 
@@ -51,7 +57,8 @@ def _today_with_a_ticked_step(page: Page) -> None:
     button = page.locator("#log-swap-1")
     button.click()
     expect(page.locator("#week-status")).to_have_text("Logged: Asha went by bus.")
-    expect(page.locator("#log-swap-1")).to_have_attribute("aria-pressed", "true")
+    expect(page.locator("#log-swap-1")).to_have_attribute("aria-disabled", "true")
+    expect(page.locator("#log-swap-1")).to_have_text("Logged")
     expect(page.locator("#log-swap-1")).to_be_focused()
 
 
@@ -147,7 +154,7 @@ def test_typing_a_place_offers_matches_and_the_pick_is_kept(new_page: NewPage) -
     open_form(page)
     page.get_by_label("Town, city or locality").press_sequentially("Andheri", delay=20)
     choices = page.get_by_role("group", name="Which Andheri?")
-    expect(choices.get_by_role("radio")).to_have_count(5)
+    expect(choices.get_by_role("radio")).to_have_count(4)  # the duplicate village is listed once
     choices.get_by_label("Andheri, Sirmaur, Himachal Pradesh").first.check()
     page.get_by_role("button", name="See today's plan").click()  # no people yet: an error
     expect(page.locator(".errors")).to_be_visible()
@@ -203,3 +210,34 @@ def test_on_a_phone_one_button_moves_through_the_colours(new_page: NewPage) -> N
     page.locator("button.cycle").click()
     expect(page.locator("html")).to_have_attribute("data-phase", "night")
     assert page.evaluate("window.notReloaded") is True
+
+
+def test_todays_air_can_be_shared_with_a_group(new_page: NewPage) -> None:
+    page = new_page(permissions=["clipboard-read", "clipboard-write"])
+    open_today(page)
+    share = page.get_by_role("button", name="Share today's air")
+    expect(share).to_be_visible()
+    share.click()
+    expect(page.locator("#share-status")).to_contain_text("Copied")
+    copied = page.evaluate("navigator.clipboard.readText()")
+    assert copied.startswith("Air today in") and "CPCB, measured" in copied
+
+
+def test_a_failed_plan_says_so_instead_of_waiting_for_ever(new_page: NewPage) -> None:
+    page = new_page()
+    page.route("**/today/plan*", lambda route: route.fulfill(status=500, body="down"))
+    open_today_without_waiting(page)
+    expect(page.locator("#plan [role=alert]")).to_contain_text(
+        "Today's plan could not be written just now"
+    )
+    expect(page.locator("#plan .steps")).to_have_count(0)
+
+
+def test_the_colour_switch_keeps_keyboard_focus(new_page: NewPage) -> None:
+    page = new_page()
+    open_today(page)
+    dark = page.get_by_role("button", name="Dark", exact=True)
+    dark.focus()
+    page.keyboard.press("Enter")
+    expect(page.locator("html")).to_have_attribute("data-theme", "dark")
+    expect(page.get_by_role("button", name="Dark", exact=True)).to_be_focused()

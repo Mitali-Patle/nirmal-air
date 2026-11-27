@@ -19,6 +19,19 @@ CONDITION_FIELDS = {
     "pregnant": Condition.PREGNANT,
 }
 HOME_LABEL = "Home"
+# How the model's field names read in an error, matching the form's own labels.
+FIELD_LABELS = {
+    "member": "who",
+    "minutes": "minutes",
+    "hour": "time",
+    "km_one_way": "km one way",
+    "days_per_week": "days a week",
+    "leaves_at_hour": "leaves at",
+    "people_in_vehicle": "people in the car",
+    "room_sqft": "main room size",
+    "purifier_cadr_m3h": "air purifier CADR",
+    "cooking_fuel": "cooking fuel",
+}
 Field = Callable[[str], str]
 
 
@@ -124,10 +137,13 @@ def _match_names(data: dict[str, Any]) -> list[str]:
 
 
 def _home(form: Mapping[str, str]) -> dict[str, Any]:
-    return {
-        "room_sqft": form.get("home_sqft") or 150,
-        "purifier_cadr_m3h": form.get("home_cadr") or 0,
-        "cooking_fuel": form.get("home_fuel", "LPG"),
+    """The home's fields; ones left empty fall back to the `Home` model's defaults."""
+    given = {
+        "room_sqft": form.get("home_sqft"),
+        "purifier_cadr_m3h": form.get("home_cadr"),
+        "cooking_fuel": form.get("home_fuel"),
+    }
+    return {key: value for key, value in given.items() if value} | {
         "incense_or_coils": "home_incense" in form,
         "smoking_indoors": "home_smoking" in form,
     }
@@ -184,7 +200,7 @@ def _message(error: Mapping[str, Any]) -> str:
         if len(location) > 1 and isinstance(location[1], int)
         else section
     )
-    field = str(location[-1]).replace("_", " ")
+    field = FIELD_LABELS.get(str(location[-1]), str(location[-1]).replace("_", " "))
     if error["type"] == "string_pattern_mismatch":
-        return f"{where} {field}: use letters only, one space between words."
+        return f"{where} {field}: use letters, with one space between words."
     return f"{where} {field}: {str(error['msg']).removeprefix('Value error, ').lower()}."

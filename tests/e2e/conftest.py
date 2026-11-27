@@ -29,6 +29,7 @@ from app.air.weather import WEATHER_URL
 from app.config import Settings
 from app.domain.readings import IST
 from app.main import create_app
+from app.web.limits import Budget, ClientLimits
 from tests.conftest import load_fixture
 
 DUSK = datetime(2026, 11, 23, 18, 30, tzinfo=IST)
@@ -60,6 +61,8 @@ def _free_port() -> int:
 def live() -> Iterator[LiveApp]:
     settings = Settings(_env_file=None, app_env="development", data_gov_api_key=SecretStr("key"))
     app = create_app(settings)
+    # The browser tests make many requests from one address within a minute.
+    app.state.services.page_limits = ClientLimits(Budget(100_000, 60))
     with respx.mock(assert_all_called=False) as router:
         router.route(host="127.0.0.1").pass_through()
         router.get(CPCB_URL).respond(json=load_fixture("cpcb_talkatora.json"))

@@ -25,11 +25,12 @@ to their location and lifestyle, and explain the direct impact of each choice.
 | What the brief asks for | Where NirmalAir does it |
 |---|---|
 | Low-emission daily routines | A plan step for each person's routine, plus the cleanest and worst hours |
-| Indoor air-quality steps | The windows rule, purifier and indoor-source steps, and indoor PM2.5 estimates |
+| Indoor air-quality steps | The windows rule, purifier and indoor-source steps, indoor PM2.5 estimates, and an honest answer on houseplants (they do not measurably clean a room's air) |
 | Sustainable alternatives | Commute swaps (bus, metro, cycle, walk, carpool) with CO₂ saved per week |
 | Location | The nearest CPCB station to any Indian place, and the sky colour of that place |
 | Lifestyle | Household members, sensitivities, routines, commutes and home |
 | Direct impact of each choice | A figure on every step, the facts behind it one tap away, and a "This week" log that adds up what the household actually did |
+| Families and communities | "Share today's air" sends a short summary (AQI, measured time and station, cleanest and worst hours) to a family, building, school or society group |
 
 ## Approach and logic
 
@@ -137,6 +138,8 @@ at 5 pm?", or an off-topic request such as "Write me a poem" to see it declined.
 - Not medical advice: the app says when to keep medicines handy or see a doctor, nothing more.
 - Free model quotas are limited. When every model is busy, the page shows labelled standard
   advice instead.
+- A step ticked in "This week" cannot be un-ticked; it can only be logged once a day.
+- Place search is in English letters (the geocoder does not match Devanagari names).
 
 ## Run it locally
 
@@ -151,12 +154,14 @@ uv run uvicorn app.index:app --reload
 ```bash
 uv run ruff check . && uv run ruff format --check .
 uv run mypy app tests scripts                  # strict
-uv run pytest -W error --cov=app               # 324 tests, 95% branch-coverage gate (100% now)
-uv run pytest -W error -m e2e                  # 32 browser tests: axe (WCAG 2.2 AA), widths, keyboard
+uv run pytest -W error --cov=app               # 351 tests, 95% branch-coverage gate (100% now)
+uv run pytest -W error -m e2e                  # 37 browser tests: axe (WCAG 2.2 AA), widths, keyboard
 ```
 
 CI runs the same checks plus a secret scan, a dependency audit and a repository-size budget
-on every push. The tests never call a real service: CPCB, Open-Meteo and the AI models are
+on every push, and CodeQL scans the Python and JavaScript. There is no Dependabot: its update
+pull requests would add branches, and this repository keeps exactly one; pip-audit fails CI
+on any known-vulnerable dependency instead. The tests never call a real service: CPCB, Open-Meteo and the AI models are
 mocked with recorded replies.
 
 ## Project layout

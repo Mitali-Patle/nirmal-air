@@ -10,6 +10,7 @@ import asyncio
 import hashlib
 import json
 import time
+from collections import Counter
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, replace
 from typing import Any
@@ -26,6 +27,10 @@ TOTAL_BUDGET_S = 20.0
 MIN_CALL_S = 2.0
 DEFAULT_RETRY_AFTER_S = 60.0
 ANSWER_TTL_S = 60 * 60
+# When every model failed, the standard advice is reused this long, so requests waiting for the
+# same answer do not each run the whole failing chain again. A rate-limited result is not kept:
+# answers are shared by everyone asking the same thing.
+FALLBACK_TTL_S = 60
 
 
 @dataclass(frozen=True)
@@ -58,8 +63,12 @@ class AIChain:
         self._providers = tuple(providers)
         self._cache = cache or TtlCache(ANSWER_TTL_S, ANSWER_TTL_S)
         self._clock = clock
+        self._fallbacks: TtlCache[AIResult[Any]] = TtlCache(
+            FALLBACK_TTL_S, FALLBACK_TTL_S, clock=clock
+        )
         self._resting_until: dict[str, float] = {}
         self._in_flight: dict[str, asyncio.Lock] = {}
+        self._users: Counter[str] = Counter()
 
     async def run[C, T: BaseModel](
         self, task: AITask[C, T], context: C, allow: Callable[[], bool] | None = None
@@ -82,11 +91,15 @@ class AIChain:
         key = f"{task.name}:{task.version}:{hashlib.sha256(user.encode()).hexdigest()}"
         asked = _Asked(payload, user, key)
         lock = self._in_flight.setdefault(key, asyncio.Lock())
+        self._users[key] += 1
         try:
             async with lock:
                 return await self._answer(task, context, asked, allow)
         finally:
-            if not lock.locked():
+            # The lock is dropped only when nobody holds it or waits for it.
+            self._users[key] -= 1
+            if not self._users[key]:
+                del self._users[key]
                 self._in_flight.pop(key, None)
 
     async def _answer[C, T: BaseModel](
@@ -97,10 +110,11 @@ class AIChain:
         allow: Callable[[], bool] | None,
     ) -> AIResult[T]:
         payload, user, key = asked.payload, asked.user, asked.key
-        cached = self._cache.get(key)
-        if cached is not None and not cached.stale:
-            hit: AIResult[T] = cached.value
-            return replace(hit, provenance=hit.provenance.model_copy(update={"cached": True}))
+        for store in (self._cache, self._fallbacks):
+            cached = store.get(key)
+            if cached is not None and not cached.stale:
+                hit: AIResult[T] = cached.value
+                return replace(hit, provenance=hit.provenance.model_copy(update={"cached": True}))
         started = self._clock()
         run = _Run(started, started + TOTAL_BUDGET_S, [])
         if allow is not None and not allow():
@@ -124,7 +138,9 @@ class AIChain:
                 )
                 self._cache.put(key, result)
                 return result
-        return self._fallback(task, context, payload, run)
+        fallback = self._fallback(task, context, payload, run)
+        self._fallbacks.put(key, fallback)
+        return fallback
 
     async def _ask[C, T: BaseModel](
         self,

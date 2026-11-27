@@ -13,7 +13,7 @@ from app.advice.facts import (
     swap_id,
 )
 from app.advice.indoor_facts import home_fact, indoor_facts
-from app.domain.commute import Swap, offered_swaps, trip_impact
+from app.domain.commute import Swap, offered_swaps, shared_car, trip_impact
 from app.domain.guidance import routine_decision
 from app.domain.household import Commute, Household, Mode
 
@@ -32,7 +32,7 @@ def household_facts(today: Today) -> list[Fact]:
     household = today.household
     pm25 = today.outdoor_pm25
     facts = _member_facts(household) + _routine_facts(today)
-    sensitive = {member.name for member in household.members if member.sensitive}
+    sensitive = household.sensitive_names
     for index, commute in enumerate(household.commutes, start=1):
         facts.append(_commute_fact(index, commute, pm25, today.approx))
         ranked = offered_swaps(commute, sensitive=commute.member in sensitive)
@@ -61,7 +61,7 @@ def _routine_facts(today: Today) -> list[Fact]:
     air = today.air
     aqi = air.aqi.value if air else None
     band = f"{air.aqi.category.label} air" if air else "no recent measurement"
-    sensitive = {member.name for member in today.household.members if member.sensitive}
+    sensitive = today.household.sensitive_names
     facts = []
     for index, routine in enumerate(today.household.routines, start=1):
         decision = routine_decision(
@@ -97,7 +97,7 @@ def _commute_fact(index: int, commute: Commute, pm25: float | None, approx: str)
         f"{number(commute.km_one_way)} km each way, {commute.days_per_week} days a week, "
         f"leaving at {clock(commute.leaves_at_hour)}. Each trip: about {trip.minutes} minutes, "
         f"{number(trip.co2_kg)} kg CO₂{inhaled}.",
-        f"{number(trip.co2_kg)} kg CO₂",
+        f"{number(trip.co2_kg)} kg CO₂/trip",
         f"{commute.member} by {mode}, {number(commute.km_one_way)} km",
     )
 
@@ -128,12 +128,12 @@ def _change(value: int, up: str, down: str, what: str) -> str:
 
 def _swap_label(member: str, swap: Swap) -> str:
     """A swap in a few words, such as "Asha by bus instead" or "Asha in a shared car"."""
-    if swap.people_in_vehicle > 1 and swap.mode in {Mode.CAR, Mode.SUV}:
+    if shared_car(swap.mode, swap.people_in_vehicle):
         return f"{member} in a shared {swap.mode.value}"
     return f"{member} by {swap.mode.value} instead"
 
 
 def _mode_label(mode: Mode, people: int, member: str) -> str:
-    if people > 1 and mode in {Mode.CAR, Mode.SUV}:
+    if shared_car(mode, people):
         return f"{mode.value} shared by {people} people ({member} and {people - 1} others)"
     return mode.value

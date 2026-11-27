@@ -9,7 +9,7 @@ from app.advice.ask import (
     standard_answer,
 )
 from app.advice.bundle import build_facts
-from app.advice.facts import Kind, Today
+from app.advice.facts import FactId, Kind, Today
 from app.advice.plan import Language, Plan, PlanItem, Slot, check_plan, plan_payload
 from app.advice.standard import standard_plan
 from app.ai.guard import FactGuard
@@ -246,3 +246,13 @@ def test_different_households_in_the_same_air_get_different_advice() -> None:
     assert mumbai_swap.startswith(
         "If Imran went by car shared"
     )  # heart condition: no added exposure
+
+
+def test_houseplants_are_never_offered_as_a_fix() -> None:
+    facts = {fact.id: fact for fact in build_facts(today())}
+    plants = facts[FactId.PLANTS]
+    assert plants.figure == "0.023 m³/h" and "do not measurably clean" in plants.text
+    assert (
+        FactGuard([plants.text]).problems("One plant cleans 0.023 m³ an hour; 10 to 1,000 per m².")
+        == []
+    )

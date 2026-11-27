@@ -10,7 +10,7 @@ from datetime import datetime
 from typing import Annotated
 
 import httpx
-from fastapi import Depends, Request
+from fastapi import Depends, HTTPException, Request, status
 from pydantic import BaseModel
 
 from app.ai.chain import AIChain
@@ -19,7 +19,7 @@ from app.air.lookup import AirLookup
 from app.air.places import PlaceFinder
 from app.config import Settings
 from app.services.today import Day, PlaceChoice, TodayService
-from app.web.limits import AILimits
+from app.web.limits import ClientLimits
 from app.web.session import load_household
 
 
@@ -36,7 +36,8 @@ class Services:
     today: TodayService
     places: PlaceFinder
     ai: AIChain
-    ai_limits: AILimits
+    ai_limits: ClientLimits
+    page_limits: ClientLimits
     clock: Callable[[], datetime]
 
 
@@ -54,6 +55,26 @@ def get_services(request: Request) -> Services:
 
 
 AppServices = Annotated[Services, Depends(get_services)]
+
+
+def within_page_limit(request: Request) -> None:
+    """Refuse a client that is sending more requests than a person would.
+
+    Args:
+        request: The incoming request.
+
+    Raises:
+        HTTPException: 429 when the client's page budget is spent.
+    """
+    if not get_services(request).page_limits.allow(request):
+        raise HTTPException(
+            status.HTTP_429_TOO_MANY_REQUESTS,
+            "Too many requests from this device. Please wait a minute and try again.",
+        )
+
+
+# Every route that reads an outside service (or could be looped) is behind this budget.
+PageLimited = Depends(within_page_limit)
 
 
 @dataclass(frozen=True)

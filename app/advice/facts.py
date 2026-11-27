@@ -58,6 +58,7 @@ class FactId(StrEnum):
     INDOOR_SHUT = "indoor_shut"
     INDOOR_PURIFIER = "indoor_purifier"
     INDOOR_PURIFIER_IF = "indoor_purifier_if"
+    PLANTS = "plants"
 
 
 MEMBER_PREFIX = "member_"
@@ -74,6 +75,7 @@ HOME_FACT_IDS = frozenset(
         FactId.INDOOR_SHUT,
         FactId.INDOOR_PURIFIER,
         FactId.INDOOR_PURIFIER_IF,
+        FactId.PLANTS,
     }
 )
 
@@ -161,6 +163,22 @@ def clock(moment: datetime | int) -> str:
     hour = moment if isinstance(moment, int) else moment.astimezone(IST).hour
     suffix = "am" if hour < NOON else "pm"
     return f"{(hour % NOON) or NOON} {suffix}"
+
+
+def stamp(moment: datetime) -> str:
+    """When a reading was measured: the date, the time and the time zone.
+
+    Args:
+        moment: The measurement time.
+
+    Returns:
+        For example "27 Nov, 8 pm IST".
+
+    >>> stamp(datetime(2026, 11, 27, 20, tzinfo=IST))
+    '27 Nov, 8 pm IST'
+    """
+    local = moment.astimezone(IST)
+    return f"{local.day} {local:%b}, {clock(local)} IST"
 
 
 def clock_span(start: datetime, end: datetime) -> str:

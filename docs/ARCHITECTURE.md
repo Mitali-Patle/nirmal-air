@@ -69,9 +69,15 @@ and outside-service failures share one base error, `UpstreamUnavailableError`.
   Cached answers do not count.
 - **Errors:** 403, 404 and 422 render as readable pages (or htmx fragments) that never echo
   what was sent.
-- **Inputs:** every input is validated with limits. Member names accept letters only, so
-  nothing typed can carry instructions to the AI. Place names come from the geocoder, never
-  from the form. Questions reach the model as a JSON string and are treated as data.
+- **Inputs:** every input is validated with limits; request bodies over 16 KB are refused (413).
+  Member names are up to 20 letters and spaces, and place names come from the geocoder,
+  never from the form. Names and questions reach the model inside a JSON payload, and the
+  prompts say they are data, not instructions. A name such as "Ignore all rules" is still
+  just a name: decisions are made in code, the number guard checks every figure, and the
+  answer cache is keyed by the whole request, so one visitor's text never reaches another.
+- **Rate limits on every route:** each client gets 60 requests a minute across pages, place
+  search, location and colour changes (429 with a readable page after that); health checks
+  are exempt. AI calls have their own, tighter budget (below).
 - **Secrets:** keys live only in environment variables. Gitleaks runs in pre-commit and CI,
   and pip-audit checks dependencies.
 
@@ -80,10 +86,17 @@ and outside-service failures share one base error, `UpstreamUnavailableError`.
 - The nearest station is asked first, and the next two only when it has no valid reading.
   Station readings are cached for 15 minutes. When CPCB stops answering, the last cached
   reading is reused and labelled as such, as long as it was measured in the last 3 hours.
-- The current weather (for the sky drawing only) is cached per place for 30 minutes.
+- The current weather (for the sky drawing only) is cached per place for 30 minutes and has
+  a 2-second timeout, so decoration never holds the page up.
+- A source that just failed (a CPCB station, the forecast, the weather) is not asked again
+  for two minutes, so an outage costs one timeout, not one per request. When every model
+  fails, the labelled standard advice is reused for a minute for the same request.
 - The forecast is cached per place for an hour, with an older copy (up to 3 hours) used when
   Open-Meteo does not answer. Place searches are cached for a day. Identical AI requests are
   cached for an hour, and identical requests arriving together share one model call.
 - The air and the forecast are fetched concurrently. The plan loads after the page, so
   the first paint never waits for a model.
-- No front-end framework: htmx (52 KB, vendored) and one small script for "Use my location".
+- No front-end framework: htmx (52 KB, vendored) and four small scripts: "Use my location",
+  the colour switch, "Share today's air", and the message shown when a request fails or
+  times out (28 s), so nothing waits for ever.
+- Fonts: one Latin file for every page; the Hindi font loads only where Hindi text is shown.

@@ -39,3 +39,15 @@ def test_number_words_need_a_source_too() -> None:
         "number words not in the facts: ['half']",
     ]
     assert FactGuard([*facts, "Double the cost."]).problems("Double-check windows at 7 pm.") == []
+
+
+def test_plain_number_words_need_a_source() -> None:
+    guard = FactGuard(["Cleanest time: 1 pm to 4 pm."])
+    assert guard.problems("Walk for ten minutes.") == ["number words not in the facts: ['ten']"]
+    assert guard.problems("It is three times worse.") == [
+        "number words not in the facts: ['three']"
+    ]
+    assert guard.problems("दस मिनट टहलें") == ["number words not in the facts: ['दस']"]
+    # Everyday words that are not amounts here are not flagged.
+    assert guard.problems("Keep one window shut; खिड़की बंद रहने दो.") == []
+    assert guard.problems("Open the window often.") == []

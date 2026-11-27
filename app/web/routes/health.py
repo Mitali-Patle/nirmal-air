@@ -1,10 +1,7 @@
 """Health endpoints: `/healthz` says the process is up, `/readyz` that CPCB data flows."""
 
-from datetime import datetime
-
 from fastapi import APIRouter, Response, status
 
-from app.domain.readings import IST
 from app.web.deps import AppServices
 
 router = APIRouter(tags=["health"])
@@ -46,7 +43,7 @@ async def readyz(services: AppServices, response: Response) -> dict[str, str]:
         `{"status": "ok"}` with 200, or `{"status": "unavailable"}` with 503.
     """
     lookup = services.air_lookup
-    if lookup is None or await lookup.measured_air(*PROBE_POINT, datetime.now(IST)) is None:
+    if lookup is None or await lookup.measured_air(*PROBE_POINT, services.clock()) is None:
         response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
         return {"status": "unavailable"}
     return {"status": "ok"}

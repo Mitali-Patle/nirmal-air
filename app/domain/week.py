@@ -10,10 +10,12 @@ from datetime import date, timedelta
 
 from app.domain.assumptions import ACTIVITY_BREATHING_L_PER_MIN
 from app.domain.commute import LITRES_PER_M3, Swap, trip_impact
-from app.domain.household import Commute, Routine
+from app.domain.household import MAX_COMMUTES, MAX_ROUTINES, Commute, Routine
 
 WEEK = timedelta(days=7)
-MAX_ENTRIES = 21  # three steps a day for a week keeps the cookie small
+# Every step a household can tick, for a week: a swap per commute and one per routine.
+# The largest such log still fits the session cookie (tests/test_cookie_size.py).
+MAX_ENTRIES = 7 * (MAX_COMMUTES + MAX_ROUTINES)
 GRAMS_PER_KG = 1000
 TRIPS_PER_DAY = 2
 

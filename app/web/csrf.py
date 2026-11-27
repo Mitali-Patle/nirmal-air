@@ -1,6 +1,6 @@
 """CSRF protection: a random token in the session, checked on every POST.
 
-Forms send it as a hidden field; htmx requests may send it as the X-CSRF-Token header.
+Every form, including the ones htmx posts, sends it as the hidden `csrf` field.
 """
 
 import secrets
@@ -9,7 +9,6 @@ from typing import Annotated
 from fastapi import Depends, Form, HTTPException, Request, status
 
 CSRF_KEY = "csrf"
-CSRF_HEADER = "x-csrf-token"
 
 
 def csrf_token(request: Request) -> str:
@@ -29,7 +28,7 @@ def csrf_token(request: Request) -> str:
 
 
 async def require_csrf(request: Request, csrf: Annotated[str | None, Form()] = None) -> None:
-    """Reject a POST whose CSRF token (form field or htmx header) does not match the session.
+    """Reject a POST whose CSRF token (the form's hidden field) does not match the session.
 
     Args:
         request: The incoming request.
@@ -38,7 +37,7 @@ async def require_csrf(request: Request, csrf: Annotated[str | None, Form()] = N
     Raises:
         HTTPException: 403 when the token is missing or wrong.
     """
-    sent = csrf or request.headers.get(CSRF_HEADER, "")
+    sent = csrf or ""
     expected = request.session.get(CSRF_KEY)
     if not isinstance(expected, str) or not secrets.compare_digest(sent, expected):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "The form expired. Reload and try again.")

@@ -19,6 +19,8 @@ from app.air.weather import WEATHER_URL
 from app.config import Settings
 from app.domain.readings import IST
 from app.main import create_app
+from app.web.limits import Budget, ClientLimits
+from app.web.security import MAX_BODY_BYTES
 from tests.conftest import load_fixture
 
 EVENING = datetime(2026, 11, 23, 18, 30, tzinfo=IST)  # one hour after the recorded reading
@@ -101,7 +103,7 @@ def test_today_shows_the_measured_air_its_source_and_the_estimates(live: respx.M
     load_sample(client)
     page = client.get("/today").text
     assert "AQI 324" in page and "Very Poor" in page
-    assert "Measured 5 pm at" in page and "CPCB via data.gov.in" in page
+    assert "Measured 23 Nov, 5 pm IST at" in page and "CPCB via data.gov.in" in page
     assert 'data-phase="dusk"' in page and 'data-haze="4"' in page
     assert page.count('class="hr ') == 24
     assert '<i class="key key-clean" aria-hidden="true"></i>Cleanest ' in page
@@ -174,7 +176,7 @@ def test_an_ai_plan_is_drawn_as_steps_with_its_provenance(live: respx.MockRouter
     fragment = client.get("/today/plan?lang=hi").text
     assert "Standard advice" not in fragment
     assert fragment.index("Play indoors.") < fragment.index("Earlier today (2)")
-    assert "step-next" in fragment and "fake:model" in fragment and "plan-v5" in fragment
+    assert "step-next" in fragment and "fake:model" in fragment and "plan-v6" in fragment
     assert "Nothing more is planned" not in fragment
 
 
@@ -218,9 +220,7 @@ def test_ask_answers_from_the_facts_and_checks_the_token(live: respx.MockRouter)
     load_sample(client)
     csrf = token(client, "/today")
     assert client.post("/ask", data={"question": "Can Aarav play?"}).status_code == 403
-    fragment = client.post(
-        "/ask", data={"question": "Can Aarav play?"}, headers={"X-CSRF-Token": csrf}
-    ).text
+    fragment = client.post("/ask", data={"question": "Can Aarav play?", "csrf": csrf}).text
     assert "Not today: the air is Very Poor." in fragment and "Can Aarav play?" in fragment
     assert client.post("/ask", data={"question": "x", "csrf": csrf}).status_code == 422
 
@@ -302,7 +302,7 @@ def test_a_household_form_saves_with_the_browsers_location() -> None:
         ({"place_query": "Andheri", "place_index": "9"}, "Choose a place from the list"),
         (
             {"geo_lat": "28.6", "geo_lon": "77.2", "m0_name": "M3era"},
-            "Person 1 name: use letters only",
+            "Person 1 name: use letters, with one space between words",
         ),
     ],
 )
@@ -340,9 +340,9 @@ def test_ticking_a_step_updates_this_week(live: respx.MockRouter) -> None:
     assert "This week" in page and 'name="step" value="swap-1"' in page
     csrf = token(client, "/today")
     fragment = client.post("/log", data={"csrf": csrf, "step": "swap-1"}).text
-    assert 'aria-pressed="true"' in fragment
+    assert 'aria-disabled="true" aria-label="Logged today: Asha went by bus"' in fragment
     assert "Logged: Asha went by bus." in fragment and 'hx-swap-oob="true"' in fragment
-    assert 'aria-label="I did this: Asha went by bus"' in fragment
+    assert 'aria-label="I did this: Asha went by bus"' not in fragment
     assert "3 kg</span> CO₂ avoided" in fragment
     client.post("/log", data={"csrf": csrf, "step": "swap-1"})
     assert "1 step logged in the last 7 days" in client.get("/today").text
@@ -370,7 +370,7 @@ def test_the_browsers_location_is_named_with_its_station() -> None:
     found = client.get("/near?lat=28.6139&lon=77.2090").text
     assert found.startswith("Found: Your location, near Delhi. Nearest CPCB station:")
     assert "outside India" in client.get("/near?lat=51.5&lon=-0.12").text
-    assert "outside India" in client.get("/near").text
+    assert "could not be read" in client.get("/near").text
 
 
 JOINT_FAMILY = {
@@ -446,7 +446,7 @@ def test_errors_are_readable_pages_and_htmx_fragments() -> None:
     assert (
         missing.status_code == 404 and "Page not found" in missing.text and "<html" in missing.text
     )
-    invalid = client.get("/today?lang=xx")
+    invalid = client.get("/places?place_query=" + "x" * 61)
     assert invalid.status_code == 422 and "Some of that could not be read" in invalid.text
     expired = client.post(
         "/sample", data={"sample": "delhi-family"}, headers={"HX-Request": "true"}
@@ -539,3 +539,46 @@ def test_the_colour_change_uses_the_pages_haze_and_checks_it(live: respx.MockRou
     assert "You chose light colours, dulled by today's Very Poor air." in response.text
     too_hazy = client.post("/theme", data=data | {"haze": "9"}, headers={"HX-Request": "true"})
     assert too_hazy.status_code == 422
+
+
+def test_a_client_over_the_page_budget_gets_a_readable_429(live: respx.MockRouter) -> None:
+    client = make_client()
+    client.app.state.services.page_limits = ClientLimits(Budget(2, 60))  # type: ignore[attr-defined]
+    assert client.get("/").status_code == 200
+    assert client.get("/").status_code == 200
+    page = client.get("/")
+    assert page.status_code == 429 and "Too many requests" in page.text
+    assert "Please wait a minute" in page.text
+    fragment = client.get("/places?place_query=Andheri", headers={"HX-Request": "true"})
+    assert fragment.status_code == 429 and "<html" not in fragment.text
+
+
+def test_health_checks_are_not_rate_limited(live: respx.MockRouter) -> None:
+    client = make_client()
+    client.app.state.services.page_limits = ClientLimits(Budget(1, 60))  # type: ignore[attr-defined]
+    assert [client.get("/healthz").status_code for _ in range(3)] == [200, 200, 200]
+
+
+def test_an_oversized_body_is_refused(live: respx.MockRouter) -> None:
+    client = make_client()
+    big = {"csrf": token(client), "place_query": "x" * (MAX_BODY_BYTES + 1)}
+    response = client.post("/household", data=big)
+    assert response.status_code == 413
+    assert response.headers["x-content-type-options"] == "nosniff"
+
+
+def test_a_non_ascii_digit_place_choice_is_refused(
+    live: respx.MockRouter,
+) -> None:
+    client = make_client()
+    data = {"csrf": token(client), "place_query": "Andheri", "place_index": "²", "m0_name": "Asha"}
+    response = client.post("/household", data=data)
+    assert response.status_code == 422 and "Choose a place" in response.text
+
+
+def test_an_unknown_language_code_falls_back_to_english(live: respx.MockRouter) -> None:
+    client = make_client()
+    load_sample(client)
+    for code in ("xx", "HI"):
+        page = client.get(f"/today?lang={code}")
+        assert page.status_code == 200 and 'href="/today?lang=hi"' in page.text

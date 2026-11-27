@@ -48,6 +48,15 @@ class TripImpact:
         return round(self.air_m3 * outdoor_pm25)
 
 
+def shared_car(mode: Mode, people: int) -> bool:
+    """Whether a trip is a car or SUV shared by more than one person (a carpool).
+
+    >>> shared_car(Mode.CAR, 3), shared_car(Mode.BUS, 3), shared_car(Mode.SUV, 1)
+    (True, False, False)
+    """
+    return people > 1 and mode in {Mode.CAR, Mode.SUV}
+
+
 @dataclass(frozen=True)
 class Swap:
     """What changes for one commute if it is made another way.

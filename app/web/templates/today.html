@@ -2,12 +2,12 @@
 {% from "macros.html" import fact_row, sky_note, theme_form %}
 {% block title %}Today in {{ today.place }} · NirmalAir{% endblock %}
 {% block styles %}<link rel="stylesheet" href="{{ 'css/today.css'|asset }}"><link rel="stylesheet" href="{{ 'css/sky.css'|asset }}">{% endblock %}
-{% block scripts %}<script src="{{ 'js/theme.js'|asset }}" defer></script>{% endblock %}
+{% block scripts %}<script src="{{ 'js/theme.js'|asset }}" defer></script><script src="{{ 'js/share.js'|asset }}" defer></script><script src="{{ 'js/waiting.js'|asset }}" defer></script>{% endblock %}
 {% block sky %}{% include "partials/sky.html" %}{% endblock %}
 {% block bar %}
 <div class="bar-end">
 {% if air %}
-<p class="live"><i class="live-dot" aria-hidden="true"></i><b>AQI {{ air.aqi.value }}</b> <span class="live-time">{{ air.reading.measured_at|clock }}</span></p>
+<p class="live" title="{{ air.aqi.category.label }} air, measured"><i class="swatch swatch-{{ air.aqi.category.name|lower }}" aria-hidden="true"></i><b>AQI {{ air.aqi.value }}</b> <span class="live-time">{{ air.reading.measured_at|clock }}</span></p>
 {% else %}
 <p class="live"><i class="live-dot" aria-hidden="true"></i>No <span class="live-time">recent </span>reading</p>
 {% endif %}
@@ -20,14 +20,15 @@
   <header class="today-head">
     <h1 class="place-line"><span class="visually-hidden">Today's plan for your household in </span>{{ today.place }}</h1>
     {% if sample %}<p><span class="sample-tag">Sample household: {{ sample }}</span></p>{% endif %}
-    <nav class="tools" aria-label="Place and language">
+    <nav class="tools" aria-label="Place, language and sharing">
       <p class="place-links"><a href="/">Change place or household</a>{% if lang == 'hi' %}<a href="/today">Plan in English</a>{% else %}<a href="/today?lang=hi" hreflang="hi" lang="hi">योजना हिंदी में</a>{% endif %}</p>
+      <p class="share-row"><button type="button" class="quiet share" id="share" hidden data-share-title="Today's air in {{ today.place }}" data-share-text="{{ share }}">Share today's air</button><span class="field-note" id="share-status" role="status"></span></p>
     </nav>
     <p class="air-line">
       {% if air %}
       <span class="aqi-n">AQI {{ air.aqi.value }}</span>
       <span class="band"><i class="swatch swatch-{{ air.aqi.category.name|lower }}" aria-hidden="true"></i>{{ air.aqi.category.label }}</span>
-      <span class="src meta">Measured {{ air.reading.measured_at|clock }} at {{ air.nearby.station.label }}, {{ air.nearby.distance_km|km }} away<span aria-hidden="true"> · </span><span class="visually-hidden">. </span>CPCB via data.gov.in</span>
+      <span class="src meta">Measured {{ air.reading.measured_at|stamp }} at {{ air.nearby.station.label }}, {{ air.nearby.distance_km|km }} away<span aria-hidden="true"> · </span><span class="visually-hidden">. </span>CPCB via data.gov.in</span>
       {% else %}
       <span class="src">No CPCB station near {{ today.place }} has reported in the last {{ max_reading_age_hours }} hours.</span>
       {% endif %}
@@ -66,6 +67,7 @@
         <li><i class="key key-clean" aria-hidden="true"></i>{{ facts.cleanest.label }}</li>
         <li><i class="key key-worst" aria-hidden="true"></i>{{ facts.worst.label }}</li>
       </ul>
+      <p class="sky-note">Hourly PM2.5 forecast from Open-Meteo (CAMS), used only to rank today's hours; the AQI above is measured.</p>
       {% else %}
       <p class="note">The forecast is not available right now, so the cleanest time is not shown.</p>
       {% endif %}
@@ -109,6 +111,7 @@
       {% if facts.indoor_purifier is defined %}{{ fact_row(facts.indoor_purifier) }}{% endif %}
       {% if facts.indoor_purifier_if is defined %}{{ fact_row(facts.indoor_purifier_if) }}{% endif %}
       {{ fact_row(facts.cigarettes) }}
+      {% if facts.plants is defined %}{{ fact_row(facts.plants) }}{% endif %}
     </ul>
     <p class="muted">From outdoor air only; cooking, incense and smoking add to these.</p>
   </section>

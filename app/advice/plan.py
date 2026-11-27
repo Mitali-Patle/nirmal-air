@@ -15,8 +15,9 @@ from pydantic import BaseModel, ConfigDict, Field
 from app.advice.facts import Fact, Today, clock
 from app.ai.guard import FactGuard
 from app.ai.task import OutputRejectedError
+from app.domain.readings import IST
 
-PLAN_VERSION = "plan-v5"
+PLAN_VERSION = "plan-v6"
 EVERYONE = "Everyone"
 MIN_ITEMS = 3
 MAX_ITEMS = 12
@@ -35,6 +36,8 @@ Rules:
 3. Write 4 to 8 items across the day (up to 12 for a large household). Each item is for one
    member, named exactly as in `members`, or for "Everyone". Give an item to every member who
    is more sensitive to polluted air, and cover every routine and every commute.
+   slot: the part of the day the step is for. A step that holds all day (medicines to hand,
+   windows, incense, smoking) takes `now_slot`, so it is never filed under a part already past.
 4. action: one concrete step, starting with a verb, under 12 words.
    why: one short sentence, under 16 words, on the direct effect of that step, using the
    numbers in its facts.
@@ -61,6 +64,20 @@ class Language(StrEnum):
 
     ENGLISH = "English"
     HINDI = "Hindi (Devanagari script)"
+
+    @classmethod
+    def from_code(cls, code: str) -> "Language":
+        """The language for a page's `lang` code; anything other than "hi" is English.
+
+        >>> Language.from_code("hi").code, Language.from_code("xx").code
+        ('hi', 'en')
+        """
+        return cls.HINDI if code == "hi" else cls.ENGLISH
+
+    @property
+    def code(self) -> str:
+        """The short code used in links and forms."""
+        return "hi" if self is Language.HINDI else "en"
 
     def problems(self, text: str) -> list[str]:
         """Why `text` is not written in this language, checked in code like the numbers.
@@ -132,12 +149,13 @@ def plan_payload(context: PlanContext) -> dict[str, Any]:
         context: The household's day.
 
     Returns:
-        Place, time, language, member names and the facts.
+        Place, time and the part of the day it is, language, member names and the facts.
     """
     now = context.today.now
     return {
         "place": context.today.place,
         "now": f"{now:%A %d %B}, {clock(now)}",
+        "now_slot": Slot.of_hour(now.astimezone(IST).hour).value,
         "language": context.language.value,
         "members": [member.name for member in context.today.household.members],
         "facts": [
@@ -188,7 +206,7 @@ def _partition_items(plan: Plan, context: PlanContext) -> tuple[list[PlanItem], 
 def _members_needing_items(context: PlanContext) -> set[str]:
     """Members the plan must address: the sensitive ones and anyone with a routine or commute."""
     household = context.today.household
-    names = {member.name for member in household.members if member.sensitive}
+    names = set(household.sensitive_names)
     names |= {routine.member for routine in household.routines}
     return names | {commute.member for commute in household.commutes}
 

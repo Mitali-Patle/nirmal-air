@@ -12,7 +12,7 @@ from fastapi import Request
 from fastapi.templating import Jinja2Templates
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
-from app.advice.facts import clock, distance_label, number
+from app.advice.facts import clock, distance_label, number, stamp
 from app.air.lookup import MAX_AGE_HOURS
 from app.web.csrf import csrf_token
 
@@ -57,6 +57,7 @@ def common_context(request: Request) -> dict[str, Any]:
 
 environment.filters["asset"] = asset_url
 environment.filters["clock"] = clock
+environment.filters["stamp"] = stamp
 environment.filters["km"] = distance_label
 environment.filters["kg"] = kilograms
 environment.filters["num"] = number

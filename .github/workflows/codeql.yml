@@ -1,0 +1,49 @@
+# CodeQL code scanning for the Python app and the small browser scripts: every push to
+# main and weekly, results in the repository's Security tab. No extra branches are made
+# (the repository keeps exactly one), so Dependabot updates are not used; pip-audit in
+# CI covers known-vulnerable dependencies.
+# Third-party actions are pinned to full commit SHAs; the comment names the release.
+name: CodeQL
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    # Mondays 09:30 IST.
+    - cron: "0 4 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: codeql-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [python, javascript-typescript]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: github/codeql-action/init@915412ff23e8b7659517e607487dbeae018f2934 # v4.39.5
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: none
+          queries: security-and-quality
+          # The vendored htmx file is upstream code, checked byte-for-byte (VENDOR.md).
+          config: |
+            paths-ignore:
+              - public/static/vendor
+              - tests
+      - uses: github/codeql-action/analyze@915412ff23e8b7659517e607487dbeae018f2934 # v4.39.5
+        with:
+          category: "/language:${{ matrix.language }}"

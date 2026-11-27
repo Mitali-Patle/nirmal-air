@@ -12,6 +12,8 @@ from pydantic import BaseModel
 from app.air.errors import WeatherUnavailableError
 
 WEATHER_URL = "https://api.open-meteo.com/v1/forecast"
+# The weather only draws clouds and rain, so the page never waits long for it.
+WEATHER_TIMEOUT_S = 2.0
 RAIN_MM = 0.1
 
 
@@ -53,7 +55,7 @@ async def fetch_weather(client: httpx.AsyncClient, lat: float, lon: float) -> We
         "timezone": "Asia/Kolkata",
     }
     try:
-        response = await client.get(WEATHER_URL, params=params)
+        response = await client.get(WEATHER_URL, params=params, timeout=WEATHER_TIMEOUT_S)
         response.raise_for_status()
         return parse_weather(response.json())
     except (httpx.HTTPError, ValueError) as error:

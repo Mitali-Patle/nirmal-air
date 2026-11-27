@@ -16,7 +16,13 @@
 /* Place, language and colours sit together under the place name, where they are found. */
 .tools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3) var(--space-6); }
 .place-links { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-5); font-size: 0.9375rem; }
+/* Sharing today's air with a family, building, school or society group. */
+.share-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); }
+.share { min-height: 36px; padding: 6px 14px; font-size: 0.9375rem; border-radius: 999px; }
 .place-links a { color: var(--ink); }
+/* The Hindi link uses the device's own Devanagari font, so English pages never download
+   the Hindi web font just for this one link. */
+.place-links [lang="hi"] { font-family: "Noto Sans Devanagari", "Mangal", system-ui, sans-serif; }
 .sample-tag { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 0.8125rem; background: var(--accent-tint); color: var(--ink); }
 .air-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-3); margin-top: var(--space-2); }
 .aqi-n { font-weight: 600; font-size: 1.125rem; }
@@ -148,6 +154,10 @@
 .plates > .muted { font-size: 0.8125rem; margin-top: var(--space-2); }
 
 /* This week: steps to tick and the running totals. */
+/* A step already logged today stays focusable (keyboard users keep their place) but is done. */
+.logged-step { color: var(--accent); border-color: transparent; cursor: default; }
+.logged-step:hover { background: transparent; border-color: transparent; }
+.logged-step:active { transform: none; }
 .step-row { align-items: center; }
 .step-impact { font-size: 0.875rem; color: var(--muted); margin-top: 2px; }
 .step-row button { white-space: nowrap; }

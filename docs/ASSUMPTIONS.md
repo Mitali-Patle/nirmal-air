@@ -45,6 +45,14 @@ It leaves out indoor sources: cooking, incense, mosquito coils and smoking make 
 than estimated. The purifier figure assumes the room stays shut and the purifier runs at the
 CADR given, so real rooms usually do somewhat less well.
 
+## Houseplants
+
+Potted plants are not offered as a fix. A review of 196 sealed-chamber tests found a median
+clean air delivery rate of 0.023 m³ an hour per plant; matching a building's own air
+exchange would take 10 to 1,000 plants per m² of floor (Cummings and Waring, *Journal of
+Exposure Science & Environmental Epidemiology* 30, 2020). The tests measured indoor chemicals
+(VOCs); for PM2.5, leaves catch only a little. The page says so in "At home".
+
 ## Cigarette equivalent
 
 Breathing 22 µg/m³ of PM2.5 for 24 hours does about the same harm as smoking one cigarette

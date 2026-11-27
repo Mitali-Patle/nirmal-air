@@ -21,9 +21,9 @@ from app.domain.readings import IST
 from app.services.today import TodayService
 from app.web.deps import Services
 from app.web.errors import register_error_handlers
-from app.web.limits import AILimits
+from app.web.limits import AI_OVERALL, AI_PER_CLIENT, PAGE_PER_CLIENT, ClientLimits
 from app.web.routes import health, start, today, week
-from app.web.security import SecurityHeadersMiddleware
+from app.web.security import BodySizeLimitMiddleware, SecurityHeadersMiddleware
 
 # Outside services get 8 seconds: long enough for a slow CPCB reply, short enough that a
 # stalled one falls back to cached or labelled data instead of a hanging page.
@@ -78,7 +78,8 @@ def _add_services(app: FastAPI, settings: Settings, http: httpx.AsyncClient) -> 
                 http, _secret(settings.groq_api_key), _secret(settings.gemini_api_key)
             )
         ),
-        ai_limits=AILimits(behind_proxy=settings.is_production),
+        ai_limits=ClientLimits(AI_PER_CLIENT, AI_OVERALL, behind_proxy=settings.is_production),
+        page_limits=ClientLimits(PAGE_PER_CLIENT, behind_proxy=settings.is_production),
         # Tests replace the clock so recorded CPCB and forecast data count as current.
         clock=lambda: datetime.now(IST),
     )
@@ -95,6 +96,7 @@ def _add_middleware(app: FastAPI, settings: Settings) -> None:
         same_site="lax",
         https_only=settings.is_production,
     )
+    app.add_middleware(BodySizeLimitMiddleware)
     app.add_middleware(SecurityHeadersMiddleware, hsts=settings.is_production)
 
 

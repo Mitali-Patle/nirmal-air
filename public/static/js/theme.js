@@ -14,6 +14,23 @@
     }
   });
 
+  // The server sends the control back after each change, which would drop keyboard focus to
+  // the page: remember the focused button and give focus to its replacement.
+  let refocus = null;
+  document.addEventListener("htmx:beforeRequest", () => {
+    const focused = document.activeElement;
+    if (!focused || !focused.closest("#theme-form")) return;
+    refocus = focused.classList.contains("cycle")
+      ? "#theme-form .cycle"
+      : `#theme-form .switch button[value="${focused.value}"]`;
+  });
+  document.addEventListener("htmx:afterSettle", () => {
+    if (!refocus) return;
+    const again = document.querySelector(refocus);
+    refocus = null;
+    if (again) again.focus();
+  });
+
   document.addEventListener("theme-change", (event) => {
     const { phase, haze, theme } = event.detail;
     root.classList.add("theme-fade");

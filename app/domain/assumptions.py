@@ -25,6 +25,12 @@ AIR_CHANGES_WINDOWS_OPEN = 5.0  # a: windows open on one side of the room.
 # For homes without one: what a common mid-range home purifier (rated 250 m³/h) would do.
 TYPICAL_PURIFIER_CADR_M3H = 250
 CEILING_HEIGHT_M = 3.0  # Ten feet, common in Indian homes.
+# Potted plants: the median single-plant clean air delivery rate across 196 sealed-chamber
+# tests, and the plants per m² of floor needed to match a building's own air exchange
+# (Cummings and Waring, J. Exposure Science & Environmental Epidemiology 30, 2020; online 2019).
+# Measured for indoor chemicals (VOCs); for PM2.5, leaves catch only a little.
+PLANT_CADR_M3H = 0.023
+PLANTS_PER_M2_TO_MATCH_AIR_EXCHANGE = (10, 1000)
 SQ_M_PER_SQ_FT = 0.092903
 
 

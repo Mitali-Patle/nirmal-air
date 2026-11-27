@@ -9,7 +9,7 @@ import httpx
 from app.air.cpcb import StationReading, fetch_station
 from app.air.errors import AirDataUnavailableError
 from app.air.stations import NearbyStation, nearest_stations
-from app.cache import TtlCache
+from app.cache import RecentFailures, TtlCache
 from app.domain.aqi import StationAqi, station_aqi
 
 STATIONS_TRIED = 3
@@ -41,6 +41,7 @@ class AirLookup:
         self._client = client
         self._api_key = api_key
         self._readings = readings or TtlCache(READING_TTL_S, READING_KEEP_S)
+        self._failures = RecentFailures()
 
     async def measured_air(self, lat: float, lon: float, now: datetime) -> MeasuredAir | None:
         """The nearest station with a valid, recent reading among the three closest.
@@ -71,9 +72,12 @@ class AirLookup:
         cached = self._readings.get(station)
         if cached is not None and not cached.stale:
             return cached.value, False
+        if self._failures.recent(station):
+            return (cached.value, True) if cached is not None else (None, False)
         try:
             reading = await fetch_station(self._client, self._api_key, station)
         except AirDataUnavailableError:
+            self._failures.note(station)
             return (cached.value, True) if cached is not None else (None, False)
         self._readings.put(station, reading)
         return reading, False

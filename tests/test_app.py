@@ -1,6 +1,5 @@
 from datetime import datetime
 from typing import Any
-from unittest.mock import patch
 
 import pytest
 import respx
@@ -11,6 +10,7 @@ from app.air.cpcb import CPCB_URL
 from app.config import Settings
 from app.domain.readings import IST
 from app.main import create_app
+from app.web.security import BodySizeLimitMiddleware
 from tests.conftest import load_fixture
 
 
@@ -70,11 +70,63 @@ def test_readyz_is_unavailable_without_a_data_key() -> None:
 def test_readyz_reports_whether_cpcb_answers() -> None:
     client = make_client(data_gov_api_key=SecretStr("key"))
     route = respx.get(CPCB_URL).respond(json=load_fixture("cpcb_talkatora.json"))
-    with patch("app.web.routes.health.datetime") as clock:
-        clock.now.return_value = datetime(2026, 11, 23, 18, tzinfo=IST)
-        assert client.get("/readyz").json() == {"status": "ok"}
+    client.app.state.services.clock = lambda: datetime(2026, 11, 23, 18, tzinfo=IST)  # type: ignore[attr-defined]
+    assert client.get("/readyz").json() == {"status": "ok"}
     assert route.calls.last.request.headers["user-agent"] == "NirmalAir/0.1"
 
     respx.get(CPCB_URL).respond(503)
     client = make_client(data_gov_api_key=SecretStr("key"))  # a fresh, empty cache
     assert client.get("/readyz").status_code == 503
+
+
+async def _call(app: Any, headers: list[tuple[bytes, bytes]], chunks: list[bytes]) -> list[Any]:
+    """Send one raw ASGI request with the given body chunks; return what the app sent."""
+    sent: list[Any] = []
+    messages = [{"type": "http.request", "body": chunk, "more_body": True} for chunk in chunks]
+    messages.append({"type": "http.request", "body": b"", "more_body": False})
+
+    async def receive() -> Any:
+        return messages.pop(0)
+
+    async def send(message: Any) -> None:
+        sent.append(message)
+
+    scope = {"type": "http", "method": "POST", "path": "/", "headers": headers}
+    await app(scope, receive, send)
+    return sent
+
+
+async def _reads_the_body(scope: Any, receive: Any, send: Any) -> None:
+    while (await receive()).get("more_body"):
+        pass
+    await send({"type": "http.response.start", "status": 200, "headers": []})
+    await send({"type": "http.response.body", "body": b"ok"})
+
+
+async def test_bodies_over_the_limit_are_refused_even_without_a_length() -> None:
+    guard = BodySizeLimitMiddleware(_reads_the_body, max_bytes=10)
+    small = await _call(guard, [(b"content-length", b"4")], [b"tiny"])
+    assert small[0]["status"] == 200
+    declared = await _call(guard, [(b"content-length", b"11")], [b"x" * 11])
+    assert declared[0]["status"] == 413
+    undeclared = await _call(guard, [], [b"x" * 6, b"x" * 6])
+    assert undeclared[0]["status"] == 413
+    garbled = await _call(guard, [(b"content-length", b"ten")], [b""])
+    assert garbled[0]["status"] == 413
+
+
+async def test_a_client_that_disconnects_is_passed_through() -> None:
+    seen: list[str] = []
+
+    async def app(scope: Any, receive: Any, send: Any) -> None:
+        seen.append((await receive())["type"])
+
+    async def receive() -> Any:
+        return {"type": "http.disconnect"}
+
+    async def send(message: Any) -> None:
+        return None
+
+    guard = BodySizeLimitMiddleware(app, max_bytes=10)
+    await guard({"type": "http", "method": "POST", "path": "/", "headers": []}, receive, send)
+    assert seen == ["http.disconnect"]

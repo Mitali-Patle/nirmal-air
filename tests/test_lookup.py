@@ -7,7 +7,7 @@ import respx
 from app.air.cpcb import CPCB_URL
 from app.air.lookup import AirLookup
 from app.air.stations import nearest_stations
-from app.cache import Cached, TtlCache
+from app.cache import Cached, RecentFailures, TtlCache
 from app.domain.readings import IST
 from tests.conftest import load_fixture
 
@@ -118,3 +118,25 @@ def test_the_cache_drops_its_oldest_entry_when_full() -> None:
     assert cache.get("b") is None
     kept = [cache.get(key) for key in ("a", "c")]
     assert [entry.value for entry in kept if entry is not None] == [3, 4]
+
+
+@respx.mock
+async def test_a_station_that_just_failed_is_not_asked_again_at_once(
+    client: httpx.AsyncClient,
+) -> None:
+    route = respx.get(CPCB_URL).mock(side_effect=httpx.ReadTimeout("stalled"))
+    lookup = AirLookup(client, "key")
+    assert await lookup.measured_air(*DELHI, FIVE_PM) is None
+    calls = route.call_count
+    assert await lookup.measured_air(*DELHI, FIVE_PM) is None
+    assert route.call_count == calls  # every station is resting after its failure
+
+
+def test_a_failure_is_forgotten_after_the_quiet_period() -> None:
+    now = [0.0]
+    failures = RecentFailures(quiet_s=120, clock=lambda: now[0])
+    assert not failures.recent("ITO")
+    failures.note("ITO")
+    assert failures.recent("ITO")
+    now[0] = 121
+    assert not failures.recent("ITO")

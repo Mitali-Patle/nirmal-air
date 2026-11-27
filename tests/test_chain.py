@@ -152,3 +152,44 @@ async def test_identical_requests_at_the_same_time_share_one_model_call() -> Non
     first, second = await asyncio.gather(chain.run(TASK, "hi"), chain.run(TASK, "hi"))
     assert len(provider.requests) == 1
     assert (first.provenance.cached, second.provenance.cached) == (False, True)
+
+
+async def test_standard_advice_after_a_failed_run_is_reused_for_a_minute() -> None:
+    clock = Clock()
+    provider = Scripted("a", [ProviderError("down"), '{"text": "back"}'])
+    chain = AIChain([provider], clock=clock)
+    first = await chain.run(TASK, "x")
+    again = await chain.run(TASK, "x")
+    assert (first.value.text, again.value.text) == ("standard", "standard")
+    assert again.provenance.cached is True and len(provider.requests) == 1
+    clock.now = 61
+    later = await chain.run(TASK, "x")
+    assert later.value.text == "back"
+
+
+async def test_a_rate_limited_answer_is_not_kept_for_others() -> None:
+    provider = Scripted("a", ['{"text": "hello"}'])
+    chain = AIChain([provider])
+    limited = await chain.run(TASK, "x", allow=lambda: False)
+    assert limited.value.text == "standard"
+    allowed = await chain.run(TASK, "x", allow=lambda: True)
+    assert allowed.value.text == "hello"
+
+
+async def test_waiters_for_the_same_answer_share_one_run_and_the_lock_is_dropped() -> None:
+    gate = asyncio.Event()
+
+    class Slow(Scripted):
+        async def generate(self, request: LLMRequest) -> str:
+            await gate.wait()
+            return await super().generate(request)
+
+    provider = Slow("a", ['{"text": "one"}'])
+    chain = AIChain([provider])
+    runs = [asyncio.create_task(chain.run(TASK, "x")) for _ in range(3)]
+    await asyncio.sleep(0)
+    gate.set()
+    results = await asyncio.gather(*runs)
+    assert [result.value.text for result in results] == ["one", "one", "one"]
+    assert len(provider.requests) == 1
+    assert chain._in_flight == {}

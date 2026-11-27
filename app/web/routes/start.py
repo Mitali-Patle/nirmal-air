@@ -7,9 +7,11 @@ from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse,
 
 from app.advice.facts import distance_label
 from app.air.errors import PlaceSearchError
+from app.air.places import MAX_RESULTS
 from app.air.stations import nearest_stations
 from app.services.samples import SAMPLES
 from app.web.csrf import CsrfChecked
+from app.web.deps import PageLimited
 from app.web.household_form import (
     COMMUTES,
     MEMBERS,
@@ -18,13 +20,13 @@ from app.web.household_form import (
     hidden_rows_in_use,
     parse_household,
 )
-from app.web.place_choice import near_me, place_finder, place_from_form
+from app.web.place_choice import near_me, place_finder, place_from_form, read_point
 from app.web.session import load_household, save_household
 from app.web.templating import templates
 
-# The place search returns at most this many results, numbered from 0.
-MAX_PLACE_INDEX = 9
-router = APIRouter()
+# The place search returns at most MAX_RESULTS results, numbered from 0.
+MAX_PLACE_INDEX = MAX_RESULTS - 1
+router = APIRouter(dependencies=[PageLimited])
 
 
 @router.get("/", response_class=HTMLResponse)
@@ -103,6 +105,8 @@ def near(
         One plain sentence for the status line (shown as text, never as HTML).
     """
     place = near_me(lat, lon)
+    if place is None and read_point(lat, lon) is None:
+        return "That location could not be read. Type a place instead."
     if place is None:
         return "That location is outside India, so NirmalAir cannot use it. Type a place instead."
     nearest = nearest_stations(place.lat, place.lon, limit=1)[0]

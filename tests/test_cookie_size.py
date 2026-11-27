@@ -66,7 +66,7 @@ def test_the_largest_household_and_a_full_week_fit_in_one_cookie() -> None:
     today = date(2026, 11, 25)
     entries = [
         LogEntry(
-            today - timedelta(days=i // 3),
+            today - timedelta(days=i // (MAX_ENTRIES // 7)),
             f"indoors-{i}",
             f"{NAMES[i % 8]}'s sport or exercise moved indoors",
             DayImpact(-12345, -6789),

@@ -313,8 +313,10 @@ Gently rounded: 10px on controls, inputs, notes and the numbers behind a step; 1
 - **Hover:** border darkens to muted. **Focus:** the global green outline. **Error:** the amber-tint error block above the form.
 
 ### Navigation
-- **Top bar:** bar ground with a hairline under it. The wordmark, and a live pill (hairline border, measured-green dot): "AQI n" in ink and the measured time on Today, "Live CPCB data" on start.
-- **Tools (Today):** under the place name: "Change place or household" and the Hindi link.
+- **Top bar:** bar ground with a hairline under it. The wordmark, and a live pill (hairline border): on Today the measured AQI band's swatch, "AQI n" in ink and the measured time; on start a measured-green dot and "Live CPCB data". The full reading line under the place name gives date, time and zone ("27 Nov, 8 pm IST").
+- **Tools (Today):** under the place name: "Change place or household", the Hindi link (set in the device's Devanagari font, so English pages never load the Hindi web font), and "Share today's air", a quiet pill button shown only where the share sheet or clipboard works; a status line under it says when the summary was copied.
+- **This week, logged:** a step logged today shows "Logged" in green, stays focusable and is `aria-disabled`; it is logged once a day.
+- **When a request fails:** the plan or answer area replaces its loading state with an alert note saying what happened and how to retry.
 - **Colour control (Today, top bar beside the AQI pill):** on phones one 34px round button showing the current mode (moon, half disc, sun); each tap moves dark → follow the sky → light. From 720px a three-way switch of the same drawn icons (32×28px, pill track, the chosen one filled with ink). It repaints in place: htmx swaps the sky band, its note and the control, and an HX-Trigger event sets phase, haze and theme on `<html>` while colours cross-fade for 500ms (none under reduced motion). The request carries the page's haze level, so only the cached weather is read. Below 380px the pill drops the time.
 - **Press:** every button and button-link scales to 0.96 while pressed (a sample row to 0.99), then springs back.
 - **Footer:** hairline above, muted 13px source line with its links.

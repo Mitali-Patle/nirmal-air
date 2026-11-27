@@ -63,7 +63,7 @@ def _windows(aqi: int | None, facts: dict[str, Fact]) -> PlanItem:
 
 
 def _routines(aqi: int | None, household: Household, facts: dict[str, Fact]) -> list[PlanItem]:
-    sensitive = {member.name for member in household.members if member.sensitive}
+    sensitive = household.sensitive_names
     items = []
     for index, routine in enumerate(household.routines, start=1):
         decision = routine_decision(
@@ -93,7 +93,7 @@ def _commutes(household: Household, facts: dict[str, Fact]) -> list[PlanItem]:
 
 
 def _home(aqi: int | None, household: Household, facts: dict[str, Fact]) -> list[PlanItem]:
-    home, fact = household.home, facts["home"]
+    home, fact = household.home, facts[FactId.HOME]
     items = []
     if FactId.INDOOR_PURIFIER in facts and (aqi is None or aqi >= CHANGE_FROM):
         action = "Run the purifier in the main room with doors shut."

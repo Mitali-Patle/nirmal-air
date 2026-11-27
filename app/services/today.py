@@ -11,7 +11,7 @@ from app.air.errors import AirDataUnavailableError, WeatherUnavailableError
 from app.air.forecast import fetch_forecast
 from app.air.lookup import AirLookup, MeasuredAir
 from app.air.weather import Weather, fetch_weather
-from app.cache import TtlCache
+from app.cache import RecentFailures, TtlCache
 from app.domain.household import Household
 from app.domain.readings import HourlyPm25
 from app.domain.timing import day_timing
@@ -65,6 +65,7 @@ class TodayService:
         self._air = air
         self._forecasts = forecasts or TtlCache(FORECAST_TTL_S, FORECAST_KEEP_S)
         self._weathers: TtlCache[Weather] = TtlCache(WEATHER_TTL_S, WEATHER_TTL_S)
+        self._failures = RecentFailures()
 
     async def day(
         self, place: PlaceChoice, household: Household, now: datetime, *, weather: bool = False
@@ -104,9 +105,12 @@ class TodayService:
         cached = self._weathers.get(key)
         if cached is not None:
             return cached.value
+        if self._failures.recent(f"weather:{key}"):
+            return None
         try:
             weather = await fetch_weather(self._client, place.lat, place.lon)
         except WeatherUnavailableError:
+            self._failures.note(f"weather:{key}")
             return None
         self._weathers.put(key, weather)
         return weather
@@ -125,10 +129,14 @@ class TodayService:
         cached = self._forecasts.get(key)
         if cached is not None and not cached.stale:
             return _from_this_hour(cached.value, now)
+        fallback = _from_this_hour(cached.value, now) if cached is not None else ()
+        if self._failures.recent(f"forecast:{key}"):
+            return fallback
         try:
             hours = tuple(await fetch_forecast(self._client, place.lat, place.lon, now))
         except AirDataUnavailableError:
-            return _from_this_hour(cached.value, now) if cached is not None else ()
+            self._failures.note(f"forecast:{key}")
+            return fallback
         self._forecasts.put(key, hours)
         return hours
 

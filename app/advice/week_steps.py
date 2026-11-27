@@ -3,9 +3,8 @@
 from dataclasses import dataclass
 
 from app.advice.facts import Today
-from app.domain.commute import offered_swaps
+from app.domain.commute import offered_swaps, shared_car
 from app.domain.guidance import Decision, routine_decision
-from app.domain.household import Mode
 from app.domain.indoor import indoor_estimates
 from app.domain.week import DayImpact, indoors_day, swap_day
 
@@ -28,11 +27,11 @@ def step_options(today: Today) -> list[StepOption]:
     Returns:
         The steps, commutes first.
     """
-    sensitive = {member.name for member in today.household.members if member.sensitive}
+    sensitive = today.household.sensitive_names
     return _swap_steps(today, sensitive) + _indoor_steps(today, sensitive)
 
 
-def _swap_steps(today: Today, sensitive: set[str]) -> list[StepOption]:
+def _swap_steps(today: Today, sensitive: frozenset[str]) -> list[StepOption]:
     """The swap the plan offers for each commute, if there is one."""
     steps = []
     for index, commute in enumerate(today.household.commutes, start=1):
@@ -40,14 +39,17 @@ def _swap_steps(today: Today, sensitive: set[str]) -> list[StepOption]:
         if not offered:
             continue
         swap = offered[0]
-        shared = swap.people_in_vehicle > 1 and swap.mode in {Mode.CAR, Mode.SUV}
-        how = f"a shared {swap.mode.value}" if shared else swap.mode.value
+        how = (
+            f"a shared {swap.mode.value}"
+            if shared_car(swap.mode, swap.people_in_vehicle)
+            else swap.mode.value
+        )
         impact = swap_day(commute, swap, today.outdoor_pm25)
         steps.append(StepOption(f"swap-{index}", f"{commute.member} went by {how}", impact))
     return steps
 
 
-def _indoor_steps(today: Today, sensitive: set[str]) -> list[StepOption]:
+def _indoor_steps(today: Today, sensitive: frozenset[str]) -> list[StepOption]:
     """Each routine that today's rule moves indoors."""
     pm25 = today.outdoor_pm25
     indoor = indoor_estimates(pm25, today.household.home).windows_shut if pm25 is not None else None

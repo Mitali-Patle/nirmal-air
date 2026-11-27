@@ -109,10 +109,13 @@ async def search_places(client: httpx.AsyncClient, query: str) -> list[Place]:
         results = _Payload.model_validate(response.json()).results
     except (httpx.HTTPError, ValueError) as error:  # ValidationError is a ValueError
         raise PlaceSearchError(f"Place search failed: {type(error).__name__}") from error
-    return [
+    places = [
         Place(result.name, result.admin2, result.admin1, result.latitude, result.longitude)
         for result in results
     ]
+    # The geocoder sometimes lists the same village twice; a reader sees one choice per name.
+    unique = {place.label: place for place in reversed(places)}
+    return [place for place in places if unique[place.label] is place]
 
 
 class PlaceFinder:

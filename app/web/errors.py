@@ -15,9 +15,12 @@ from app.web.templating import templates
 TITLES = {
     403: "That form has expired",
     404: "Page not found",
-    405: "Page not found",
+    405: "That page cannot be used this way",
     422: "Some of that could not be read",
+    429: "Too many requests",
 }
+# Statuses whose own message is safe and useful to show (it never echoes what was sent).
+SHOWN_DETAIL = frozenset({403, 429})
 
 
 ASK_LENGTH = f"Please ask in {QUESTION_MIN_CHARS} to {QUESTION_MAX_CHARS} characters."
@@ -34,9 +37,9 @@ def register_error_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(StarletteHTTPException)
     async def http_error(request: Request, error: StarletteHTTPException) -> Response:
-        # Only the CSRF refusal's reason is shown; other details stay out of the page.
-        forbidden = error.status_code == status.HTTP_403_FORBIDDEN
-        message = error.detail if forbidden and isinstance(error.detail, str) else None
+        # Only the CSRF refusal's and the rate limit's reasons are shown; others stay hidden.
+        shown = error.status_code in SHOWN_DETAIL
+        message = error.detail if shown and isinstance(error.detail, str) else None
         return _render(request, error.status_code, message)
 
     @app.exception_handler(RequestValidationError)

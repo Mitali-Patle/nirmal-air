@@ -4,6 +4,7 @@ from typing import Any
 
 import respx
 
+from app.advice.bundle import build_facts
 from app.advice.facts import Fact, Kind
 from app.advice.plan import Plan, PlanItem, Slot
 from app.ai.task import Provenance
@@ -16,9 +17,10 @@ from app.services.today import PlaceChoice, TodayService
 from app.web.cookie import pack
 from app.web.household_form import parse_household
 from app.web.session import ThemeChoice, load_household, theme_choice
+from app.web.share import share_text
 from app.web.templating import templates
 from app.web.views import plan_board, slot_of
-from tests.builders import FAMILY
+from tests.builders import FAMILY, today
 
 
 def request_with(session: dict[str, Any]) -> Any:
@@ -70,7 +72,7 @@ def test_form_errors_read_as_sentences() -> None:
     _, errors = parse_household({"m0_name": "Asha", "m1_name": "Asha"})
     assert errors == ["Each member needs a different name"]
     _, errors = parse_household({"m0_name": "Asha", "home_sqft": "5"})
-    assert errors == ["Home room sqft: input should be greater than or equal to 50."]
+    assert errors == ["Home main room size: input should be greater than or equal to 50."]
     _, errors = parse_household({})
     assert errors == ["Add at least one person, with a name."]
 
@@ -175,7 +177,7 @@ def test_a_day_with_no_steps_left_says_so() -> None:
     board = plan_board(plan, [], datetime(2026, 11, 25, 22, tzinfo=IST))
     provenance = Provenance(
         task="plan",
-        prompt_version="plan-v5",
+        prompt_version="plan-v6",
         provider="fake:model",
         cached=False,
         latency_ms=1,
@@ -188,3 +190,48 @@ def test_a_day_with_no_steps_left_says_so() -> None:
     )
     assert "Nothing more is planned for today" in page
     assert "Earlier today (1)" in page
+
+
+def test_the_shared_summary_states_the_reading_and_its_source() -> None:
+    day = today()
+    facts = {fact.id: fact for fact in build_facts(day)}
+    text = share_text(day, facts, "https://nirmal-air.vercel.app/")
+    lines = text.splitlines()
+    assert lines[0].startswith(
+        "Air today in ITO, New Delhi: AQI 326, Very Poor (CPCB, measured 24 Nov, 8 am IST"
+    )
+    assert "Cleanest" in text and "Worst" in text
+    assert lines[-1] == "Plan for your own family: https://nirmal-air.vercel.app/"
+    no_air = today(with_air=False, with_timing=False)
+    empty = share_text(no_air, {fact.id: fact for fact in build_facts(no_air)}, "x")
+    assert "no CPCB station nearby has reported in the last 3 hours" in empty
+    assert "Cleanest" not in empty
+
+
+async def test_a_forecast_or_weather_that_just_failed_is_not_asked_again(client: Any) -> None:
+    service = TodayService(client, None)
+    place = PlaceChoice("Delhi", 28.61, 77.21)
+    now = datetime(2026, 11, 25, 9, tzinfo=IST)
+    with respx.mock:
+        forecast = respx.get(FORECAST_URL).respond(503)
+        weather = respx.get(WEATHER_URL).respond(503)
+        first = await service.day(place, FAMILY, now, weather=True)
+        second = await service.day(place, FAMILY, now, weather=True)
+    assert (first.hours, first.weather, second.hours, second.weather) == ((), None, (), None)
+    assert (forecast.call_count, weather.call_count) == (1, 1)
+
+
+def test_a_step_moved_to_the_cleanest_time_shows_that_time() -> None:
+    facts = [
+        Fact("routine_1", Kind.HOUSEHOLD, "Walk at 6 am.", "6 am"),
+        Fact("cleanest", Kind.FORECAST, "Cleanest 1 pm to 4 pm.", "1 to 4 pm"),
+    ]
+    item = PlanItem(
+        slot=Slot.AFTERNOON,
+        member="Asha",
+        action="Walk at the cleanest time.",
+        why="Less PM2.5.",
+        fact_ids=["routine_1", "cleanest"],
+    )
+    board = plan_board(Plan(items=[item]), facts, datetime(2026, 11, 25, 12, tzinfo=IST))
+    assert board.next is not None and board.next.figure == "1 to 4 pm"

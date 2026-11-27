@@ -16,14 +16,22 @@ from collections.abc import Iterable
 # A word that starts with letters and ends in digits: PM2.5, PM10, NO2, N95, FFP2.
 _NAMED = re.compile(r"\b[^\W\d_]+\d+(?:\.\d+)?\b")
 _NUMBER = re.compile(r"\d+(?:[.,]\d+)*")
-# Words that state an amount without digits ("twice the PM2.5", "दोगुना") need a source too.
+# Words that state an amount without digits ("twice the PM2.5", "ten minutes", "दस मिनट")
+# need a source too. "one" and Hindi "दो" are left out: they are also everyday words ("one
+# window", "रहने दो") and would turn ordinary sentences away.
 # Word edges are written out because Devanagari vowel signs are not "word" characters to \b.
 _EDGE = r"[\w\u0900-\u097F]"
+_ENGLISH_AMOUNTS = (
+    "twice|thrice|double|triple|quadruple|half|dozen|hundred|thousand"
+    "|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve"
+    "|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety"
+)
+_HINDI_AMOUNTS = (
+    "दोगुना|दोगुनी|दोगुने|दुगना|दुगनी|दुगुना|तिगुना|तिगुनी|आधा|आधी|आधे"
+    "|तीन|चार|पाँच|पांच|छह|छः|सात|आठ|नौ|दस|बीस|तीस|चालीस|पचास|सौ|हज़ार|हजार"
+)
 _NUMBER_WORDS = re.compile(
-    rf"(?<!{_EDGE})(twice|thrice|double|triple|quadruple|half"
-    r"|दोगुना|दोगुनी|दोगुने|दुगना|दुगनी|दुगुना|तिगुना|तिगुनी|आधा|आधी|आधे)"
-    rf"(?!{_EDGE})",
-    re.IGNORECASE,
+    rf"(?<!{_EDGE})({_ENGLISH_AMOUNTS}|{_HINDI_AMOUNTS})(?!{_EDGE})", re.IGNORECASE
 )
 
 
