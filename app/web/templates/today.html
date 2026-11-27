@@ -15,7 +15,18 @@
 <div class="today">
   <header class="today-head">
     <h1 class="place-line"><span class="visually-hidden">Today's plan for your household in </span>{{ today.place }}</h1>
-    <p class="place-links"><a href="/">Change place or household</a>{% if sample %}<span class="sample-tag">Sample household: {{ sample }}</span>{% endif %}</p>
+    {% if sample %}<p><span class="sample-tag">Sample household: {{ sample }}</span></p>{% endif %}
+    <nav class="tools" aria-label="Place, language and colours">
+      <p class="place-links"><a href="/">Change place or household</a>{% if lang == 'hi' %}<a href="/today">Plan in English</a>{% else %}<a href="/today?lang=hi" hreflang="hi" lang="hi">योजना हिंदी में</a>{% endif %}</p>
+      <form class="theme" method="post" action="/theme">
+        <input type="hidden" name="csrf" value="{{ csrf_token }}">
+        <input type="hidden" name="lang" value="{{ lang }}">
+        <fieldset>
+          <legend>Colours</legend>
+          <span class="switch">{% for choice, label in theme_labels.items() %}<button type="submit" name="theme" value="{{ choice.value }}" aria-pressed="{{ 'true' if sky.theme == choice else 'false' }}">{{ label }}</button>{% endfor %}</span>
+        </fieldset>
+      </form>
+    </nav>
     <p class="air-line">
       {% if air %}
       <span class="aqi-n">AQI {{ air.aqi.value }}</span>
@@ -73,7 +84,7 @@
       {% else %}
       <p class="note">No CPCB station near {{ today.place }} has reported in the last {{ max_reading_age_hours }} hours. The plan uses the forecast times and general advice.</p>
       {% endif %}
-      <p class="sky-note">{% if sky.theme.value == "auto" %}The page's colour follows the {{ sky.phase.value }} sky here{% else %}You chose {{ sky.theme.value }} colours (Follow the sky is in the footer){% endif %}{% if sky.haze %}, dulled by today's {{ air.aqi.category.label }} air{% endif %}.</p>
+      <p class="sky-note">{% if sky.theme.value == "auto" %}The page's colour follows the {{ sky.phase.value }} sky here{% else %}You chose {{ sky.theme.value }} colours (choose Follow the sky at the top){% endif %}{% if sky.haze %}, dulled by today's {{ air.aqi.category.label }} air{% endif %}.</p>
     </section>
 
     <section class="ask" aria-labelledby="ask-h">
@@ -120,20 +131,4 @@
   {% include "partials/week.html" %}
 
 </div>
-{% endblock %}
-
-{% block foot %}
-<nav class="foot-links" aria-label="Household and display">
-  <a href="/">Edit household or place</a>
-  {% if lang == 'hi' %}<a href="/today">Plan in English</a>{% else %}<a href="/today?lang=hi" hreflang="hi" lang="hi">योजना हिंदी में</a>{% endif %}
-</nav>
-<form class="theme" method="post" action="/theme">
-  <input type="hidden" name="csrf" value="{{ csrf_token }}">
-  <fieldset>
-    <legend>Colours</legend>
-    {% for choice, label in theme_labels.items() %}
-    <button type="submit" name="theme" value="{{ choice.value }}" aria-pressed="{{ 'true' if sky.theme == choice else 'false' }}">{{ label }}</button>
-    {% endfor %}
-  </fieldset>
-</form>
 {% endblock %}

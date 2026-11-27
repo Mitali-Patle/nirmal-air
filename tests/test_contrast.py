@@ -78,11 +78,3 @@ def test_button_text_is_readable_on_the_accent(phase: str) -> None:
 
 def test_all_six_haze_levels_are_defined() -> None:
     assert len(HAZES) == 6
-
-
-def test_dark_mode_follows_the_night_palette() -> None:
-    dark = re.search(r'html\[data-theme="auto"\] \{(.*?)\}', TOKENS, re.S)
-    assert dark is not None
-    assert dict(re.findall(COLOUR_RULE, dark.group(1))) == {
-        name: f"#{''.join(f'{c:02X}' for c in rgb)}" for name, rgb in phase_tokens("night").items()
-    }

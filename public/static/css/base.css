@@ -61,8 +61,6 @@ code, pre { font-family: var(--sans); font-size: 0.8125rem; }
 .foot { border-top: 1px solid var(--line); margin-top: var(--space-7); color: var(--muted); font-size: 0.8125rem; }
 .foot-in { flex-direction: column; align-items: stretch; padding-block: var(--space-5) var(--space-6); gap: var(--space-4); }
 .foot p { max-width: 72ch; }
-.foot-links { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-5); font-size: 0.875rem; }
-.foot-links a { color: var(--ink); }
 
 /* Fact labels: what kind of number this is, a coloured dot and a word. */
 .kind {
@@ -109,10 +107,13 @@ button.quiet { background: transparent; color: var(--ink); border-color: var(--l
 button.quiet:hover { border-color: var(--muted); background: var(--panel); }
 button[aria-pressed="true"] { background: var(--ink); color: var(--ground); border-color: var(--ink); }
 
-.theme fieldset { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
-.theme legend { font-size: 0.875rem; font-weight: 600; margin: 0 var(--space-2) 0 0; float: left; }
-.theme button { min-height: 36px; padding: 6px 12px; font-size: 0.875rem; font-weight: 500; background: transparent; color: var(--ink); border-color: var(--line); }
-.theme button:hover { border-color: var(--muted); }
+/* Colours: one three-way switch. */
+.theme fieldset { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); }
+.theme legend { font-size: 0.875rem; font-weight: 600; color: var(--muted); margin: 0; float: left; }
+.switch { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 3px; background: var(--panel); }
+.switch button { min-height: 36px; padding: 4px 14px; font-size: 0.875rem; font-weight: 500; background: transparent; color: var(--ink); border: 0; border-radius: 999px; }
+.switch button:hover { background: color-mix(in srgb, var(--ink) 8%, transparent); }
+.switch button[aria-pressed="true"] { background: var(--ink); color: var(--ground); }
 
 @media (prefers-reduced-motion: reduce) {
   /* No transitions or animations at all: a tiny duration would still start a transition on

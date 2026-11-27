@@ -200,7 +200,7 @@ components:
 
 **Creative North Star: "The Day on Paper"**
 
-The household's day is one quiet timeline. Each person's step is a dot on a hairline rail; the next step is set large in condensed Anek; every other step is a calm row with its figure at the right edge. The page follows the local sky: `<html data-phase>` comes from the place's sunrise and sunset (morning, afternoon, evening are warm paper with near-black ink; dusk is deep indigo, night midnight blue, both with pale ink), and `data-haze` (0 to 5) from the measured AQI band dulls the ground toward smog. After dusk a faint fixed star field sits behind the whole Today page and thins with the haze. A user can pin light or dark; "Follow the sky" in dark mode uses the night palette.
+The household's day is one quiet timeline. Each person's step is a dot on a hairline rail; the next step is set large in condensed Anek; every other step is a calm row with its figure at the right edge. The page follows the local sky: `<html data-phase>` comes from the place's sunrise and sunset (morning, afternoon, evening are warm paper with near-black ink; dusk is deep indigo, night midnight blue, both with pale ink), and `data-haze` (0 to 5) from the measured AQI band dulls the ground toward smog. After dusk a faint fixed star field sits behind the whole Today page and thins with the haze. A user can pin light or dark; "Follow the sky" follows only the sky, whatever the device's dark-mode setting, so the page never shows a daytime sun on a night ground.
 
 It refuses the AQI dashboard (gauge, giant number, pollutant tiles), the bright card-stack wellness app, and the road-sign boards an earlier version used. The air's severity is said in words, never shouted in colour.
 
@@ -216,7 +216,7 @@ It refuses the AQI dashboard (gauge, giant number, pollutant tiles), the bright 
 Five phase palettes, one green, one slate blue, and CPCB colour kept to a swatch.
 
 ### Brand (start and error pages)
-Pages without a household's sky wear the brand: **Forest** ground (`brand-sky`) and bar, pale ink, and **Marigold** (`brand-accent`) for actions, in every light or dark setting (`html[data-phase="brand"]`, defined after the dark-mode block). Opening a household hands the page to the place's sky, so the change of colour marks the step from the product to the family's own day. `tests/test_contrast.py` checks it like the five sky phases.
+Pages without a household's sky wear the brand: **Forest** ground (`brand-sky`) and bar, pale ink, and **Marigold** (`brand-accent`) for actions, in every light or dark setting (`html[data-phase="brand"]`). Opening a household hands the page to the place's sky, so the change of colour marks the step from the product to the family's own day. `tests/test_contrast.py` checks it like the five sky phases.
 
 ### Primary
 - **Ledger Green** (`accent`; `accent-evening` at evening, `accent-dark` at dusk and night): every action (buttons, the link button, selection, focus ring, caret, form accent) and every person's step (rail dot, the name under the step). Its 14% mix into the panel (`--accent-tint`) rings the next-step dot and backs the sample-household tag. Text on it is `on-accent` (`on-accent-dark` after dusk).
@@ -314,7 +314,8 @@ Gently rounded: 10px on controls, inputs, notes and the numbers behind a step; 1
 
 ### Navigation
 - **Top bar:** bar ground with a hairline under it. The wordmark, and a live pill (hairline border, measured-green dot): "AQI n" in ink and the measured time on Today, "Live CPCB data" on start.
-- **Footer:** hairline above, muted 13px source line, ink links, the Hindi link and the colour choice.
+- **Tools (Today):** under the place name: "Change place or household", the Hindi link, and Colours as one three-way switch (pill track on panel, the chosen option filled with ink).
+- **Footer:** hairline above, muted 13px source line with its links.
 
 ### Day Rail (signature)
 Each step is a three-column row: a 20px rail column, the text, and a right-edge figure. The 1px hairline runs between dot centres with no loose ends. Person dots are outlined green, home dots outlined blue, on the ground. The next step fills its dot, adds the tint ring and sets the action in `title-next`, its why-line in ink. "The numbers behind this" opens a panel list of labelled facts. While the plan is written, the rail's shape breathes (opacity to 0.45 over 1.4s).

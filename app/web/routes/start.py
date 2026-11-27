@@ -134,18 +134,25 @@ async def save_profile(request: Request) -> Response:
 
 
 @router.post("/theme", dependencies=[CsrfChecked])
-def set_theme(request: Request, theme: Annotated[ThemeChoice, Form()]) -> Response:
+def set_theme(
+    request: Request,
+    theme: Annotated[ThemeChoice, Form()],
+    lang: Annotated[str, Form(pattern="^(en|hi)$")] = "en",
+) -> Response:
     """Remember the visitor's theme choice.
 
     Args:
         request: The incoming request.
-        theme: Time of day, light or dark.
+        theme: Follow the sky, light or dark.
+        lang: The plan's language, kept across the change.
 
     Returns:
-        A redirect back to Today.
+        A redirect back to Today, in the same language.
     """
     save_theme(request, theme)
-    return RedirectResponse("/today", status.HTTP_303_SEE_OTHER)
+    return RedirectResponse(
+        "/today?lang=hi" if lang == "hi" else "/today", status.HTTP_303_SEE_OTHER
+    )
 
 
 def _start_page(

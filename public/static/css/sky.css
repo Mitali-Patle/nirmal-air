@@ -9,9 +9,6 @@ html[data-phase="afternoon"] { --sky-high: #C4D6E0; --cloud: #FFFDF5; --sun: #FF
 html[data-phase="evening"] { --sky-high: #E8AE7E; --cloud: #F7D3AE; --sun: #F27B35; --glow: rgba(242, 123, 53, 0.55); }
 html[data-phase="dusk"] { --sky-high: #3E3670; --cloud: #6D5A8A; --sun: #F27B35; --glow: rgba(242, 123, 53, 0.4); }
 html[data-phase="night"] { --sky-high: #1F3263; --cloud: #3B414B; --sun: #FFE27A; --glow: rgba(255, 226, 122, 0.4); }
-@media (prefers-color-scheme: dark) {
-  html[data-theme="auto"] { --sky-high: #1F3263; --cloud: #3B414B; }
-}
 html[data-haze="1"] { --haze-veil: 0.06; }
 html[data-haze="2"] { --haze-veil: 0.1; }
 html[data-haze="3"] { --haze-veil: 0.14; }

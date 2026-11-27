@@ -100,19 +100,10 @@ html[data-phase="night"] {
   --accent: #8DC59B; --on-accent: #10201A; --home: #AFC6EC; --warn: #E3B35C;
   color-scheme: dark;
 }
-/* "Follow the sky" still respects a phone set to dark mode. */
-@media (prefers-color-scheme: dark) {
-  html[data-theme="auto"] {
-    --sky: #0E1730; --smog: #2C3140; --bar-sky: #0B1328;
-    --ink: #EDEFF5; --muted: #A9B2C8; --panel: #15213C; --line: #263354;
-    --accent: #8DC59B; --on-accent: #10201A; --home: #AFC6EC; --warn: #E3B35C;
-    color-scheme: dark;
-  }
-}
 
 /* Pages without a household's sky (the start page, errors) wear the brand: deep forest
-   green with a gold accent, in every light or dark setting. Once a household is open, Today
-   takes the colours of the place's sky. Defined after the dark-mode block so it always wins. */
+   green with a gold accent, whatever the device's light or dark setting. Once a household is open, Today
+   takes the colours of the place's sky. */
 html[data-phase="brand"] {
   --sky: #173A2A; --smog: #173A2A; --bar-sky: #133224;
   --ink: #F2EFE6; --muted: #BFD0C3; --panel: #1E4633; --line: #2E5A44;

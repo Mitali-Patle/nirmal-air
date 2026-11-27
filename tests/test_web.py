@@ -494,3 +494,13 @@ def test_a_chosen_theme_is_named_instead_of_the_sky(live: respx.MockRouter) -> N
     load_sample(client)
     client.post("/theme", data={"csrf": token(client), "theme": "dark"})
     assert "You chose dark colours" in client.get("/today").text
+
+
+def test_changing_colours_keeps_the_plan_language(live: respx.MockRouter) -> None:
+    client = make_client()
+    load_sample(client)
+    data = {"csrf": token(client), "theme": "dark", "lang": "hi"}
+    response = client.post("/theme", data=data, follow_redirects=False)
+    assert response.headers["location"] == "/today?lang=hi"
+    english = client.post("/theme", data=data | {"lang": "en"}, follow_redirects=False)
+    assert english.headers["location"] == "/today"
