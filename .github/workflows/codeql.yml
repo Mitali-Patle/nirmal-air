@@ -39,10 +39,13 @@ jobs:
           languages: ${{ matrix.language }}
           build-mode: none
           queries: security-and-quality
-          # The vendored htmx file is upstream code, checked byte-for-byte (VENDOR.md).
+          # The vendored htmx file is upstream code, checked byte-for-byte (VENDOR.md). Jinja
+          # templates hold no script (the CSP forbids inline code) but their {{ }} expressions
+          # read as broken JavaScript to the extractor.
           config: |
             paths-ignore:
               - public/static/vendor
+              - app/web/templates
               - tests
       - uses: github/codeql-action/analyze@915412ff23e8b7659517e607487dbeae018f2934 # v4.39.5
         with:

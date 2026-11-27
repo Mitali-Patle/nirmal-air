@@ -50,7 +50,6 @@ class Provider(Protocol):
     @property
     def name(self) -> str:
         """Identifier such as `groq:openai/gpt-oss-120b`, shown in provenance."""
-        ...
 
     async def generate(self, request: LLMRequest) -> str:
         """Return the model's raw JSON answer.
@@ -58,7 +57,6 @@ class Provider(Protocol):
         Raises:
             ProviderError: When no usable answer came back.
         """
-        ...
 
 
 class _HttpProvider:
