@@ -151,7 +151,7 @@ uv run uvicorn app.index:app --reload
 ```bash
 uv run ruff check . && uv run ruff format --check .
 uv run mypy app tests scripts                  # strict
-uv run pytest -W error --cov=app               # 309 tests, 95% branch-coverage gate (100% now)
+uv run pytest -W error --cov=app               # 324 tests, 95% branch-coverage gate (100% now)
 uv run pytest -W error -m e2e                  # 32 browser tests: axe (WCAG 2.2 AA), widths, keyboard
 ```
 
