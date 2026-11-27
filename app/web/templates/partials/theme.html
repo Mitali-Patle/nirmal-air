@@ -1,3 +1,4 @@
-{% from "macros.html" import sky_note %}
+{% from "macros.html" import sky_note, theme_form %}
 {% include "partials/sky.html" %}
-{{ sky_note(sky, air, oob=true) }}
+{{ sky_note(sky, oob=true) }}
+{{ theme_form(sky, theme_labels, lang, csrf_token, oob=true) }}

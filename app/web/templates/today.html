@@ -1,15 +1,18 @@
 {% extends "base.html" %}
-{% from "macros.html" import fact_row, sky_note, theme_icon %}
+{% from "macros.html" import fact_row, sky_note, theme_form %}
 {% block title %}Today in {{ today.place }} · NirmalAir{% endblock %}
 {% block styles %}<link rel="stylesheet" href="{{ 'css/today.css'|asset }}"><link rel="stylesheet" href="{{ 'css/sky.css'|asset }}">{% endblock %}
 {% block scripts %}<script src="{{ 'js/theme.js'|asset }}" defer></script>{% endblock %}
 {% block sky %}{% include "partials/sky.html" %}{% endblock %}
 {% block bar %}
+<div class="bar-end">
 {% if air %}
-<p class="live"><i class="live-dot" aria-hidden="true"></i><b>AQI {{ air.aqi.value }}</b> {{ air.reading.measured_at|clock }}</p>
+<p class="live"><i class="live-dot" aria-hidden="true"></i><b>AQI {{ air.aqi.value }}</b> <span class="live-time">{{ air.reading.measured_at|clock }}</span></p>
 {% else %}
-<p class="live"><i class="live-dot" aria-hidden="true"></i>No recent reading</p>
+<p class="live"><i class="live-dot" aria-hidden="true"></i>No <span class="live-time">recent </span>reading</p>
 {% endif %}
+{{ theme_form(sky, theme_labels, lang, csrf_token) }}
+</div>
 {% endblock %}
 
 {% block main %}
@@ -17,16 +20,8 @@
   <header class="today-head">
     <h1 class="place-line"><span class="visually-hidden">Today's plan for your household in </span>{{ today.place }}</h1>
     {% if sample %}<p><span class="sample-tag">Sample household: {{ sample }}</span></p>{% endif %}
-    <nav class="tools" aria-label="Place, language and colours">
+    <nav class="tools" aria-label="Place and language">
       <p class="place-links"><a href="/">Change place or household</a>{% if lang == 'hi' %}<a href="/today">Plan in English</a>{% else %}<a href="/today?lang=hi" hreflang="hi" lang="hi">योजना हिंदी में</a>{% endif %}</p>
-      <form class="theme" method="post" action="/theme" hx-post="/theme" hx-target="#sky" hx-swap="outerHTML">
-        <input type="hidden" name="csrf" value="{{ csrf_token }}">
-        <input type="hidden" name="lang" value="{{ lang }}">
-        <fieldset>
-          <legend class="visually-hidden">Colours</legend>
-          <span class="switch">{% for choice, label in theme_labels.items() %}<button type="submit" name="theme" value="{{ choice.value }}" title="{{ label }}" aria-pressed="{{ 'true' if sky.theme == choice else 'false' }}">{{ theme_icon(choice.value) }}<span class="visually-hidden">{{ label }}</span></button>{% endfor %}</span>
-        </fieldset>
-      </form>
     </nav>
     <p class="air-line">
       {% if air %}
@@ -85,7 +80,7 @@
       {% else %}
       <p class="note">No CPCB station near {{ today.place }} has reported in the last {{ max_reading_age_hours }} hours. The plan uses the forecast times and general advice.</p>
       {% endif %}
-      {{ sky_note(sky, air) }}
+      {{ sky_note(sky) }}
     </section>
 
     <section class="ask" aria-labelledby="ask-h">

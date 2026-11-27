@@ -110,6 +110,9 @@ def phase_at(now: datetime, sun: SunTimes) -> Phase:
     return Phase.EVENING if now < sun.sunset else Phase.DUSK
 
 
+MAX_HAZE = len(Category) - 1
+
+
 def haze_level(category: Category | None) -> int:
     """How much the measured air dulls the sky, from 0 (clear) to 5 (Severe).
 
@@ -124,3 +127,14 @@ def haze_level(category: Category | None) -> int:
     4
     """
     return 0 if category is None else list(Category).index(category)
+
+
+def haze_band(haze: int) -> Category | None:
+    """The AQI band a haze level stands for; None when the air does not dull the sky.
+
+    >>> haze_band(4) is Category.VERY_POOR
+    True
+    >>> haze_band(0) is None
+    True
+    """
+    return list(Category)[haze] if 0 < haze <= MAX_HAZE else None

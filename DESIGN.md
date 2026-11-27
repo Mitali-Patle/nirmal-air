@@ -314,7 +314,8 @@ Gently rounded: 10px on controls, inputs, notes and the numbers behind a step; 1
 
 ### Navigation
 - **Top bar:** bar ground with a hairline under it. The wordmark, and a live pill (hairline border, measured-green dot): "AQI n" in ink and the measured time on Today, "Live CPCB data" on start.
-- **Tools (Today):** under the place name: "Change place or household", the Hindi link, and a small three-way colour switch: dark (moon), follow the sky (half disc), light (sun), 32×28px drawn icons on a pill track, the chosen one filled with ink. It repaints in place: htmx swaps the sky band and its note, and an HX-Trigger event sets phase, haze and theme on `<html>` while every colour cross-fades for 500ms (none under reduced motion).
+- **Tools (Today):** under the place name: "Change place or household" and the Hindi link.
+- **Colour control (Today, top bar beside the AQI pill):** on phones one 34px round button showing the current mode (moon, half disc, sun); each tap moves dark → follow the sky → light. From 720px a three-way switch of the same drawn icons (32×28px, pill track, the chosen one filled with ink). It repaints in place: htmx swaps the sky band, its note and the control, and an HX-Trigger event sets phase, haze and theme on `<html>` while colours cross-fade for 500ms (none under reduced motion). The request carries the page's haze level, so only the cached weather is read. Below 380px the pill drops the time.
 - **Press:** every button and button-link scales to 0.96 while pressed (a sample row to 0.99), then springs back.
 - **Footer:** hairline above, muted 13px source line with its links.
 

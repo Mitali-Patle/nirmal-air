@@ -55,8 +55,8 @@
 </li>
 {%- endmacro %}
 
-{% macro sky_note(sky, air, oob=false) -%}
-<p class="sky-note" id="sky-note"{% if oob %} hx-swap-oob="true"{% endif %}>{% if sky.theme.value == "auto" %}The page's colour follows the {{ sky.phase.value }} sky here{% else %}You chose {{ sky.theme.value }} colours; the middle of the colour switch follows the sky{% endif %}{% if sky.haze %}, dulled by today's {{ air.aqi.category.label }} air{% endif %}.</p>
+{% macro sky_note(sky, oob=false) -%}
+<p class="sky-note" id="sky-note"{% if oob %} hx-swap-oob="true"{% endif %}>{% if sky.theme.value == "auto" %}The page's colour follows the {{ sky.phase.value }} sky here{% else %}You chose {{ sky.theme.value }} colours{% endif %}{% if sky.band %}, dulled by today's {{ sky.band.label }} air{% endif %}.{% if sky.theme.value != "auto" %} Use the colour switch at the top to follow the sky again.{% endif %}</p>
 {%- endmacro %}
 
 {% macro theme_icon(choice) -%}
@@ -64,4 +64,19 @@
 {%- elif choice == "light" -%}<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="3"/><path d="M8 1.5v1.6M8 12.9v1.6M1.5 8h1.6M12.9 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M3.4 12.6l1.1-1.1M11.5 4.5l1.1-1.1"/></svg>
 {%- else -%}<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="5.6"/><path class="fill" d="M8 2.4a5.6 5.6 0 0 1 0 11.2Z"/></svg>
 {%- endif -%}
+{%- endmacro %}
+
+{% macro theme_form(sky, theme_labels, lang, csrf, oob=false) -%}
+{%- set choices = theme_labels|list -%}
+{%- set nxt = choices[(choices.index(sky.theme) + 1) % choices|length] -%}
+<form class="theme" id="theme-form" method="post" action="/theme" hx-post="/theme" hx-target="#sky" hx-swap="outerHTML"{% if oob %} hx-swap-oob="true"{% endif %}>
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <input type="hidden" name="lang" value="{{ lang }}">
+  <input type="hidden" name="haze" value="{{ sky.haze }}">
+  <button type="submit" class="cycle" name="theme" value="{{ nxt.value }}" title="Colours: {{ theme_labels[sky.theme] }}">{{ theme_icon(sky.theme.value) }}<span class="visually-hidden">Colours: {{ theme_labels[sky.theme] }}. Change to {{ theme_labels[nxt] }}</span></button>
+  <fieldset>
+    <legend class="visually-hidden">Colours</legend>
+    <span class="switch">{% for choice, label in theme_labels.items() %}<button type="submit" name="theme" value="{{ choice.value }}" title="{{ label }}" aria-pressed="{{ 'true' if sky.theme == choice else 'false' }}">{{ theme_icon(choice.value) }}<span class="visually-hidden">{{ label }}</span></button>{% endfor %}</span>
+  </fieldset>
+</form>
 {%- endmacro %}

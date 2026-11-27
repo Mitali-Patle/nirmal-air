@@ -513,6 +513,10 @@ def test_colours_change_in_place_with_htmx(live: respx.MockRouter) -> None:
     response = client.post("/theme", data=data, headers={"HX-Request": "true"})
     assert response.status_code == 200
     assert 'id="sky"' in response.text and 'id="sky-note" hx-swap-oob="true"' in response.text
+    assert (
+        'id="theme-form"' in response.text
+        and 'class="cycle" name="theme" value="auto"' in response.text
+    )
     change = json.loads(response.headers["HX-Trigger"])["theme-change"]
     assert change == {"phase": "night", "haze": change["haze"], "theme": "dark"}
     assert 'aria-pressed="true"' in client.get("/today").text.split('value="dark"')[1][:60]
@@ -525,3 +529,13 @@ def test_colours_without_a_household_go_back_to_today(live: respx.MockRouter) ->
         "/theme", data=data, headers={"HX-Request": "true"}, follow_redirects=False
     )
     assert response.status_code == 303
+
+
+def test_the_colour_change_uses_the_pages_haze_and_checks_it(live: respx.MockRouter) -> None:
+    client = make_client()
+    load_sample(client)
+    data = {"csrf": token(client, "/today"), "theme": "light", "haze": "4"}
+    response = client.post("/theme", data=data, headers={"HX-Request": "true"})
+    assert "You chose light colours, dulled by today's Very Poor air." in response.text
+    too_hazy = client.post("/theme", data=data | {"haze": "9"}, headers={"HX-Request": "true"})
+    assert too_hazy.status_code == 422

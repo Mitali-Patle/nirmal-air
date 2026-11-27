@@ -7,7 +7,7 @@ from app.air.weather import Weather
 from app.domain.aqi import Category
 from app.domain.readings import IST
 from app.domain.scene import Scene, scene
-from app.domain.sky import Phase, haze_level, phase_at, sun_times
+from app.domain.sky import Phase, haze_band, phase_at, sun_times
 from app.services.today import PlaceChoice
 from app.web.session import ThemeChoice
 
@@ -22,16 +22,19 @@ class Sky:
     haze: int
     theme: ThemeChoice
 
+    @property
+    def band(self) -> Category | None:
+        """The AQI band that dulls the sky, for the note under it; None when it does not."""
+        return haze_band(self.haze)
 
-def sky_for(
-    place: PlaceChoice, now: datetime, category: Category | None, theme: ThemeChoice
-) -> Sky:
+
+def sky_for(place: PlaceChoice, now: datetime, haze: int, theme: ThemeChoice) -> Sky:
     """The page's sky: the real phase of day at the place, unless the visitor picked a theme.
 
     Args:
         place: Where the household is.
         now: The current time.
-        category: Today's measured AQI band, if any.
+        haze: How much the measured air dulls the sky, 0 to 5 (`haze_level`).
         theme: The visitor's theme choice.
 
     Returns:
@@ -42,7 +45,7 @@ def sky_for(
         phase = Phase.NIGHT
     elif theme is ThemeChoice.LIGHT and phase in DARK_PHASES:
         phase = Phase.MORNING
-    return Sky(phase, haze_level(category), theme)
+    return Sky(phase, haze, theme)
 
 
 def scene_for(place: PlaceChoice, now: datetime, sky: Sky, weather: Weather | None) -> Scene:

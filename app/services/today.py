@@ -86,12 +86,20 @@ class TodayService:
         air, hours, current = await asyncio.gather(
             self._measured(place, now),
             self._forecast(place, now),
-            self._weather(place) if weather else _nothing(),
+            self.weather(place) if weather else _nothing(),
         )
         today = Today(place.label, now, air, day_timing(hours), household)
         return Day(today, hours, current)
 
-    async def _weather(self, place: PlaceChoice) -> Weather | None:
+    async def weather(self, place: PlaceChoice) -> Weather | None:
+        """The current cloud cover and rain at a place, cached for half an hour.
+
+        Args:
+            place: Where the household is.
+
+        Returns:
+            The weather, or None when Open-Meteo does not answer (the sky is drawn clear).
+        """
         key = place.cache_key
         cached = self._weathers.get(key)
         if cached is not None:

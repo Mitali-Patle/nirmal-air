@@ -189,3 +189,17 @@ def test_colours_change_without_reloading_the_page(new_page: NewPage) -> None:
     )
     expect(page.locator("#sky-note")).to_contain_text("You chose dark colours")
     assert page.evaluate("window.notReloaded") is True
+
+
+def test_on_a_phone_one_button_moves_through_the_colours(new_page: NewPage) -> None:
+    page = new_page(viewport={"width": 390, "height": 844})
+    open_today(page)
+    page.evaluate("window.notReloaded = true")
+    cycle = page.locator("button.cycle")
+    expect(cycle).to_contain_text("Change to Light")
+    cycle.click()
+    expect(page.locator("html")).to_have_attribute("data-theme", "light")
+    expect(page.locator("button.cycle")).to_contain_text("Change to Dark")
+    page.locator("button.cycle").click()
+    expect(page.locator("html")).to_have_attribute("data-phase", "night")
+    assert page.evaluate("window.notReloaded") is True

@@ -56,6 +56,8 @@ code, pre { font-family: var(--sans); font-size: 0.8125rem; }
   border: 1px solid var(--line); border-radius: 999px; padding: 7px 12px 7px 10px;
 }
 .live b { color: var(--ink); font-weight: 600; }
+/* On the narrowest phones the pill keeps only the AQI; the time is in the line below. */
+@media (max-width: 379px) { .live-time { display: none; } .live { padding-inline: 10px; } }
 .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--kind-measured); box-shadow: 0 0 0 3px color-mix(in srgb, var(--kind-measured) 28%, transparent); }
 
 .foot { border-top: 1px solid var(--line); margin-top: var(--space-7); color: var(--muted); font-size: 0.8125rem; }
@@ -108,8 +110,21 @@ button.quiet { background: transparent; color: var(--ink); border-color: var(--l
 button.quiet:hover { border-color: var(--muted); background: var(--panel); }
 button[aria-pressed="true"] { background: var(--ink); color: var(--ground); border-color: var(--ink); }
 
-/* Colours: a small three-way switch, dark / follow the sky / light. */
-.theme fieldset { display: inline-flex; }
+/* Colours, in the top bar: one round button on phones (each tap moves dark, follow the sky,
+   light), the three-way switch from 720px. */
+.bar-end { display: flex; align-items: center; gap: var(--space-2); }
+.theme fieldset { display: none; }
+.cycle {
+  min-height: 0; width: 34px; height: 34px; padding: 0; display: grid; place-items: center;
+  background: transparent; color: var(--ink); border: 1px solid var(--line); border-radius: 50%;
+}
+.cycle:hover { background: color-mix(in srgb, var(--ink) 8%, transparent); border-color: var(--muted); }
+.cycle svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.cycle svg .fill { fill: currentColor; stroke: none; }
+@media (min-width: 720px) {
+  .cycle { display: none; }
+  .theme fieldset { display: inline-flex; }
+}
 .switch { display: inline-flex; gap: 2px; border: 1px solid var(--line); border-radius: 999px; padding: 2px; background: var(--panel); }
 .switch button {
   min-height: 0; width: 32px; height: 28px; padding: 0; display: grid; place-items: center;

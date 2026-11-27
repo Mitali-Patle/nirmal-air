@@ -9,13 +9,12 @@ import math
 from dataclasses import dataclass
 from datetime import datetime
 
-from app.domain.sky import Phase, SunTimes
+from app.domain.sky import MAX_HAZE, Phase, SunTimes
 
 WIDTH, HEIGHT = 1200, 120
 # The arc stays in the lower part of the drawing: the band crops its top on wide screens.
 HORIZON_Y, ARC_HEIGHT = 112, 52
 MAX_STARS = 24
-MAX_HAZE = 5
 # Cloud cover thresholds (percent) for one, two and three clouds on each side.
 CLOUD_STEPS = (20, 50, 80)
 # Fixed star positions, so the sky does not change on every page load.
