@@ -17,6 +17,8 @@ from app.web.household_form import (
     MEMBERS,
     ROUTINES,
     SECTIONS,
+    FormError,
+    described_by,
     form_from_household,
     hidden_rows_in_use,
     parse_household,
@@ -25,8 +27,11 @@ from app.web.place_choice import near_me, place_finder, place_from_form, read_po
 from app.web.session import load_household, save_household
 from app.web.templating import templates
 
+PLACE_MISSING = "Choose a place from the list, or use your location."
 # The place search returns at most MAX_RESULTS results, numbered from 0.
 MAX_PLACE_INDEX = MAX_RESULTS - 1
+# Letters typed before the place search runs: one letter matches too much to be useful.
+MIN_PLACE_QUERY = 2
 router = APIRouter(dependencies=[PageLimited])
 
 
@@ -100,7 +105,7 @@ async def places(
     """
     query = place_query.strip()
     results, failed = [], False
-    if len(query) >= 2:  # noqa: PLR2004 - two letters before searching
+    if len(query) >= MIN_PLACE_QUERY:
         try:
             results = await place_finder(request).search(query)
         except PlaceSearchError:
@@ -149,7 +154,7 @@ async def save_profile(request: Request) -> Response:
     household, errors = parse_household(form)
     place = await place_from_form(request, form)
     if place is None:
-        errors.insert(0, "Choose a place from the list, or use your location.")
+        errors.insert(0, FormError(PLACE_MISSING, "place_query"))
     if household is None or place is None:
         return _start_page(request, errors, form, status.HTTP_422_UNPROCESSABLE_CONTENT)
     save_household(request, place, household)
@@ -158,7 +163,7 @@ async def save_profile(request: Request) -> Response:
 
 def _start_page(
     request: Request,
-    errors: list[str],
+    errors: list[FormError],
     form: dict[str, str],
     code: int = status.HTTP_200_OK,
     *,
@@ -169,6 +174,7 @@ def _start_page(
         "samples": SAMPLES,
         "saved": load_household(request),
         "errors": errors,
+        "error_ids": described_by(errors),
         "form": form,
         "member_rows": range(MEMBERS.rows),
         "routine_rows": range(ROUTINES.rows),

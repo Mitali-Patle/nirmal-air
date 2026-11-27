@@ -1,8 +1,7 @@
 // "Use my location": fills the hidden latitude and longitude fields from the browser, then
 // asks the server to name the place and its nearest station so the visitor sees what was
 // found. Typing a place afterwards clears the location, so the typed place wins.
-(function () {
-  "use strict";
+(() => {
   const button = document.getElementById("locate");
   const status = document.getElementById("locate-status");
   const lat = document.getElementById("geo_lat");
@@ -27,30 +26,44 @@
   }
 
   button.hidden = false;
-  button.addEventListener("click", function () {
+  button.addEventListener("click", () => {
     button.disabled = true;
     status.textContent = "Finding your location… if the browser asks, choose Allow.";
-    pending = window.setTimeout(function () { finish(reasons[3]); }, WAIT_MS);
+    pending = window.setTimeout(() => {
+      finish(reasons[3]);
+    }, WAIT_MS);
     navigator.geolocation.getCurrentPosition(
-      function (position) {
+      (position) => {
         // A late answer (the permission prompt can take a while) is still used.
         lat.value = position.coords.latitude.toFixed(4);
         lon.value = position.coords.longitude.toFixed(4);
-        if (typed) { typed.value = ""; }
+        if (typed) {
+          typed.value = "";
+        }
         const choices = document.getElementById("place-choices");
-        if (choices) { choices.textContent = ""; }
-        const query = "lat=" + encodeURIComponent(lat.value) + "&lon=" + encodeURIComponent(lon.value);
-        fetch("/near?" + query)
-          .then(function (reply) { return reply.ok ? reply.text() : Promise.reject(reply.status); })
-          .then(function (text) { finish(text.trim()); })
-          .catch(function () { finish("Location set. The nearest station will be used."); });
+        if (choices) {
+          choices.textContent = "";
+        }
+        const query = `lat=${encodeURIComponent(lat.value)}&lon=${encodeURIComponent(lon.value)}`;
+        fetch(`/near?${query}`)
+          .then((reply) => (reply.ok ? reply.text() : Promise.reject(reply.status)))
+          .then((text) => {
+            finish(text.trim());
+          })
+          .catch(() => {
+            finish("Location set. The nearest station will be used.");
+          });
       },
-      function (error) { if (pending !== null) { finish(reasons[error.code] || reasons[2]); } },
-      { enableHighAccuracy: false, timeout: WAIT_MS, maximumAge: 600000 }
+      (error) => {
+        if (pending !== null) {
+          finish(reasons[error.code] || reasons[2]);
+        }
+      },
+      { enableHighAccuracy: false, timeout: WAIT_MS, maximumAge: 600000 },
     );
   });
   if (typed) {
-    typed.addEventListener("input", function () {
+    typed.addEventListener("input", () => {
       if (lat.value) {
         lat.value = "";
         lon.value = "";

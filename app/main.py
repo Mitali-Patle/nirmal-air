@@ -97,7 +97,7 @@ def _add_middleware(app: FastAPI, settings: Settings) -> None:
         https_only=settings.is_production,
     )
     app.add_middleware(BodySizeLimitMiddleware)
-    app.add_middleware(SecurityHeadersMiddleware, hsts=settings.is_production)
+    app.add_middleware(SecurityHeadersMiddleware, https_only=settings.is_production)
 
 
 def _secret(value: SecretStr | None) -> str | None:

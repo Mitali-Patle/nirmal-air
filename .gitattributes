@@ -1,0 +1,5 @@
+# Third-party and generated files, so diffs and GitHub's language statistics treat them so.
+public/static/vendor/** linguist-vendored
+public/static/fonts/** linguist-vendored binary
+app/air/stations.json linguist-generated
+uv.lock linguist-generated

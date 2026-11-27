@@ -2,7 +2,6 @@
 // the choice, the server saves it and replies with the new sky band, and its "theme-change"
 // event (HX-Trigger) carries the phase, haze and theme set here. Colours cross-fade.
 (() => {
-  "use strict";
   const root = document.documentElement;
   const FADE_MS = 600;
 
@@ -19,7 +18,7 @@
   let refocus = null;
   document.addEventListener("htmx:beforeRequest", () => {
     const focused = document.activeElement;
-    if (!focused || !focused.closest("#theme-form")) return;
+    if (!focused?.closest("#theme-form")) return;
     refocus = focused.classList.contains("cycle")
       ? "#theme-form .cycle"
       : `#theme-form .switch button[value="${focused.value}"]`;

@@ -20,7 +20,9 @@ rather than by the AI.
 
 | Read more | |
 |---|---|
-| How it is built, security and efficiency | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |
+| How it is built, and why it is fast | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |
+| What it holds, where data goes, every security control | [SECURITY.md](SECURITY.md) |
+| Setup, checks and conventions for changes | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | Every constant and its published source | [docs/ASSUMPTIONS.md](docs/ASSUMPTIONS.md) |
 | Prompt versions, and how AI was used to build this | [PROMPTS.md](PROMPTS.md) |
 | Product brief and design system | [PRODUCT.md](PRODUCT.md) · [DESIGN.md](DESIGN.md) |
@@ -171,11 +173,11 @@ time is tomorrow"), and the attempt is listed on the page.
 
 | Criterion | What to look at |
 |---|---|
-| **Code quality** | Typed Python (mypy strict), small modules (every app file under 300 lines), pure domain code that imports nothing else from the app, docstrings with doctests, ruff with a wide rule set, pre-commit and CI on every push |
-| **Security** | Strict Content Security Policy with no inline code, HSTS, CSRF tokens on every POST, a signed HttpOnly SameSite cookie, rate limits on every route (tighter for AI), 16 KB request cap, validated inputs, user text sent to the model as data, keys only in environment variables; gitleaks, pip-audit and CodeQL in CI. Details: [ARCHITECTURE.md](docs/ARCHITECTURE.md#security) |
+| **Code quality** | Typed Python (mypy strict), small modules (every app file under 300 lines), pure domain code that imports nothing else from the app, docstrings with doctests, ruff with a wide rule set, Biome for the JavaScript and CSS, no suppressed warnings in the app, pre-commit and CI on every push |
+| **Security** | Strict Content Security Policy with no inline code, HSTS, CSRF tokens on every POST, a signed HttpOnly SameSite cookie, rate limits on every route (tighter for AI), 16 KB request cap, validated inputs, user text sent to the model as data, keys only in environment variables; gitleaks, pip-audit and CodeQL in CI. Data inventory, controls and accepted risks: [SECURITY.md](SECURITY.md) |
 | **Efficiency** | Air and forecast fetched side by side; nearest station first; caches for readings, forecasts, places and identical AI requests; a failing source is not asked again for two minutes; no front-end framework (htmx plus four small scripts); self-hosted fonts. Details: [ARCHITECTURE.md](docs/ARCHITECTURE.md#efficiency) |
-| **Testing** | 360 tests with 100% branch coverage (gate 95%), 37 browser tests, and every outside service mocked with recorded replies |
-| **Accessibility** | axe checks for WCAG 2.2 AA on every page in light and dark, keyboard-only and 320 px tests, a skip link, visible focus, reduced motion respected, text contrast tested in every sky colour at every haze level |
+| **Testing** | 366 tests with 100% branch coverage (gate 95%), 38 browser tests, and every outside service mocked with recorded replies |
+| **Accessibility** | axe checks for WCAG 2.2 AA on every page in light and dark, keyboard-only and 320 px tests, a skip link, visible focus, form errors that take focus and link to their fields (marked `aria-invalid`), reduced motion respected, text contrast tested in every sky colour at every haze level |
 
 ## Assumptions
 
@@ -205,9 +207,10 @@ Every value, with its source and caveats: [docs/ASSUMPTIONS.md](docs/ASSUMPTIONS
 
 ## Limitations
 
-- No accounts or cross-device sync; the household lives in one browser's cookie. The cookie
-  is signed (it cannot be altered) but not encrypted: whoever holds the browser can decode it.
-  "Forget this household" on the start page clears it, for a shared device.
+- No accounts or cross-device sync, by design: the household lives only in one browser's
+  signed, HttpOnly cookie, never on a server. Whoever holds the browser can read it, so it
+  holds first names and no other identifiers, and "Forget this household" clears it on a
+  shared device (see [SECURITY.md](SECURITY.md)).
 - No indoor sensors: indoor values are estimates from outdoor air.
 - Tailpipe PM2.5 per trip is not estimated (no current Indian per-kilometre data for today's
   vehicles).
@@ -238,10 +241,9 @@ labelled standard advice.
 ## Quality checks
 
 ```bash
-uv run ruff check . && uv run ruff format --check .
-uv run mypy app tests scripts                  # strict
-uv run pytest -W error --cov=app               # 360 tests, 95% branch-coverage gate (100% now)
-uv run pytest -W error -m e2e                  # 37 browser tests: axe (WCAG 2.2 AA), widths, keyboard
+uv run pre-commit run --all-files              # ruff, mypy, Biome (JS, CSS), gitleaks
+uv run pytest -W error --cov=app               # 366 tests, 95% branch-coverage gate (100% now)
+uv run pytest -W error -m e2e                  # 38 browser tests: axe (WCAG 2.2 AA), widths, keyboard
 ```
 
 CI runs the same checks plus a secret scan, a dependency audit and a repository-size budget

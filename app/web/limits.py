@@ -26,7 +26,8 @@ AI_OVERALL = Budget(60, 60)
 # Pages, place search, location and colour changes: a person clicking around stays far below.
 PAGE_PER_CLIENT = Budget(60, 60)
 MAX_CLIENTS = 2048
-PROXY_HEADERS = ("x-vercel-forwarded-for", "x-real-ip", "x-forwarded-for")
+# Only headers Vercel's proxy sets itself; the generic X-Forwarded-For is never read.
+PROXY_HEADERS = ("x-vercel-forwarded-for", "x-real-ip")
 
 
 class RateLimiter:

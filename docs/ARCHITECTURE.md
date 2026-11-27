@@ -55,31 +55,11 @@ and outside-service failures share one base error, `UpstreamUnavailableError`.
 
 ## Security
 
-- **Strict Content Security Policy:** scripts, styles, fonts and images come from the app's
-  own origin only, with no inline code. HSTS and frame denial in production.
-- **Cookie:** signed, HttpOnly, Secure and SameSite=Lax, holding only the household profile
-  and the week's log (no account, no server-side personal data). It is signed, not encrypted:
-  it cannot be altered, but its content is readable to whoever holds the browser. Profile and
-  log are packed (compact JSON, compressed), so the largest household with a full week stays
-  well under the 4 KB cookie limit (tested). CSRF tokens on every POST.
-- **AI quota:** routes that call a model are rate-limited per client (20 in 10 minutes) and
-  per instance (60 a minute). Counts live in each serverless instance's memory, so they stop a
-  loop or a script rather than a determined attacker spread over many instances. In production
-  the client is the address Vercel's proxy writes; forwarded headers are ignored elsewhere. Over the limit, the plan is the labelled standard advice.
-  Cached answers do not count.
-- **Errors:** 403, 404 and 422 render as readable pages (or htmx fragments) that never echo
-  what was sent.
-- **Inputs:** every input is validated with limits; request bodies over 16 KB are refused (413).
-  Member names are up to 20 letters and spaces, and place names come from the geocoder,
-  never from the form. Names and questions reach the model inside a JSON payload, and the
-  prompts say they are data, not instructions. A name such as "Ignore all rules" is still
-  just a name: decisions are made in code, the number guard checks every figure, and the
-  answer cache is keyed by the whole request, so one visitor's text never reaches another.
-- **Rate limits on every route:** each client gets 60 requests a minute across pages, place
-  search, location and colour changes (429 with a readable page after that); health checks
-  are exempt. AI calls have their own, tighter budget (below).
-- **Secrets:** keys live only in environment variables. Gitleaks runs in pre-commit and CI,
-  and pip-audit checks dependencies.
+What the app holds, where it is sent, every control with the file that implements it, and the
+risks accepted: [SECURITY.md](../SECURITY.md). In short: a strict CSP with no inline code, a
+signed HttpOnly cookie as the only storage, CSRF tokens on every POST, validated inputs with a
+16 KB body limit, per-client rate limits on every route (tighter for AI), the number guard on
+every AI answer, and keys only in environment variables.
 
 ## Efficiency
 

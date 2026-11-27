@@ -34,7 +34,10 @@ def test_every_response_carries_the_security_headers() -> None:
     assert "default-src 'self'" in response.headers["content-security-policy"]
     assert response.headers["x-frame-options"] == "DENY"
     assert "geolocation=(self)" in response.headers["permissions-policy"]
+    assert response.headers["cross-origin-resource-policy"] == "same-origin"
+    assert response.headers["x-permitted-cross-domain-policies"] == "none"
     assert "strict-transport-security" not in response.headers
+    assert "upgrade-insecure-requests" not in response.headers["content-security-policy"]
 
 
 def test_production_adds_hsts_and_hides_the_api_docs() -> None:
@@ -43,7 +46,9 @@ def test_production_adds_hsts_and_hides_the_api_docs() -> None:
         data_gov_api_key=SecretStr("key"),
         session_secret=SecretStr("s" * 32),
     )
-    assert "max-age" in client.get("/healthz").headers["strict-transport-security"]
+    headers = client.get("/healthz").headers
+    assert "max-age" in headers["strict-transport-security"]
+    assert headers["content-security-policy"].endswith("; upgrade-insecure-requests")
     assert client.get("/docs").status_code == 404
 
 

@@ -1,12 +1,16 @@
 {% extends "base.html" %}
 {% block title %}NirmalAir · today's air, planned for your family{% endblock %}
 {% block styles %}<link rel="stylesheet" href="{{ 'css/start.css'|asset }}">{% endblock %}
-{% block scripts %}<script src="{{ 'js/locate.js'|asset }}" defer></script>{% endblock %}
+{% block scripts %}<script type="module" src="{{ 'js/locate.js'|asset }}"></script>{% endblock %}
 {% block main %}
 {% set roles = [('adult', 'Adult'), ('child', 'Child'), ('senior', 'Senior')] %}
 {% set activities = [('walk', 'Walk'), ('outdoor play', 'Outdoor play'), ('sport or exercise', 'Sport or exercise'), ('school run', 'School run'), ('market and errands', 'Market and errands')] %}
 {% set modes = [('car', 'Car'), ('SUV', 'SUV'), ('scooter or motorbike', 'Scooter or motorbike'), ('auto-rickshaw', 'Auto-rickshaw'), ('bus', 'Bus'), ('metro', 'Metro'), ('cycle', 'Cycle'), ('walk', 'Walk')] %}
 {% set fuels = [('LPG', 'LPG'), ('piped gas', 'Piped gas'), ('electric', 'Electric'), ('wood, coal or kerosene', 'Wood, coal or kerosene')] %}
+{#- A field with a problem says so, and points at the message about it in the summary. -#}
+{% macro invalid(name, note='') -%}
+{% if name in error_ids %} aria-invalid="true" aria-describedby="{{ error_ids[name] }}{{ ' ' ~ note if note }}"{% elif note %} aria-describedby="{{ note }}"{% endif %}
+{%- endmacro %}
 {% macro hour_options(name, default) -%}
 {% for h in range(24) %}<option value="{{ h }}"{% if form.get(name, default|string) == h|string %} selected{% endif %}>{{ h|clock }}</option>{% endfor %}
 {%- endmacro %}
@@ -51,9 +55,9 @@
     <details class="own-form"{% if open_form %} open{% endif %}>
     <summary class="go">{{ "Edit your household" if saved else "Set up your household" }}</summary>
     {% if errors %}
-    <div class="errors" role="alert">
-      <p>Please fix these:</p>
-      <ul>{% for error in errors %}<li>{{ error }}</li>{% endfor %}</ul>
+    <div class="errors" role="alert" aria-labelledby="errors-h" tabindex="-1" autofocus>
+      <h3 id="errors-h">Please fix these:</h3>
+      <ul>{% for error in errors %}<li id="error-{{ loop.index }}">{% if error.field %}<a href="#{{ error.field }}">{{ error.message }}</a>{% else %}{{ error.message }}{% endif %}</li>{% endfor %}</ul>
     </div>
     {% endif %}
     <form method="post" action="/household" class="household">
@@ -62,7 +66,7 @@
       <fieldset class="group">
         <legend>Where you live</legend>
         <label for="place_query">Town, city or locality</label>
-        <input id="place_query" name="place_query" type="text" maxlength="60" autocomplete="address-level2"
+        <input id="place_query" name="place_query" type="text" maxlength="60" autocomplete="address-level2"{{ invalid('place_query') }}
                value="{{ form.get('place_query', '') }}" placeholder="Andheri, Lucknow, Salt Lake…"
                hx-get="/places" hx-trigger="input changed delay:400ms" hx-target="#place-choices" hx-sync="this:replace">
         {% set picked = form.get('place_index', '0') %}
@@ -82,9 +86,9 @@
         {% if row == shown.members %}<details class="more-rows"{% if open_more.members %} open{% endif %}><summary>Add more people (up to {{ member_rows|length }})</summary>{% endif %}
         <fieldset class="row row-person"><legend class="row-legend">Person {{ row + 1 }}</legend>
           <div><label for="m{{ row }}_name">Name</label>
-            <input id="m{{ row }}_name" name="m{{ row }}_name" type="text" maxlength="20" value="{{ form.get('m%d_name'|format(row), '') }}"></div>
+            <input id="m{{ row }}_name" name="m{{ row }}_name" type="text" maxlength="20"{{ invalid('m%d_name'|format(row)) }} value="{{ form.get('m%d_name'|format(row), '') }}"></div>
           <div><label for="m{{ row }}_role">Age group</label>
-            <select id="m{{ row }}_role" name="m{{ row }}_role">{% for value, label in roles %}<option value="{{ value }}"{% if form.get('m%d_role'|format(row)) == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+            <select id="m{{ row }}_role" name="m{{ row }}_role"{{ invalid('m%d_role'|format(row)) }}>{% for value, label in roles %}<option value="{{ value }}"{% if form.get('m%d_role'|format(row)) == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
           <div class="checks">
             <label><input type="checkbox" name="m{{ row }}_lung"{% if form.get('m%d_lung'|format(row)) %} checked{% endif %}> Asthma or lung condition</label>
             <label><input type="checkbox" name="m{{ row }}_heart"{% if form.get('m%d_heart'|format(row)) %} checked{% endif %}> Heart condition</label>
@@ -101,10 +105,10 @@
         {% for row in routine_rows %}
         {% if row == shown.routines %}<details class="more-rows"{% if open_more.routines %} open{% endif %}><summary>Add more routines (up to {{ routine_rows|length }})</summary>{% endif %}
         <fieldset class="row"><legend class="row-legend">Routine {{ row + 1 }}</legend>
-          <div><label for="r{{ row }}_member">Who</label><input id="r{{ row }}_member" name="r{{ row }}_member" type="text" maxlength="20" value="{{ form.get('r%d_member'|format(row), '') }}"></div>
-          <div><label for="r{{ row }}_activity">What</label><select id="r{{ row }}_activity" name="r{{ row }}_activity">{% for value, label in activities %}<option value="{{ value }}"{% if form.get('r%d_activity'|format(row)) == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
-          <div><label for="r{{ row }}_hour">Usual time</label><select id="r{{ row }}_hour" name="r{{ row }}_hour">{{ hour_options('r%d_hour'|format(row), 7) }}</select></div>
-          <div><label for="r{{ row }}_minutes">Minutes</label><input id="r{{ row }}_minutes" name="r{{ row }}_minutes" type="number" min="10" max="180" step="5" value="{{ form.get('r%d_minutes'|format(row), '30') }}"></div>
+          <div><label for="r{{ row }}_member">Who</label><input id="r{{ row }}_member" name="r{{ row }}_member" type="text" maxlength="20"{{ invalid('r%d_member'|format(row)) }} value="{{ form.get('r%d_member'|format(row), '') }}"></div>
+          <div><label for="r{{ row }}_activity">What</label><select id="r{{ row }}_activity" name="r{{ row }}_activity"{{ invalid('r%d_activity'|format(row)) }}>{% for value, label in activities %}<option value="{{ value }}"{% if form.get('r%d_activity'|format(row)) == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+          <div><label for="r{{ row }}_hour">Usual time</label><select id="r{{ row }}_hour" name="r{{ row }}_hour"{{ invalid('r%d_hour'|format(row)) }}>{{ hour_options('r%d_hour'|format(row), 7) }}</select></div>
+          <div><label for="r{{ row }}_minutes">Minutes</label><input id="r{{ row }}_minutes" name="r{{ row }}_minutes" type="number" min="10" max="180" step="5"{{ invalid('r%d_minutes'|format(row)) }} value="{{ form.get('r%d_minutes'|format(row), '30') }}"></div>
         </fieldset>
         {% endfor %}
         {% if routine_rows|length > shown.routines %}</details>{% endif %}
@@ -115,12 +119,12 @@
         {% for row in commute_rows %}
         {% if row == shown.commutes %}<details class="more-rows"{% if open_more.commutes %} open{% endif %}><summary>Add more trips (up to {{ commute_rows|length }})</summary>{% endif %}
         <fieldset class="row"><legend class="row-legend">Trip {{ row + 1 }}</legend>
-          <div><label for="c{{ row }}_member">Who</label><input id="c{{ row }}_member" name="c{{ row }}_member" type="text" maxlength="20" value="{{ form.get('c%d_member'|format(row), '') }}"></div>
-          <div><label for="c{{ row }}_mode">How</label><select id="c{{ row }}_mode" name="c{{ row }}_mode">{% for value, label in modes %}<option value="{{ value }}"{% if form.get('c%d_mode'|format(row)) == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
-          <div><label for="c{{ row }}_km">Km one way</label><input id="c{{ row }}_km" name="c{{ row }}_km" type="number" min="0.5" max="60" step="0.5" value="{{ form.get('c%d_km'|format(row), '') }}"></div>
-          <div><label for="c{{ row }}_days">Days a week</label><input id="c{{ row }}_days" name="c{{ row }}_days" type="number" min="1" max="7" value="{{ form.get('c%d_days'|format(row), '5') }}"></div>
-          <div><label for="c{{ row }}_hour">Leaves at</label><select id="c{{ row }}_hour" name="c{{ row }}_hour">{{ hour_options('c%d_hour'|format(row), 9) }}</select></div>
-          <div><label for="c{{ row }}_people">People in the car</label><input id="c{{ row }}_people" name="c{{ row }}_people" type="number" min="1" max="4" value="{{ form.get('c%d_people'|format(row), '1') }}"></div>
+          <div><label for="c{{ row }}_member">Who</label><input id="c{{ row }}_member" name="c{{ row }}_member" type="text" maxlength="20"{{ invalid('c%d_member'|format(row)) }} value="{{ form.get('c%d_member'|format(row), '') }}"></div>
+          <div><label for="c{{ row }}_mode">How</label><select id="c{{ row }}_mode" name="c{{ row }}_mode"{{ invalid('c%d_mode'|format(row)) }}>{% for value, label in modes %}<option value="{{ value }}"{% if form.get('c%d_mode'|format(row)) == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+          <div><label for="c{{ row }}_km">Km one way</label><input id="c{{ row }}_km" name="c{{ row }}_km" type="number" min="0.5" max="60" step="0.5"{{ invalid('c%d_km'|format(row)) }} value="{{ form.get('c%d_km'|format(row), '') }}"></div>
+          <div><label for="c{{ row }}_days">Days a week</label><input id="c{{ row }}_days" name="c{{ row }}_days" type="number" min="1" max="7"{{ invalid('c%d_days'|format(row)) }} value="{{ form.get('c%d_days'|format(row), '5') }}"></div>
+          <div><label for="c{{ row }}_hour">Leaves at</label><select id="c{{ row }}_hour" name="c{{ row }}_hour"{{ invalid('c%d_hour'|format(row)) }}>{{ hour_options('c%d_hour'|format(row), 9) }}</select></div>
+          <div><label for="c{{ row }}_people">People in the car</label><input id="c{{ row }}_people" name="c{{ row }}_people" type="number" min="1" max="4"{{ invalid('c%d_people'|format(row)) }} value="{{ form.get('c%d_people'|format(row), '1') }}"></div>
           <div class="checks"><label><input type="checkbox" name="c{{ row }}_metro"{% if form.get('c%d_metro'|format(row)) %} checked{% endif %}> A metro could do this trip</label></div>
         </fieldset>
         {% endfor %}
@@ -130,9 +134,9 @@
       <fieldset class="group">
         <legend>Your home</legend>
         <div class="row">
-          <div><label for="home_sqft">Main room, sq ft</label><input id="home_sqft" name="home_sqft" type="number" min="50" max="1000" value="{{ form.get('home_sqft', '150') }}"></div>
-          <div><label for="home_cadr">Air purifier CADR, m³/h</label><input id="home_cadr" name="home_cadr" type="number" min="0" max="1500" value="{{ form.get('home_cadr', '0') }}" aria-describedby="cadr-note"></div>
-          <div><label for="home_fuel">Cooking fuel</label><select id="home_fuel" name="home_fuel">{% for value, label in fuels %}<option value="{{ value }}"{% if form.get('home_fuel') == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+          <div><label for="home_sqft">Main room, sq ft</label><input id="home_sqft" name="home_sqft" type="number" min="50" max="1000"{{ invalid('home_sqft') }} value="{{ form.get('home_sqft', '150') }}"></div>
+          <div><label for="home_cadr">Air purifier CADR, m³/h</label><input id="home_cadr" name="home_cadr" type="number" min="0" max="1500" value="{{ form.get('home_cadr', '0') }}"{{ invalid('home_cadr', 'cadr-note') }}></div>
+          <div><label for="home_fuel">Cooking fuel</label><select id="home_fuel" name="home_fuel"{{ invalid('home_fuel') }}>{% for value, label in fuels %}<option value="{{ value }}"{% if form.get('home_fuel') == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
         </div>
         <p class="field-note" id="cadr-note">0 if you have no purifier. The CADR is printed on the box or in the manual.</p>
         <div class="checks">

@@ -15,7 +15,12 @@ from app.domain.household import Mode
 from app.domain.readings import IST, HourlyPm25
 from app.services.today import PlaceChoice, TodayService
 from app.web.cookie import pack
-from app.web.household_form import form_from_household, parse_household
+from app.web.household_form import (
+    FormError,
+    described_by,
+    form_from_household,
+    parse_household,
+)
 from app.web.session import ThemeChoice, load_household, theme_choice
 from app.web.share import share_text
 from app.web.templating import templates
@@ -68,13 +73,42 @@ def test_commute_rows_are_read() -> None:
     assert household.commutes[0].metro_possible is True
 
 
-def test_form_errors_read_as_sentences() -> None:
+def test_form_errors_read_as_sentences_and_point_at_their_field() -> None:
     _, errors = parse_household({"m0_name": "Asha", "m1_name": "Asha"})
-    assert errors == ["Each member needs a different name"]
+    assert errors == [FormError("Each member needs a different name")]
     _, errors = parse_household({"m0_name": "Asha", "home_sqft": "5"})
-    assert errors == ["Home main room size: input should be greater than or equal to 50."]
+    assert errors == [
+        FormError("Home main room size: input should be greater than or equal to 50.", "home_sqft")
+    ]
     _, errors = parse_household({})
-    assert errors == ["Add at least one person, with a name."]
+    assert errors == [FormError("Add at least one person, with a name.", "m0_name")]
+
+
+def test_an_error_names_the_row_the_person_sees_not_the_count_of_filled_rows() -> None:
+    form = {
+        "m0_name": "Asha",
+        "m2_name": "Ravi 2",  # row 1 left empty
+        "r1_member": "Asha",
+        "r1_activity": "walk",
+        "r1_hour": "7",
+        "r1_minutes": "500",
+        "c2_member": "Kabeer",
+        "c2_mode": "car",
+        "c2_km": "5",
+        "c2_days": "5",
+        "c2_hour": "9",
+        "c3_km": "4",
+    }
+    _, errors = parse_household(form)
+    assert set(errors) == {
+        FormError("Person 3 name: use letters, with one space between words.", "m2_name"),
+        FormError("Routine 2 minutes: input should be less than or equal to 180.", "r1_minutes"),
+        FormError('Trip 3: "Kabeer" is not one of the people above.', "c2_member"),
+        FormError("Trip 4: who makes this trip?", "c3_member"),
+    }
+    assert described_by([*errors, FormError("Again", "c3_member")])["c3_member"] == (
+        f"error-{len(errors)} error-{len(errors) + 1}"
+    )
 
 
 async def test_without_a_data_key_there_is_no_measured_air(client: Any) -> None:

@@ -49,6 +49,8 @@ def test_forwarded_addresses_are_trusted_only_behind_vercels_proxy() -> None:
     real_ip = request(ip="10.0.0.1", headers={"x-real-ip": "9.8.7.6"})
     assert client_key(real_ip, behind_proxy=True) == "9.8.7.6"
     assert client_key(request(ip="10.0.0.1"), behind_proxy=True) == "10.0.0.1"
+    generic = request(ip="10.0.0.1", headers={"x-forwarded-for": "1.1.1.1"})
+    assert client_key(generic, behind_proxy=True) == "10.0.0.1"
     assert client_key(request(), behind_proxy=False) == "unknown"
 
 

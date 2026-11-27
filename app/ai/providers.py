@@ -4,7 +4,7 @@ Each provider turns a request into the model's raw JSON text or raises a typed e
 chain knows how to handle. Error messages carry only status codes, never keys or content.
 """
 
-from collections.abc import Callable
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any, Protocol
 
@@ -76,7 +76,7 @@ class _HttpProvider:
 
     async def _post(
         self, url: str, headers: dict[str, str], body: dict[str, Any], timeout_s: float
-    ) -> Any:  # noqa: ANN401 - decoded JSON
+    ) -> object:
         """POST a JSON body and return the decoded reply, mapping failures to our errors."""
         try:
             response = await self._client.post(url, headers=headers, json=body, timeout=timeout_s)
@@ -127,7 +127,7 @@ class GroqProvider(_HttpProvider):
             body["reasoning_effort"] = "low"
         headers = {"Authorization": f"Bearer {self._api_key}"}
         data = await self._post(GROQ_URL, headers, body, request.timeout_s)
-        return _text(self.name, lambda: data["choices"][0]["message"]["content"])
+        return _text(self.name, data, ("choices", 0, "message", "content"))
 
 
 class GeminiProvider(_HttpProvider):
@@ -157,18 +157,45 @@ class GeminiProvider(_HttpProvider):
         url = GEMINI_URL.format(model=self._model)
         headers = {"x-goog-api-key": self._api_key}
         data = await self._post(url, headers, body, request.timeout_s)
-        return _text(self.name, lambda: data["candidates"][0]["content"]["parts"][0]["text"])
+        return _text(self.name, data, ("candidates", 0, "content", "parts", 0, "text"))
 
 
-def _text(name: str, extract: Callable[[], object]) -> str:
-    """Pull the answer text out of a reply, or fail if it is missing or empty."""
+def _text(name: str, reply: object, path: Sequence[str | int]) -> str:
+    """Pull the answer text out of a decoded reply, or fail if it is missing or empty.
+
+    Args:
+        name: The provider, for error messages.
+        reply: The decoded JSON reply.
+        path: The keys and list positions that lead to the text.
+
+    Returns:
+        The answer text.
+
+    Raises:
+        ProviderError: If the reply has another shape or the text is empty.
+    """
+    text = reply
     try:
-        text = extract()
+        for key in path:
+            text = _step(text, key)
     except (KeyError, IndexError, TypeError) as error:
         raise ProviderError(f"{name}: unexpected reply shape") from error
     if not isinstance(text, str) or not text.strip():
         raise ProviderError(f"{name}: empty answer")
     return text
+
+
+def _step(value: object, key: str | int) -> object:
+    """One step into decoded JSON: an object's key or a list's position.
+
+    >>> _step({"a": [1, 2]}, "a"), _step([1, 2], 1)
+    ([1, 2], 2)
+    """
+    if isinstance(value, dict):
+        return value[key]
+    if isinstance(value, list) and isinstance(key, int):
+        return value[key]
+    raise TypeError(f"cannot read {key!r} from {type(value).__name__}")
 
 
 def _retry_after(response: httpx.Response) -> float | None:

@@ -31,6 +31,14 @@ repos:
         args: ["--fix"]
       - id: ruff-format
 
+  # The browser scripts and stylesheets (vendored htmx excluded): Biome's recommended lint
+  # rules for both, and its formatter for the scripts.
+  - repo: https://github.com/biomejs/pre-commit
+    rev: v2.6.7
+    hooks:
+      - id: biome-check
+        files: ^public/static/(js|css)/
+
   - repo: local
     hooks:
       - id: main-branch-only

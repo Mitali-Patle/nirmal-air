@@ -78,6 +78,7 @@ async def test_a_429_without_a_delay(client: httpx.AsyncClient) -> None:
         (httpx.Response(503), "HTTP 503"),
         (httpx.Response(200, text="<html>"), "not JSON"),
         (httpx.Response(200, json={"choices": []}), "unexpected reply shape"),
+        (httpx.Response(200, json={"choices": "none"}), "unexpected reply shape"),
         (httpx.Response(200, json=groq_reply("  ")), "empty answer"),
         (httpx.Response(200, json=groq_reply(None)), "empty answer"),
     ],

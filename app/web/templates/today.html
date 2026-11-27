@@ -2,7 +2,7 @@
 {% from "macros.html" import fact_row, sky_note, theme_form %}
 {% block title %}Today in {{ today.place }} · NirmalAir{% endblock %}
 {% block styles %}<link rel="stylesheet" href="{{ 'css/today.css'|asset }}"><link rel="stylesheet" href="{{ 'css/sky.css'|asset }}">{% endblock %}
-{% block scripts %}<script src="{{ 'js/theme.js'|asset }}" defer></script><script src="{{ 'js/share.js'|asset }}" defer></script><script src="{{ 'js/waiting.js'|asset }}" defer></script>{% endblock %}
+{% block scripts %}<script type="module" src="{{ 'js/theme.js'|asset }}"></script><script type="module" src="{{ 'js/share.js'|asset }}"></script><script type="module" src="{{ 'js/waiting.js'|asset }}"></script>{% endblock %}
 {% block sky %}{% include "partials/sky.html" %}{% endblock %}
 {% block bar %}
 <div class="bar-end">

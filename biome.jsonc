@@ -1,0 +1,28 @@
+// Lint and format rules for the browser scripts and stylesheets (public/static/js, css).
+// The scripts load as ES modules (strict mode, deferred). Vendored htmx is not checked.
+{
+  "$schema": "https://biomejs.dev/schemas/2.6.7/schema.json",
+  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+  "files": { "includes": ["public/static/js/**", "public/static/css/**"] },
+  "formatter": { "indentStyle": "space", "indentWidth": 2, "lineWidth": 100 },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "complexity": {
+        // Three deliberate overrides: the screen-reader-only utility, the reduced-motion
+        // switch, and the colour cross-fade, which must beat every component's transition.
+        "noImportantStyles": "off"
+      },
+      "style": {
+        // Rules are grouped by component. Each pair this rule flags differs in specificity,
+        // so the more specific selector wins wherever it sits in the file.
+        "noDescendingSpecificity": "off"
+      }
+    }
+  },
+  "javascript": { "formatter": { "quoteStyle": "double" } },
+  // One rule per line keeps each component's styles scannable; only the linter runs on CSS.
+  "css": { "formatter": { "enabled": false }, "linter": { "enabled": true } },
+  "assist": { "enabled": false }
+}

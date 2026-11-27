@@ -24,24 +24,29 @@ BASE_HEADERS: dict[str, str] = {
     "Referrer-Policy": "strict-origin-when-cross-origin",
     "Permissions-Policy": "camera=(), microphone=(), geolocation=(self), payment=()",
     "Cross-Origin-Opener-Policy": "same-origin",
+    "Cross-Origin-Resource-Policy": "same-origin",
+    "X-Permitted-Cross-Domain-Policies": "none",
 }
-HSTS_HEADER = ("Strict-Transport-Security", "max-age=63072000; includeSubDomains")
+# Over HTTPS only (production): browsers keep to HTTPS, and any stray http:// link is upgraded.
+HTTPS_HEADERS: dict[str, str] = {
+    "Strict-Transport-Security": "max-age=63072000; includeSubDomains",
+    "Content-Security-Policy": f"{CONTENT_SECURITY_POLICY}; upgrade-insecure-requests",
+}
 
 
 class SecurityHeadersMiddleware:
     """Pure ASGI middleware that sets security headers without buffering the response."""
 
-    def __init__(self, app: ASGIApp, *, hsts: bool) -> None:
+    def __init__(self, app: ASGIApp, *, https_only: bool) -> None:
         """Wrap an ASGI app.
 
         Args:
             app: The application to wrap.
-            hsts: Whether to send Strict-Transport-Security (production only).
+            https_only: Whether the site is served only over HTTPS (production), which adds
+                Strict-Transport-Security and upgrades insecure requests.
         """
         self.app = app
-        self.headers = dict(BASE_HEADERS)
-        if hsts:
-            self.headers[HSTS_HEADER[0]] = HSTS_HEADER[1]
+        self.headers = BASE_HEADERS | HTTPS_HEADERS if https_only else dict(BASE_HEADERS)
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         """Handle one ASGI connection, adding headers to HTTP responses."""

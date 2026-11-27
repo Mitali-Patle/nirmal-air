@@ -1,5 +1,6 @@
 """The real pages in a browser: journeys, axe (WCAG 2.2 AA), phone widths, keyboard, console."""
 
+import re
 from collections.abc import Callable
 from datetime import datetime
 from functools import cache
@@ -241,3 +242,18 @@ def test_the_colour_switch_keeps_keyboard_focus(new_page: NewPage) -> None:
     page.keyboard.press("Enter")
     expect(page.locator("html")).to_have_attribute("data-theme", "dark")
     expect(page.get_by_role("button", name="Dark", exact=True)).to_be_focused()
+
+
+def test_form_errors_take_focus_and_point_at_their_fields(new_page: NewPage) -> None:
+    page = new_page()
+    open_form(page)
+    page.get_by_role("button", name="See today's plan").click()
+    summary = page.get_by_role("alert")
+    expect(summary).to_be_focused()
+    place, name = page.locator("#place_query"), page.locator("#m0_name")
+    expect(place).to_have_attribute("aria-invalid", "true")
+    expect(place).to_have_attribute("aria-describedby", "error-1")
+    expect(name).to_have_attribute("aria-invalid", "true")
+    expect(page.locator("#m1_name")).not_to_have_attribute("aria-invalid", "true")
+    summary.get_by_role("link", name="Add at least one person, with a name.").click()
+    expect(page).to_have_url(re.compile(r"#m0_name$"))

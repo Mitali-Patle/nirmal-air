@@ -2,12 +2,11 @@
 // from the same facts as the page) to a family, building, school or society group, with the
 // phone's share sheet, or by copying it. The button stays hidden where neither works.
 (() => {
-  "use strict";
   const button = document.getElementById("share");
   const status = document.getElementById("share-status");
   if (!button || !status) return;
   const canShare = typeof navigator.share === "function";
-  const canCopy = Boolean(navigator.clipboard && navigator.clipboard.writeText);
+  const canCopy = typeof navigator.clipboard?.writeText === "function";
   if (!canShare && !canCopy) return;
   button.hidden = false;
 
